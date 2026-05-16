@@ -243,6 +243,30 @@ hr {
     max-height: 300px;  /* set maximum height */
     overflow-y: auto;   /* automatically show vertical scrollbar */
   }
+
+#chat_records_container {
+    display: flex;
+    align-items: center;
+    /* overflow: hidden; */ /* Remove this as it may clip dropdown */
+    flex: 1;
+    justify-content: flex-end;
+    position: relative;
+}
+
+#chat_records {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+#chat_records .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#more_records_dropdown {
+    margin-left: 5px;
+}
     
 
 /* Scrollbar styles */

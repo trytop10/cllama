@@ -649,8 +649,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function updateChatRecordsList(sessionsArray, activeSessionId) {
         const chatRecordsDiv = document.getElementById("chat_records");
+        const moreRecordsDropdown = document.getElementById("more_records_dropdown");
+        const moreRecordsList = document.getElementById("more_records_list");
         if (!chatRecordsDiv) return;
+
         chatRecordsDiv.innerHTML = "";
+        if (moreRecordsList) moreRecordsList.innerHTML = "";
+        if (moreRecordsDropdown) moreRecordsDropdown.style.display = "none";
 
         if (!Array.isArray(sessionsArray) || sessionsArray.length === 0) {
             const noRecordsMsg = document.createElement('span');
@@ -660,22 +665,78 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        sessionsArray.forEach(session => {
-            const sessionLink = document.createElement("a");
-            sessionLink.className = `btn btn-sm btn-outline-secondary me-1 mb-1 ${session.id === activeSessionId ? 'active' : ''}`;
-            sessionLink.href = "#";
-            sessionLink.textContent = session.name;
-            sessionLink.dataset.sessionId = session.id;
-            sessionLink.addEventListener('click', (e) => {
+        function createSessionButton(session, activeId, isDropdownItem = false) {
+            const link = document.createElement("a");
+            if (isDropdownItem) {
+                link.className = `dropdown-item ${session.id === activeId ? 'active' : ''}`;
+            } else {
+                link.className = `btn btn-sm btn-outline-secondary mb-1 me-1 ${session.id === activeId ? 'active' : ''}`;
+            }
+            link.href = "#";
+            link.textContent = session.name;
+            link.dataset.sessionId = session.id;
+            link.addEventListener('click', (e) => {
                 if (!stopFlag) return;
                 e.preventDefault();
-                const targetSessionId = parseInt(e.target.dataset.sessionId, 10);
-                if (targetSessionId !== activeSessionId) {
+                const targetSessionId = parseInt(e.currentTarget.dataset.sessionId, 10);
+                if (targetSessionId !== activeId) {
                     loadChatHistory(ccId || "0", targetSessionId);
                 }
             });
-            chatRecordsDiv.appendChild(sessionLink);
+            return link;
+        }
+
+        // Initially enable wrapping to detect overflow
+        chatRecordsDiv.style.flexWrap = "wrap";
+        chatRecordsDiv.style.height = "auto";
+
+        sessionsArray.forEach(session => {
+            chatRecordsDiv.appendChild(createSessionButton(session, activeSessionId));
         });
+
+        // Use a microtask to measure
+        setTimeout(() => {
+            const buttons = Array.from(chatRecordsDiv.children);
+            if (buttons.length === 0) return;
+
+            const firstBtnTop = buttons[0].offsetTop;
+            let overflowIndex = -1;
+
+            // Check which button starts a new line
+            for (let i = 1; i < buttons.length; i++) {
+                if (buttons[i].offsetTop > firstBtnTop) {
+                    overflowIndex = i;
+                    break;
+                }
+            }
+
+            if (overflowIndex !== -1) {
+                if (moreRecordsDropdown) {
+                    moreRecordsDropdown.style.display = "block";
+                    // If the dropdown itself now wraps, move the previous button too
+                    if (moreRecordsDropdown.offsetTop > firstBtnTop && overflowIndex > 0) {
+                        overflowIndex--;
+                    }
+                }
+
+                // Move buttons from overflowIndex onwards to dropdown
+                const toMove = sessionsArray.slice(overflowIndex);
+                // Remove buttons from DOM
+                for (let i = buttons.length - 1; i >= overflowIndex; i--) {
+                    chatRecordsDiv.removeChild(buttons[i]);
+                }
+                // Add to dropdown
+                toMove.forEach(session => {
+                    const li = document.createElement("li");
+                    li.appendChild(createSessionButton(session, activeSessionId, true));
+                    moreRecordsList.appendChild(li);
+                });
+            }
+
+            // Finally disable wrapping to keep them in one line
+            chatRecordsDiv.style.flexWrap = "nowrap";
+            chatRecordsDiv.style.height = "";
+        }, 50); // Increased timeout slightly to ensure more reliable offsetTop measurement
     }
 
     function setAllFilesActivation(isActive) {
