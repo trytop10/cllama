@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "Yeniden Gönder"
+    },
+    "apiConfigGuidance": {
+        "message": "Lütfen AI özelliklerini doğru şekilde kullanabilmek için önce API bilgilerini (API URL'si, API Anahtarı vb.) yapılandırın."
+    },
+    "goToConfig": {
+        "message": "Yapılandırmaya Git"
     }
 }

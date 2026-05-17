@@ -415,6 +415,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         return messageDiv;
     }
 
+    messagesContainer.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('go-to-config')) {
+            e.preventDefault();
+            browser.runtime.openOptionsPage();
+        }
+    });
+
     messagesContainer.addEventListener('scroll', function() {
         const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
         const currentScrollTop = scrollTop;
@@ -1018,25 +1025,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const initialScenarioId = ccId || "0";
     const initialStorageKey = `chatHistory_${initialScenarioId}`;
 
-    browser.storage.local.get(initialStorageKey, async (data) => {
-        let scenarioData = data[initialStorageKey];
-        if (!scenarioData?.history?.length) {
-            scenarioData = {
-                currentId: 0,
-                history: [{ id: 0, name: browser.i18n.getMessage("defaultChatName") || "00", records: [] }]
-            };
-            await browser.storage.local.set({ [initialStorageKey]: scenarioData });
-        }
+    const loadHistory = () => {
+        return new Promise((resolve) => {
+            browser.storage.local.get(initialStorageKey, async (data) => {
+                let scenarioData = data[initialStorageKey];
+                if (!scenarioData?.history?.length) {
+                    scenarioData = {
+                        currentId: 0,
+                        history: [{ id: 0, name: browser.i18n.getMessage("defaultChatName") || "00", records: [] }]
+                    };
+                    await browser.storage.local.set({ [initialStorageKey]: scenarioData });
+                }
 
-        if (!scenarioData.history.some(s => s.id === scenarioData.currentId)) {
-            scenarioData.currentId = scenarioData.history[0]?.id ?? 0;
-        }
+                if (!scenarioData.history.some(s => s.id === scenarioData.currentId)) {
+                    scenarioData.currentId = scenarioData.history[0]?.id ?? 0;
+                }
 
-        loadChatHistory(initialScenarioId, scenarioData.currentId);
-        updateChatRecordsList(scenarioData.history, scenarioData.currentId);
-        updateResendButtonVisibility();
-    });
+                await loadChatHistory(initialScenarioId, scenarioData.currentId);
+                updateChatRecordsList(scenarioData.history, scenarioData.currentId);
+                updateResendButtonVisibility();
+                resolve();
+            });
+        });
+    };
 
+    await loadHistory();
     await initializeModelSelection();
 
     async function initializeModelSelection() {
@@ -1049,8 +1062,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (currentModelDisplay) currentModelDisplay.textContent = runtimeConfig.modelName;
 
             const modelServerDisplay = document.getElementById("modelServer");
-            if (modelServerDisplay) modelServerDisplay.textContent = runtimeConfig.service;
+            if (modelServerDisplay) modelServerDisplay.textContent = runtimeConfig.service || "N/A";
             currentModel = runtimeConfig.modelName;
+
+            if (!runtimeConfig.apiUrl) {
+                const guidanceMsg = `${browser.i18n.getMessage("apiConfigGuidance")} <a href="#" class="go-to-config">${browser.i18n.getMessage("goToConfig")}</a>`;
+                displayMessage(guidanceMsg, 'system-error-message');
+                return;
+            }
 
             const serviceInstance = getService(
                 runtimeConfig.service,

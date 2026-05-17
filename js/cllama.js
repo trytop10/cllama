@@ -11,19 +11,7 @@ export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
 
 // Default configuration
 
-// {
-//   service: "Qwen",
-//   apiUrl: "https://api.suanli.cn/v1/chat/completions",
-//   apiKey: "sk-W0rpStc95T7JVYVwDYc29IyirjtpPPby6SozFMQr17m8KWeo",
-//   modelName: "free:QwQ-32B",
-//   maxTokens: 18000,
-//   tranPrompt: browser.i18n.getMessage("tranPrompt").replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage"))
-// }
 export const defaultSettings = {
-  service: "Test",
-  apiUrl: "https://api.fxdq.net",
-  apiKey: "ukey-202510",
-  modelName: "gemini-3-flash-preview",
   maxTokens: 30000,
   tranPrompt: browser.i18n.getMessage("tranPrompt").replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage"))
 };
@@ -57,7 +45,12 @@ async function loadConfiguration() {
 export async function getClientService() {
   if (!chatClient) {
     await loadConfiguration();
-    chatClient = getServiceInstance(runtimeConfig);
+    try {
+      chatClient = getServiceInstance(runtimeConfig);
+    } catch (e) {
+      console.warn("Failed to initialize chat client:", e.message);
+      chatClient = null;
+    }
   }
   return chatClient;
 }
@@ -67,7 +60,7 @@ export async function getClientService() {
  * @returns {Promise<Object>} Runtime config object
  */
 export async function getRuntimeConfig() {
-  await getClientService();
+  await loadConfiguration();
   return runtimeConfig;
 }
 

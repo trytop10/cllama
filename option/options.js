@@ -37,6 +37,10 @@ function setFormValue(data) {
   // If service and API URL are set, initialize the model list
   if(ds.service && ds.apiUrl)
     setModelList(ds.service, ds.apiUrl, ds.apiKey);
+  else {
+    ds.service = "ollama";
+    ds.apiUrl = "http://localhost:11434";
+  }
   
   // Iterate over the properties of the current data source settings
   for (const k of Object.keys(ds)) {

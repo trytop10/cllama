@@ -1,5 +1,5 @@
-import { processInsight, i18n, DB_KEY } from '../js/cllama.js';
-import { balert } from '../js/dialog.mjs';
+import { processInsight, i18n, DB_KEY, getRuntimeConfig } from '../js/cllama.js';
+import { balert, confirm } from '../js/dialog.mjs';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { addClass, hasClass, isMobile, removeClass, replaceElementContent, replaceThinkTags, sendToContentScript } from "../js/util.js";
@@ -151,6 +151,17 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     async function handleActionClick(action, buttonElement) {
         try {
+            const runtimeConfig = await getRuntimeConfig();
+            if (!runtimeConfig || !runtimeConfig.apiUrl) {
+                const confirmed = await confirm(`${browser.i18n.getMessage("apiConfigGuidance")}`, {
+                    okText: browser.i18n.getMessage("goToConfig")
+                });
+                if (confirmed) {
+                    browser.runtime.openOptionsPage();
+                }
+                return;
+            }
+
             const response = await sendToContentScript({ action: "getPageInfo" });
             
             if (!response?.title || !response?.content) {

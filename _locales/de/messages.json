@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "Erneut senden"
+    },
+    "apiConfigGuidance": {
+        "message": "Bitte konfigurieren Sie zuerst die API-Informationen (z. B. API-URL, API-Key usw.), um AI-Funktionen ordnungsgemäß nutzen zu können."
+    },
+    "goToConfig": {
+        "message": "Zur Konfiguration gehen"
     }
 }

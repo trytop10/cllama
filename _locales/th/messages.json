@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "ส่งใหม่"
+    },
+    "apiConfigGuidance": {
+        "message": "กรุณาตั้งค่าข้อมูล API (เช่น URL API, API Key ฯลฯ) ก่อนใช้งานฟีเจอร์ AI อย่างถูกต้อง"
+    },
+    "goToConfig": {
+        "message": "ไปที่การตั้งค่า"
     }
 }

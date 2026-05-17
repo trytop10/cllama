@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "Reenviar"
+    },
+    "apiConfigGuidance": {
+        "message": "Por favor configure la información de la API (por ejemplo, URL de la API, clave API, etc.) antes de usar las funciones de IA."
+    },
+    "goToConfig": {
+        "message": "Ir a Configuración"
     }
 }

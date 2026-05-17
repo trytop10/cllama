@@ -1,21 +1,21 @@
 import { i18n, browser, isFirefox } from "../js/cllama.js";
 
 document.getElementById('insightify').addEventListener('click',  async (e) => {
+  e.preventDefault();
   openPage("/insightify/insightify.html", "Insightify");
   window.close();
-  e.preventDefault();
 });
 
 document.getElementById('chat').addEventListener('click', async (e) => {
+  e.preventDefault();  
   openPage("/chat/chat.html", "chat");
   window.close();
-  e.preventDefault();
 });
 
 document.getElementById('settings').addEventListener('click', async (e) => {
+  e.preventDefault();  
   browser.runtime.openOptionsPage();
   window.close();
-  e.preventDefault();
 });
 
 async function openPage(url, title) {

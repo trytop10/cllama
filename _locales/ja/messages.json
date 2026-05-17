@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "再送信"
+    },
+    "apiConfigGuidance": {
+        "message": "AI機能を正しく使用するために、まずAPI情報（例：API URL、APIキーなど）を設定してください。"
+    },
+    "goToConfig": {
+        "message": "設定へ移動"
     }
 }

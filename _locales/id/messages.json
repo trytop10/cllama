@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "Kirim ulang"
+    },
+    "apiConfigGuidance": {
+        "message": "Silakan konfigurasikan informasi API (mis. URL API, API Key, dll.) terlebih dahulu untuk dapat menggunakan fitur AI dengan benar."
+    },
+    "goToConfig": {
+        "message": "Buka Pengaturan"
     }
 }

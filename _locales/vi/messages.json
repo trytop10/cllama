@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "Gửi lại"
+    },
+    "apiConfigGuidance": {
+        "message": "Vui lòng cấu hình thông tin API (ví dụ: URL API, API Key, v.v.) trước khi sử dụng các tính năng AI đúng cách."
+    },
+    "goToConfig": {
+        "message": "Đi đến Cấu hình"
     }
 }

@@ -255,5 +255,11 @@
     },
     "resend": {
         "message": "重新發送"
+    },
+    "apiConfigGuidance": {
+        "message": "請先配置 API 信息（例如 API URL、API Key 等），才能正常使用 AI 功能。"
+    },
+    "goToConfig": {
+        "message": "前往設定"
     }
 }
