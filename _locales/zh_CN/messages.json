@@ -262,5 +262,11 @@
     },
     "goToConfig": {
         "message": "前往配置"
+    },
+    "thinkModeLabel": {
+        "message": "思考模式"
+    },
+    "thinkModeDesc": {
+        "message": "启用后AI模型会展示其思考过程，适用于支持thinking的模型(Ollama 0.9+)。"
     }
 }

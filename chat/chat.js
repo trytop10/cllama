@@ -874,9 +874,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="mb-3">
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" id="thinkModeTogglePopover">
-              <label class="form-check-label" for="thinkModeTogglePopover">Think Mode</label>
+              <label class="form-check-label" for="thinkModeTogglePopover">${browser.i18n.getMessage("thinkModeLabel")}</label>
             </div>
-            <div class="text-muted small mt-1">Thinking models, Ollama version 0.9 or newer.</div>
+            <div class="text-muted small mt-1">${browser.i18n.getMessage("thinkModeDesc")}</div>
           </div>
           <div class="d-flex justify-content-end">
             <button type="button" class="btn btn-sm btn-secondary me-2" id="resetApiSettingsBtnPopover">${browser.i18n.getMessage("apiSettingsResetButton")}</button>

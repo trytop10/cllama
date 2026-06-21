@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "구성으로 이동"
+    },
+    "thinkModeLabel": {
+        "message": "생각 모드"
+    },
+    "thinkModeDesc": {
+        "message": "활성화하면 AI 모델이 사고 과정을 표시합니다. 사고 기능을 지원하는 모델용(Ollama 0.9+)."
     }
 }

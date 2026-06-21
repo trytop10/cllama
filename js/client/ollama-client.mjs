@@ -70,7 +70,8 @@ export class OllamaClient {
     let sessionId = null;
     let abortController = null;
     let abortableAsyncIterator = null;
-    let fullResponseBuilder = [];
+    let thinkingBuilder = [];
+    let contentBuilder = [];
 
     let requestOptions = {
       model,
@@ -106,18 +107,34 @@ export class OllamaClient {
           break
         }
 
-        if (part.message?.content) {
-          const chunk = part.message.content
-          fullResponseBuilder.push(chunk);
+        // New Ollama API: standalone thinking field
+        if (part.message?.thinking) {
+          const chunk = part.message.thinking
+          thinkingBuilder.push(chunk);
 
           if (typeof options.onStream === 'function') {
-            options.onStream(chunk, fullResponseBuilder.join(''), sessionId)
+            const thinkingText = thinkingBuilder.join('');
+            const full = '<think>' + thinkingText + '</think>' + contentBuilder.join('');
+            options.onStream(chunk, full, sessionId)
+          }
+        }
+
+        // Content field (both old API with <think> tags and new API body text)
+        if (part.message?.content) {
+          const chunk = part.message.content
+          contentBuilder.push(chunk);
+
+          if (typeof options.onStream === 'function') {
+            const thinkingText = thinkingBuilder.join('');
+            const full = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentBuilder.join('');
+            options.onStream(chunk, full, sessionId)
           }
         }
       }
 
       if (this.activeSessions.has(sessionId)) {
-        const fullResponse = fullResponseBuilder.join('');
+        const thinkingText = thinkingBuilder.join('');
+        const fullResponse = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentBuilder.join('');
         if (typeof options.onComplete === 'function') {
           options.onComplete(fullResponse, sessionId)
         }

@@ -119,7 +119,8 @@ export class ChatGPTClient {
   async _processStreamResponse(response, sessionId, options) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let fullText = '';
+    let thinkingText = '';
+    let contentText = '';
     let buffer = '';
 
     try {
@@ -156,12 +157,23 @@ export class ChatGPTClient {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices[0]?.delta?.content || '';
+            const delta = parsed.choices[0]?.delta || {};
 
-            if (content) {
-              fullText += content;
+            // New API: standalone reasoning_content field for thinking
+            if (delta.reasoning_content) {
+              thinkingText += delta.reasoning_content;
               if (typeof options.onStream === 'function') {
-                options.onStream(content, fullText, sessionId);
+                const full = '<think>' + thinkingText + '</think>' + contentText;
+                options.onStream(delta.reasoning_content, full, sessionId);
+              }
+            }
+
+            // Content field (both old API with <think> tags and new API body text)
+            if (delta.content) {
+              contentText += delta.content;
+              if (typeof options.onStream === 'function') {
+                const full = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentText;
+                options.onStream(delta.content, full, sessionId);
               }
             }
           } catch (jsonError) {
@@ -176,7 +188,8 @@ export class ChatGPTClient {
 
       this.activeSessions.delete(sessionId);
       if (typeof options.onComplete === 'function') {
-        options.onComplete(fullText, sessionId);
+        const fullResponse = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentText;
+        options.onComplete(fullResponse, sessionId);
       }
     } catch (error) {
       this.activeSessions.delete(sessionId);

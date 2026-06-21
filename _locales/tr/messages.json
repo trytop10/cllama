@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Yapılandırmaya Git"
+    },
+    "thinkModeLabel": {
+        "message": "Düşünme Modu"
+    },
+    "thinkModeDesc": {
+        "message": "Etkinleştirildiğinde, AI modelleri düşünme sürecini gösterir. Düşünmeyi destekleyen modeller için (Ollama 0.9+)."
     }
 }

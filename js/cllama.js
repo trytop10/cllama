@@ -13,7 +13,13 @@ export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
 
 export const defaultSettings = {
   maxTokens: 30000,
-  tranPrompt: browser.i18n.getMessage("tranPrompt").replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage"))
+  tranPrompt: browser.i18n.getMessage("tranPrompt").replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage")),
+  tranThink: false,
+  tranTemperature: 0.7,
+  tranTopP: 0.9,
+  insightThink: false,
+  insightTemperature: 0.7,
+  insightTopP: 0.9
 };
 
 let runtimeConfig = { ...defaultSettings }, chatClient;
@@ -122,7 +128,9 @@ async function _getInsightClientAndData(prompt, doc) {
  */
 export async function processInsightForBackground(prompt, doc, options) {
   const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
+  const ops = { temperature: runtimeConfig.insightTemperature, top_p: runtimeConfig.insightTopP, think: runtimeConfig.insightThink };
   clientService.sendRequest(msgData, {
+    options: ops,
     onStream: options.onStream,
     onComplete: options.onComplete,
     onError: options.onError
@@ -144,8 +152,10 @@ export async function processInsight(prompt, doc, msgId, options) {
   }
 
   const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
+  const ops = { temperature: runtimeConfig.insightTemperature, top_p: runtimeConfig.insightTopP, think: runtimeConfig.insightThink };
 
   clientService.sendRequest(msgData, {
+    options: ops,
     onStream: (chunk, full) => renderWithDebounce(target, full),
     onComplete: (fullResponse, id) => {
       renderWithDebounce(target, fullResponse);
@@ -324,7 +334,10 @@ export async function translate(input, callback, options) {
     ];
   }
   
+  const ops = { temperature: runtimeConfig.tranTemperature, top_p: runtimeConfig.tranTopP, think: runtimeConfig.tranThink };
+
   clientService.sendRequest(messages, {
+    options: ops,
     onStream: (_, full) => {
       callback(full);
       if (options?.stop()) {

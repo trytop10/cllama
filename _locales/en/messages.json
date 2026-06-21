@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Go to Config"
+    },
+    "thinkModeLabel": {
+        "message": "Think Mode"
+    },
+    "thinkModeDesc": {
+        "message": "When enabled, AI models will show their thinking process. For models that support thinking (Ollama 0.9+)."
     }
 }

@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Đi đến Cấu hình"
+    },
+    "thinkModeLabel": {
+        "message": "Chế độ Suy nghĩ"
+    },
+    "thinkModeDesc": {
+        "message": "Khi được bật, các mô hình AI sẽ hiển thị quá trình suy nghĩ của chúng. Dành cho các mô hình hỗ trợ suy nghĩ (Ollama 0.9+)."
     }
 }

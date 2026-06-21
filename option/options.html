@@ -76,7 +76,8 @@
       <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
           <a class="nav-link active i18n" id="aiserver-tab" data-bs-toggle="tab" href="#nav-aiserver" role="tab" aria-controls="nav-aiserver" aria-selected="true">api_configuration</a>
-          <a class="nav-link i18n" id="other-tab" data-bs-toggle="tab" href="#nav-other" role="tab" aria-controls="nav-other" aria-selected="false">other</a>
+          <a class="nav-link i18n" id="insight-tab" data-bs-toggle="tab" href="#nav-insight" role="tab" aria-controls="nav-insight" aria-selected="false">Insightify</a>
+          <a class="nav-link i18n" id="tran-tab" data-bs-toggle="tab" href="#nav-tran" role="tab" aria-controls="nav-tran" aria-selected="false">translate</a>
           <a class="nav-link i18n" id="export-tab" data-bs-toggle="tab" href="#nav-export" role="tab" aria-controls="nav-export" aria-selected="false">export</a>
           <a class="nav-link i18n" id="import-tab" data-bs-toggle="tab" href="#nav-import" role="tab" aria-controls="nav-import" aria-selected="false">import</a>
         </div>
@@ -152,28 +153,88 @@
 
           </form>        
         </div>
-        <div class="tab-pane opane fade" id="nav-other" role="tabpanel" aria-labelledby="nav-other-tab">
+        <div class="tab-pane opane fade" id="nav-insight" role="tabpanel" aria-labelledby="nav-insight-tab">
           
-          <div class="mb-3">
+          <div class="mb-4">
             <label for="insightService" class="form-label i18n">insightServiceLabel</label>
-            <select id="insightService" class="form-control"></select>
+            <select id="insightService" class="form-select"></select>
+            <div id="insightSvcHint" class="text-info small mt-1 i18n d-none">apiConfigGuidance</div>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2">
+              <div class="form-check form-switch mb-0 wide-switch">
+                <input class="form-check-input" type="checkbox" id="insightThink">
+              </div>
+              <label class="form-check-label i18n" for="insightThink" i18n="text">thinkModeLabel</label>
+            </div>
+            <div class="text-muted small mt-1 ms-2 i18n">thinkModeDesc</div>
+          </div>
+          <div class="mb-4">
+            <label for="insightTemperature" class="form-label small mb-1 i18n">apiSettingsCreativityLabel</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" class="form-range flex-grow-1" id="insightTemperature" min="0" max="2" step="0.1" value="0.7">
+              <span class="badge bg-primary rounded-pill flex-shrink-0" style="min-width:2.6em;" id="insightTemperatureValue">0.7</span>
+            </div>
+            <div class="text-muted small mt-1 i18n">apiSettingsCreativityDesc</div>
+          </div>
+          <div class="mb-4">
+            <label for="insightTopP" class="form-label small mb-1 i18n">apiSettingsFocusLabel</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" class="form-range flex-grow-1" id="insightTopP" min="0" max="1" step="0.1" value="0.9">
+              <span class="badge bg-primary rounded-pill flex-shrink-0" style="min-width:2.6em;" id="insightTopPValue">0.9</span>
+            </div>
+            <div class="text-muted small mt-1 i18n">apiSettingsFocusDesc</div>
+          </div>
+
+          <div class="d-flex justify-content-center mt-4">
+            <a class="btn btn-primary w-50 i18n" id="b_save_insight">save</a>
+          </div>
+        </div>
+        <div class="tab-pane opane fade" id="nav-tran" role="tabpanel" aria-labelledby="nav-tran-tab">
+          
+          <div class="mb-4">
             <label for="tranService" class="form-label i18n">tranServiceLabel</label>
-            <select id="tranService" class="form-control"></select>
+            <select id="tranService" class="form-select"></select>
+            <div id="tranSvcHint" class="text-info small mt-1 i18n d-none">apiConfigGuidance</div>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-4">
               <label for="tranPrompt" class="form-label i18n">tranPromptLabel</label>
               <textarea class="form-control is-must" 
                   id="tranPrompt"
-                  rows = "5"
+                  rows = "3"
                   required></textarea>
           </div>
 
-          <div class="d-flex justify-content-center mt-5">
-            <a class="btn btn-primary w-50 i18n" id="b_save_other">save</a>
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2">
+              <div class="form-check form-switch mb-0 wide-switch">
+                <input class="form-check-input" type="checkbox" id="tranThink">
+              </div>
+              <label class="form-check-label i18n" for="tranThink" i18n="text">thinkModeLabel</label>
+            </div>
+            <div class="text-muted small mt-1 ms-2 i18n">thinkModeDesc</div>
+          </div>
+          <div class="mb-3">
+            <label for="tranTemperature" class="form-label small mb-1 i18n">apiSettingsCreativityLabel</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" class="form-range flex-grow-1" id="tranTemperature" min="0" max="2" step="0.1" value="0.7">
+              <span class="badge bg-primary rounded-pill flex-shrink-0" style="min-width:2.6em;" id="tranTemperatureValue">0.7</span>
+            </div>
+            <div class="text-muted small mt-1 i18n">apiSettingsCreativityDesc</div>
+          </div>
+          <div class="mb-3">
+            <label for="tranTopP" class="form-label small mb-1 i18n">apiSettingsFocusLabel</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" class="form-range flex-grow-1" id="tranTopP" min="0" max="1" step="0.1" value="0.9">
+              <span class="badge bg-primary rounded-pill flex-shrink-0" style="min-width:2.6em;" id="tranTopPValue">0.9</span>
+            </div>
+            <div class="text-muted small mt-1 i18n">apiSettingsFocusDesc</div>
+          </div>
+
+          <div class="d-flex justify-content-center mt-4">
+            <a class="btn btn-primary w-50 i18n" id="b_save_tran">save</a>
           </div>
         </div>
         <div class="tab-pane  opane fade" id="nav-export" role="tabpanel" aria-labelledby="nav-export-tab">

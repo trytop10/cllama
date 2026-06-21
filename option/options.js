@@ -10,6 +10,14 @@ let ds = {}; // Current data source settings
 const browser = typeof chrome !== 'undefined' ? chrome : browser;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Load language-specific stylesheet for German (longer labels)
+  if (browser.i18n.getUILanguage().startsWith('de')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'options-l.css';
+    document.head.appendChild(link);
+  }
+
   await initPage();  // Initialize the page
   bindEventListeners(); // Bind event listeners
   i18n(); // Initialize i18n for the page
@@ -49,27 +57,37 @@ function setFormValue(data) {
       if (serviceRadio) serviceRadio.checked = true; // Check the radio button corresponding to the service
     } else {
       const field = document.getElementById(k);
-      if (field) field.value = ds[k]; // Set the value of other form fields
+      if (field) {
+        if (field.type === 'checkbox') {
+          field.checked = ds[k]; // Set checkbox state
+        } else {
+          field.value = ds[k]; // Set the value of other form fields
+        }
+      }
     }
   }
 
-  // Populate the service selection dropdowns for translation and insight services
-  const tranServiceSelect = document.getElementById('tranService');
-  const insightServiceSelect = document.getElementById('insightService');
-  tranServiceSelect.innerHTML = ''; // Clear existing options
-  insightServiceSelect.innerHTML = ''; // Clear existing options
-  dsList.forEach(item => {
-    const option1 = new Option(item.service, item.service);
-    const option2 = new Option(item.service, item.service);
-    tranServiceSelect.add(option1);
-    insightServiceSelect.add(option2);
-  });
+  // Update range slider badge display values
+  const tranTempEl = document.getElementById('tranTemperature');
+  const tranTempVal = document.getElementById('tranTemperatureValue');
+  if (tranTempEl && tranTempVal) tranTempVal.textContent = parseFloat(ds.tranTemperature || 0.7).toFixed(1);
+  const tranTopPEl = document.getElementById('tranTopP');
+  const tranTopPVal = document.getElementById('tranTopPValue');
+  if (tranTopPEl && tranTopPVal) tranTopPVal.textContent = parseFloat(ds.tranTopP || 0.9).toFixed(1);
+  const insightTempEl = document.getElementById('insightTemperature');
+  const insightTempVal = document.getElementById('insightTemperatureValue');
+  if (insightTempEl && insightTempVal) insightTempVal.textContent = parseFloat(ds.insightTemperature || 0.7).toFixed(1);
+  const insightTopPEl = document.getElementById('insightTopP');
+  const insightTopPVal = document.getElementById('insightTopPValue');
+  if (insightTopPEl && insightTopPVal) insightTopPVal.textContent = parseFloat(ds.insightTopP || 0.9).toFixed(1);
 
+  // Populate the service selection dropdowns for translation and insight services
+  populateServiceDropdowns();
   if (ds.tranService) {
-    tranServiceSelect.value = ds.tranService;
+    document.getElementById('tranService').value = ds.tranService;
   }
   if (ds.insightService) {
-    insightServiceSelect.value = ds.insightService;
+    document.getElementById('insightService').value = ds.insightService;
   }
 
   const apiMsg = document.getElementById("api_msg");
@@ -117,6 +135,33 @@ async function setModelList(service, url, key) {
 }
 
 /**
+ * Populates translation and insight service dropdowns from dsList.
+ * Shows guidance hint when no services are configured.
+ */
+function populateServiceDropdowns() {
+  const tranSelect = document.getElementById('tranService');
+  const insightSelect = document.getElementById('insightService');
+  const tranHint = document.getElementById('tranSvcHint');
+  const insightHint = document.getElementById('insightSvcHint');
+
+  [tranSelect, insightSelect].forEach(sel => { sel.innerHTML = ''; });
+
+  if (dsList.length === 0) {
+    if (tranHint) tranHint.classList.remove('d-none');
+    if (insightHint) insightHint.classList.remove('d-none');
+    return;
+  }
+
+  if (tranHint) tranHint.classList.add('d-none');
+  if (insightHint) insightHint.classList.add('d-none');
+
+  dsList.forEach(item => {
+    tranSelect.add(new Option(item.service, item.service));
+    insightSelect.add(new Option(item.service, item.service));
+  });
+}
+
+/**
  * Saves the API settings to browser local storage.
  */
 async function saveApiSettings() {
@@ -156,31 +201,50 @@ async function saveApiSettings() {
 
   await browser.storage.local.set({ [DB_KEY.base]: ds });
   await browser.storage.local.set({ [DB_KEY.dsList]: dsList });
+
+  // Refresh service dropdowns in insight/tran tabs
+  populateServiceDropdowns();
+  if (ds.tranService) document.getElementById('tranService').value = ds.tranService;
+  if (ds.insightService) document.getElementById('insightService').value = ds.insightService;
   
   alert(browser.i18n.getMessage("saveSuccessMessage"));
 }
 
 /**
- * Saves other general settings to browser local storage.
+ * Saves translation settings to browser local storage.
  */
-async function saveOtherSettings() {
+async function saveTranSettings() {
   const tranPrompt = document.getElementById('tranPrompt').value.trim();
   const tranService = document.getElementById('tranService').value;
-  const insightService = document.getElementById('insightService').value;
 
   // Validate required field
   if (!tranPrompt) {
     balert(browser.i18n.getMessage("requiredError"));
-    return false; // Prevent further execution if validation fails
+    return false;
   }
 
-  // Update the global 'ds' (current data source settings) with other settings
   ds.tranPrompt = tranPrompt;
   ds.tranService = tranService;
-  ds.insightService = insightService;
+  ds.tranThink = document.getElementById('tranThink').checked;
+  ds.tranTemperature = parseFloat(document.getElementById('tranTemperature').value);
+  ds.tranTopP = parseFloat(document.getElementById('tranTopP').value);
 
   await browser.storage.local.set({[DB_KEY.base]: ds});
-  
+  alert(browser.i18n.getMessage("saveSuccessMessage"));
+}
+
+/**
+ * Saves insight settings to browser local storage.
+ */
+async function saveInsightSettings() {
+  const insightService = document.getElementById('insightService').value;
+
+  ds.insightService = insightService;
+  ds.insightThink = document.getElementById('insightThink').checked;
+  ds.insightTemperature = parseFloat(document.getElementById('insightTemperature').value);
+  ds.insightTopP = parseFloat(document.getElementById('insightTopP').value);
+
+  await browser.storage.local.set({[DB_KEY.base]: ds});
   alert(browser.i18n.getMessage("saveSuccessMessage"));
 }
 
@@ -266,7 +330,8 @@ function bindEventListeners() {
 
   // Event listeners for save buttons
   document.getElementById('b_save_api').addEventListener('click', saveApiSettings);
-  document.getElementById('b_save_other').addEventListener('click', saveOtherSettings);
+  document.getElementById('b_save_tran').addEventListener('click', saveTranSettings);
+  document.getElementById('b_save_insight').addEventListener('click', saveInsightSettings);
 
   // Event listener for LLM type switching
   document.querySelectorAll(".llmtype").forEach(llm => {
@@ -342,6 +407,24 @@ function bindEventListeners() {
       }
     };
     reader.readAsText(file); // Read the selected file as text
+  });
+
+  // Range slider live display updates for translation options
+  ['tranTemperature', 'tranTopP'].forEach(id => {
+    const slider = document.getElementById(id);
+    const badge = document.getElementById(id + 'Value');
+    if (slider && badge) {
+      slider.addEventListener('input', () => badge.textContent = parseFloat(slider.value).toFixed(1));
+    }
+  });
+
+  // Range slider live display updates for insight options
+  ['insightTemperature', 'insightTopP'].forEach(id => {
+    const slider = document.getElementById(id);
+    const badge = document.getElementById(id + 'Value');
+    if (slider && badge) {
+      slider.addEventListener('input', () => badge.textContent = parseFloat(slider.value).toFixed(1));
+    }
   });
 
   // Event listener for file input change to display selected file name

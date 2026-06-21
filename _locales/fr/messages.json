@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Aller à la configuration"
+    },
+    "thinkModeLabel": {
+        "message": "Mode de Réflexion"
+    },
+    "thinkModeDesc": {
+        "message": "Lorsqu'il est activé, les modèles d'IA montrent leur processus de réflexion. Pour les modèles qui prennent en charge la réflexion (Ollama 0.9+)."
     }
 }

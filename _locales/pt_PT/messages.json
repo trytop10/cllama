@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Ir para Configurações"
+    },
+    "thinkModeLabel": {
+        "message": "Modo de Pensamento"
+    },
+    "thinkModeDesc": {
+        "message": "Quando ativado, os modelos de IA mostram seu processo de pensamento. Para modelos que suportam pensamento (Ollama 0.9+)."
     }
 }

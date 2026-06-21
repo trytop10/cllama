@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Buka Pengaturan"
+    },
+    "thinkModeLabel": {
+        "message": "Mode Berpikir"
+    },
+    "thinkModeDesc": {
+        "message": "Jika diaktifkan, model AI akan menampilkan proses berpikirnya. Untuk model yang mendukung thinking (Ollama 0.9+)."
     }
 }

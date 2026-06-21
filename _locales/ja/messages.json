@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "設定へ移動"
+    },
+    "thinkModeLabel": {
+        "message": "思考モード"
+    },
+    "thinkModeDesc": {
+        "message": "有効にすると、AIモデルが思考プロセスを表示します。思考機能をサポートするモデル向け（Ollama 0.9+）。"
     }
 }

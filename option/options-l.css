@@ -1,0 +1,16 @@
+.nav {
+    --bs-nav-link-padding-y: 0.8rem;
+    --bs-nav-link-padding-x: 0.6rem;
+}
+
+.card {
+    --bs-card-spacer-y: 0.8rem;
+    --bs-card-spacer-x: 0.6rem;
+}
+
+.nav-tabs .nav-link {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    padding: 0.5rem 0.6rem;
+}
+

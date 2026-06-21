@@ -261,5 +261,11 @@
     },
     "goToConfig": {
         "message": "Zur Konfiguration gehen"
+    },
+    "thinkModeLabel": {
+        "message": "Denkmodus"
+    },
+    "thinkModeDesc": {
+        "message": "Wenn aktiviert, zeigen KI-Modelle ihren Denkprozess an. Für Modelle, die Thinking unterstützen (Ollama 0.9+)."
     }
 }
