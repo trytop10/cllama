@@ -23,6 +23,7 @@ export const defaultSettings = {
 };
 
 let runtimeConfig = { ...defaultSettings }, chatClient;
+let _configManuallySet = false;
 
 /**
  * Loads configuration from browser storage
@@ -45,12 +46,34 @@ async function loadConfiguration() {
 }
 
 /**
+ * Switches runtime configuration to a different data source at runtime
+ * Resets the cached chat client so next call reinitialises with new config
+ * @param {Object} config - The new data source configuration
+ */
+export function setRuntimeConfig(config) {
+  if (!config || !config.service || !config.apiUrl) {
+    console.warn("setRuntimeConfig: invalid config", config);
+    return;
+  }
+  // Merge into existing runtimeConfig, preserving other settings
+  runtimeConfig.service = config.service;
+  runtimeConfig.apiUrl = config.apiUrl;
+  runtimeConfig.apiKey = config.apiKey || "-";
+  runtimeConfig.modelName = config.modelName || runtimeConfig.modelName;
+  // Reset the cached client so it will be re-initialized
+  chatClient = null;
+  _configManuallySet = true;
+}
+
+/**
  * Gets or initializes the AI service client
  * @returns {Promise<Object>} Chat client instance
  */
 export async function getClientService() {
   if (!chatClient) {
-    await loadConfiguration();
+    if (!_configManuallySet) {
+      await loadConfiguration();
+    }
     try {
       chatClient = getServiceInstance(runtimeConfig);
     } catch (e) {

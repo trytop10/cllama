@@ -1,5 +1,5 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, browser, getRuntimeConfig, abortSession } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession } from '../js/cllama.js';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags } from '../js/util.js';
@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let lastScrollTop = messagesContainer.scrollTop;
     let stopScrollFlag = false;
     let currentModel = "";
+    let currentServiceConfig = null; // Currently active data source config from dsList
     let currentConfigurations = [];
     let apiSettingsPopover;
     let historyMemory = true;
@@ -1052,31 +1053,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadHistory();
     await initializeModelSelection();
 
-    async function initializeModelSelection() {
+    /**
+     * Populate the model dropdown for a given data source configuration
+     * @param {Object} dsConfig - The data source config { service, apiUrl, apiKey, modelName }
+     */
+    async function populateModelList(dsConfig) {
         const modelListDiv = document.getElementById("modelList");
         const currentModelDisplay = document.getElementById("modelDropdown");
         if (modelListDiv) modelListDiv.textContent = "";
 
+        if (!dsConfig || !dsConfig.apiUrl) {
+            if (currentModelDisplay) currentModelDisplay.textContent = "--";
+            return;
+        }
+
         try {
-            const runtimeConfig = await getRuntimeConfig();
-            if (currentModelDisplay) currentModelDisplay.textContent = runtimeConfig.modelName;
-
-            const modelServerDisplay = document.getElementById("modelServer");
-            if (modelServerDisplay) modelServerDisplay.textContent = runtimeConfig.service || "N/A";
-            currentModel = runtimeConfig.modelName;
-
-            if (!runtimeConfig.apiUrl) {
-                const guidanceMsg = `${browser.i18n.getMessage("apiConfigGuidance")} <a href="#" class="go-to-config">${browser.i18n.getMessage("goToConfig")}</a>`;
-                displayMessage(guidanceMsg, 'system-error-message');
-                return;
-            }
-
             const serviceInstance = getService(
-                runtimeConfig.service,
-                runtimeConfig.apiUrl,
-                runtimeConfig.apiKey
+                dsConfig.service,
+                dsConfig.apiUrl,
+                dsConfig.apiKey
             );
             const models = await serviceInstance.getModels();
+
+            // Use current modelName if present in the list, otherwise use the first model
+            if (models.length > 0) {
+                if (dsConfig.modelName && models.includes(dsConfig.modelName)) {
+                    currentModel = dsConfig.modelName;
+                } else {
+                    currentModel = models[0];
+                }
+                if (currentModelDisplay) currentModelDisplay.textContent = currentModel;
+            } else {
+                currentModel = dsConfig.modelName || "";
+                if (currentModelDisplay) currentModelDisplay.textContent = currentModel || "--";
+            }
 
             if (modelListDiv) {
                 models.forEach(modelName => {
@@ -1095,10 +1105,96 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
             }
         } catch (error) {
-            console.error("Failed to initialize model list:", error);
+            console.error("Failed to populate model list:", error);
+            currentModel = dsConfig.modelName || "";
+            if (currentModelDisplay) currentModelDisplay.textContent = currentModel || "Error";
+        }
+    }
+
+    /**
+     * Switch the active data source and refresh the model list
+     * @param {Object} dsConfig - The new data source configuration
+     */
+    async function switchService(dsConfig) {
+        if (!dsConfig) return;
+        currentServiceConfig = dsConfig;
+        setRuntimeConfig(dsConfig);
+        await populateModelList(dsConfig);
+
+        const serviceDropdown = document.getElementById("serviceDropdown");
+        if (serviceDropdown) serviceDropdown.textContent = dsConfig.service;
+    }
+
+    /**
+     * Build the service selector dropdown from the dsList
+     * @param {Array} dsList - Array of data source configuration objects
+     * @param {Object} baseConfig - The base/default configuration
+     */
+    function buildServiceSelector(dsList, baseConfig) {
+        const serviceSelectDiv = document.getElementById("serviceSelectDiv");
+        const serviceList = document.getElementById("serviceList");
+        if (!serviceSelectDiv || !serviceList) return;
+
+        serviceList.textContent = "";
+
+        // Build a combined list: the base config first, then dsList entries
+        const allServices = [baseConfig];
+        dsList.forEach(item => {
+            // Avoid duplicates with the base config
+            if (item.service !== baseConfig.service || item.apiUrl !== baseConfig.apiUrl) {
+                allServices.push(item);
+            }
+        });
+
+        allServices.forEach((dsConfig, index) => {
+            const listItem = document.createElement("li");
+            const link = document.createElement("a");
+            link.className = "dropdown-item";
+            link.href = "#";
+            link.textContent = dsConfig.service + (dsConfig.apiUrl ? " (" + dsConfig.apiUrl + ")" : "");
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                switchService(dsConfig);
+            });
+            listItem.appendChild(link);
+            serviceList.appendChild(listItem);
+        });
+
+        serviceSelectDiv.style.display = "";
+    }
+
+    async function initializeModelSelection() {
+        try {
+            const runtimeConfig = await getRuntimeConfig();
+            const dsList = runtimeConfig.dsList || [];
+
+            // Build the service selector with the base config and dsList
+            const baseConfig = {
+                service: runtimeConfig.service,
+                apiUrl: runtimeConfig.apiUrl,
+                apiKey: runtimeConfig.apiKey,
+                modelName: runtimeConfig.modelName
+            };
+            currentServiceConfig = baseConfig;
+
+            buildServiceSelector(dsList, baseConfig);
+
+            const serviceDropdown = document.getElementById("serviceDropdown");
+            if (serviceDropdown) serviceDropdown.textContent = runtimeConfig.service || "N/A";
+
+            if (!runtimeConfig.apiUrl) {
+                const guidanceMsg = `${browser.i18n.getMessage("apiConfigGuidance")} <a href="#" class="go-to-config">${browser.i18n.getMessage("goToConfig")}</a>`;
+                displayMessage(guidanceMsg, 'system-error-message');
+            }
+
+            await populateModelList(baseConfig);
+
+        } catch (error) {
+            console.error("Failed to initialize model selection:", error);
+            const modelSelectDiv = document.getElementById("modelSelectDiv");
+            if (modelSelectDiv) modelSelectDiv.style.display = "";
+            const currentModelDisplay = document.getElementById("modelDropdown");
             if (currentModelDisplay) currentModelDisplay.textContent = "Error";
-            const modelServerDisplay = document.getElementById("modelServer");
-            if (modelServerDisplay) modelServerDisplay.textContent = "N/A";
         }
 
         const modelSelectDiv = document.getElementById("modelSelectDiv");

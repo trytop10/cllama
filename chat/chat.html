@@ -87,6 +87,10 @@
           <a id="b_new" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px;">
             <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_new"></use></svg>
           </a>
+          <a  id="b_image" class="btn btn-sm btn-outline-secondary" href="#" style="border:0px;" title="Upload File">
+            <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_atta"></use></svg>
+          </a>
+          <input type="file" id="imageUpload" accept="image/*, audio/*, video/*, application/pdf" style="display: none;" />          
           <a id="b_fish" title="__MSG_fish_title__" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px;">
             <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_fish"></use></svg>
           </a>          
@@ -123,17 +127,19 @@
       <!-- Function Bar -->
       <div class="function-bar d-flex align-items-center p-2 border border-top-0 rounded-bottom">
         <div class="d-flex align-items-center flex-grow-1">
-          <button class="btn btn-link p-1" id="b_image" title="Upload File"><svg class="theme-icon-active" width="1.2em" height="1.2em"><use href="#svg_atta"></use></svg></button>
-          <input type="file" id="imageUpload" accept="image/*, audio/*, video/*, application/pdf" style="display: none;" />
-          <div id="modelServer" class="p-1" style="margin-left: 3px;">&nbsp;</div> :
+          <div id="serviceSelectDiv" class="dropup-center dropup" style="display: none;">
+            <button class="btn btn-link p-1 dropdown-toggle" type="button" id="serviceDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration:none;max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ollama
+            </button>
+            <ul id="serviceList" class="dropdown-menu scrollable" aria-labelledby="serviceDropdown">
+            </ul>
+          </div>
           <div id="modelSelectDiv" class="dropup-center dropup" style="display: none;">
+            <span class="p-1">:</span>
             <button class="btn btn-link p-1 dropdown-toggle" type="button" id="modelDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration:none;max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               GPT-4
             </button>
             <ul id="modelList" class="dropdown-menu scrollable" aria-labelledby="modelDropdown">
-              <li><a class="dropdown-item" href="#">GPT-4</a></li>
-              <li><a class="dropdown-item" href="#">GPT-3.5</a></li>
-              <li><a class="dropdown-item" href="#">Claude</a></li>
             </ul>
           </div>
         </div>
