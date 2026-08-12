@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "cllama",
     "description": "__MSG_cllamaDescription__",  
-    "version": "2.1.2",
+    "version": "2.1.3",
     "action": {
       "default_popup": "/popup/popup.html",
       "default_title": "__MSG_browserActionTitle__",      
@@ -19,7 +19,7 @@
       {
         "matches": ["<all_urls>"],
         "run_at" : "document_end",
-        "js": ["content_script.js"]
+        "js": ["js/Readability.js", "content_script.js"]
       }
     ],
     "default_locale" : "en",

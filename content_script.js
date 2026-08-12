@@ -12,37 +12,76 @@ let shadowRootForTranslate = null;
 let panelBodyForTranslate = null;
 
 /**
- * Extract page content based on custom CSS selectors or default to body text
+ * Extract page content using Readability.js
+ */
+function extractContentWithReadability() {
+    try {
+        const documentClone = document.cloneNode(true);
+        const reader = new Readability(documentClone);
+        const article = reader.parse();
+
+        if (article && article.textContent && article.textContent.trim().length > 0) {
+            return {
+                title: article.title || document.title,
+                content: article.textContent.trim()
+            };
+        }
+    } catch (e) {
+        console.error("Readability parsing failed:", e);
+    }
+    return null;
+}
+
+/**
+ * Extract page content based on custom CSS selectors, or use Readability as fallback
  */
 function getPageInfo() {
     return new Promise((resolve) => {
         const url = window.location.href;
-        let content = document.body.innerText;
 
         browser.storage.local.get("urls", (urlsResult) => {
             const configurations = urlsResult.urls || [];
 
+            // Check if there's a matching CSS selector configuration
             for (const item of configurations) {
                 if (url.startsWith(item.url)) {
-                    content = "";
+                    let content = "";
                     const elements = document.body.querySelectorAll(item.cssSelector);
-                    
+
                     elements.forEach((element) => {
                         content += element.innerText + " ";
                     });
 
-                    if (content.length < 1) {
-                        console.error(`No content found with CSS selector [${item.cssSelector}], falling back to full page content`);
-                        content = document.body.innerText;
-                    } else {
-                        break;
+                    if (content.trim().length > 0) {
+                        resolve({
+                            title: document.title,
+                            content,
+                            url
+                        });
+                        return;
                     }
+
+                    console.error(`No content found with CSS selector [${item.cssSelector}], falling back to Readability`);
+                    break;
                 }
             }
 
+            // No CSS selector configured or selector found nothing — use Readability
+            const readabilityResult = extractContentWithReadability();
+            if (readabilityResult) {
+                resolve({
+                    title: readabilityResult.title,
+                    content: readabilityResult.content,
+                    url
+                });
+                return;
+            }
+
+            // Ultimate fallback to full body text
+            console.warn("Readability extraction failed or returned empty, falling back to body.innerText");
             resolve({
                 title: document.title,
-                content,
+                content: document.body.innerText,
                 url
             });
         });

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "cllama",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "__MSG_cllamaDescription__",
   "permissions": ["storage", "tabs"],  
   "homepage_url": "https://fxdq.net/cllama/en/index.html",
@@ -15,7 +15,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content_script.js"]
+      "js": ["js/Readability.js", "content_script.js"]
     }
   ],
 

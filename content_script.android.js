@@ -451,15 +451,40 @@
     }
 
     /**
+     * Extract page content using Readability.js
+     */
+    function extractContent() {
+        try {
+            const documentClone = document.cloneNode(true);
+            const reader = new Readability(documentClone);
+            const article = reader.parse();
+
+            if (article && article.textContent && article.textContent.trim().length > 0) {
+                return article.textContent.trim();
+            }
+        } catch (e) {
+            console.error("Readability parsing failed:", e);
+        }
+        return null;
+    }
+
+    /**
      * Run analysis on current page content
      */
     async function runAnalysis(prompt, panelTitle, panelBody) {
         const msgId = `msg_${Date.now()}`;
         panelBody.innerHTML = `<div id="${msgId}">${browser.i18n.getMessage('waitMessage')}</div>`;
 
+        // Try Readability first, fallback to body.innerText
+        let content = extractContent();
+        if (!content) {
+            console.warn("Readability extraction failed, falling back to body.innerText");
+            content = document.body.innerText;
+        }
+
         const doc = {
             title: `${panelTitle.textContent}:${document.title}`,
-            content: document.body.innerText.substring(0, MAX_CONTENT_LENGTH),
+            content: content.substring(0, MAX_CONTENT_LENGTH),
             url: window.location.href
         };
 
