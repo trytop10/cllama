@@ -46,7 +46,8 @@
   },
   "web_accessible_resources": [
     "viewer/viewer.html",
-    "viewer/viewer.js"
+    "viewer/viewer.js",
+    "init/insightify/*"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "default_locale": "en"

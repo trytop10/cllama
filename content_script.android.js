@@ -195,22 +195,40 @@
     }
 
     /**
-     * Create menu with action buttons
+     * Load default action list from language-specific JSON file.
+     * Falls back through: current language → short language code → English → empty array
+     */
+    async function loadDefaultActions() {
+        const uiLang = browser.i18n.getUILanguage();
+        const underscore = uiLang.replace(/-/g, '_');
+        const shortCode = underscore.split('_')[0];
+        const candidates = [...new Set([underscore, shortCode, 'en'])];
+
+        for (const lang of candidates) {
+            const url = browser.runtime.getURL(`/init/insightify/actions_${lang}.json`);
+            try {
+                const resp = await fetch(url);
+                if (resp.ok) return await resp.json();
+            } catch (e) {
+                // Try next candidate
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Create menu with action buttons (populated asynchronously)
      */
     function createMenu() {
         const menu = document.createElement('div');
         menu.className = 'menu';
 
-        browser.storage.local.get('actionList', (actions) => {
+        // Load and populate action buttons asynchronously
+        browser.storage.local.get('actionList', async (actions) => {
             let actionDataList = actions['actionList'];
-            
+
             if (!actionDataList?.length) {
-                actionDataList = [{
-                    id: 1,
-                    name: browser.i18n.getMessage("summarizer"),
-                    prompt: browser.i18n.getMessage("summaryPrompt")
-                        .replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage"))
-                }];
+                actionDataList = await loadDefaultActions();
             }
 
             // Insight list button

@@ -1,4 +1,4 @@
-import { processInsight, i18n, DB_KEY, getRuntimeConfig } from '../js/cllama.js';
+import { processInsight, i18n, DB_KEY, getRuntimeConfig, loadDefaultActions } from '../js/cllama.js';
 import { balert, confirm } from '../js/dialog.mjs';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
@@ -117,19 +117,16 @@ document.addEventListener("DOMContentLoaded", () => {
      * Load and initialize action buttons
      */
     function loadActions() {
-        browser.storage.local.get(DB_KEY.actionList, (actions) => {
+        browser.storage.local.get(DB_KEY.actionList, async (actions) => {
             let actionDataList = actions[DB_KEY.actionList];
-            
+
             if (!actionDataList?.length) {
-                actionDataList = [{
-                    id: 1,
-                    name: browser.i18n.getMessage("summarizer"),
-                    prompt: browser.i18n.getMessage("summaryPrompt")
-                        .replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage"))
-                }];
-                browser.storage.local.set({ [DB_KEY.actionList]: actionDataList });
+                actionDataList = await loadDefaultActions();
+                if (actionDataList.length) {
+                    browser.storage.local.set({ [DB_KEY.actionList]: actionDataList });
+                }
             }
-            
+
             actionDataList.forEach(item => appendActionButton(item));
         });
     }

@@ -34,7 +34,8 @@
           "viewer/viewer.html",
           "/css/android.css",
           "/css/cllama.css",
-          "/css/github-markdown-dark.css"
+          "/css/github-markdown-dark.css",
+          "/init/insightify/*"
         ],
         "matches": ["<all_urls>"]
       }

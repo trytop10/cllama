@@ -408,6 +408,30 @@ export function i18n() {
   });
 }
 
+/**
+ * Load default action list from language-specific JSON file.
+ * Falls back through: current language → short language code → English → empty array
+ * @returns {Promise<Array>} Array of default action objects
+ */
+export async function loadDefaultActions() {
+    const uiLang = browser.i18n.getUILanguage();
+    const underscore = uiLang.replace(/-/g, '_');  // "zh-CN" → "zh_CN", "en" → "en"
+    const shortCode = underscore.split('_')[0];     // "zh_CN" → "zh", "en" → "en"
+
+    const candidates = [...new Set([underscore, shortCode, 'en'])];
+
+    for (const lang of candidates) {
+        const url = browser.runtime.getURL(`/init/insightify/actions_${lang}.json`);
+        try {
+            const resp = await fetch(url);
+            if (resp.ok) return await resp.json();
+        } catch (e) {
+            // Try next candidate
+        }
+    }
+    return [];
+}
+
 // Browser storage keys
 export const DB_KEY = {
   base: "base",

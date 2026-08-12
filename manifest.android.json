@@ -31,7 +31,8 @@
     "viewer/viewer.html",
     "viewer/viewer.js",
     "css/*",
-    "logo/*"
+    "logo/*",
+    "init/*"
   ],
   "browser_specific_settings": {
     "gecko": {
