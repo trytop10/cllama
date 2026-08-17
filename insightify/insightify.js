@@ -215,8 +215,95 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /**
+     * Automatically run a pending insight started from the context menu
+     * (right-click selection text → Insight → action). Uses the selected text
+     * as the analysis content instead of the whole page.
+     */
+    async function runPendingInsight() {
+        const pending = await new Promise((resolve) => {
+            browser.storage.local.get(DB_KEY.pendingInsight, (data) => {
+                resolve(data[DB_KEY.pendingInsight]);
+            });
+        });
+
+        if (!pending || !pending.action) return;
+
+        // Consume the pending item immediately so it won't run again
+        browser.storage.local.remove(DB_KEY.pendingInsight);
+
+        const action = pending.action;
+        const buttonElement = document.getElementById(`ac_${action.id}`);
+        if (buttonElement) addClass(buttonElement, "disabled");
+
+        const runtimeConfig = await getRuntimeConfig();
+        if (!runtimeConfig || !runtimeConfig.apiUrl) {
+            const confirmed = await confirm(`${browser.i18n.getMessage("apiConfigGuidance")}`, {
+                okText: browser.i18n.getMessage("goToConfig")
+            });
+            if (confirmed) {
+                browser.runtime.openOptionsPage();
+            }
+            if (buttonElement) removeClass(buttonElement, "disabled");
+            return;
+        }
+
+        if (!pending.selectionText) {
+            balert(browser.i18n.getMessage("insightifyPageError1"));
+            if (buttonElement) removeClass(buttonElement, "disabled");
+            return;
+        }
+
+        const msgId = `msg_${Date.now()}`;
+        const sourceTitle = pending.title || browser.i18n.getMessage("Insightify");
+        const item = {
+            url: pending.url || '',
+            title: `${action.name} : ${sourceTitle.replaceAll("\"", "'")}`,
+            content: `<strong>${browser.i18n.getMessage("waitMessage")}</strong>`,
+            ctime: new Date().toLocaleString(),
+            msgId
+        };
+
+        const itemHTML = createItemHTML(item);
+        const doc = parser.parseFromString(itemHTML, 'text/html');
+        const newCard = doc.body.firstChild.cloneNode(true);
+        summaryList.insertBefore(newCard, summaryList.children[0]);
+
+        const docInfo = {
+            title: sourceTitle,
+            content: pending.selectionText,
+            url: pending.url || ''
+        };
+
+        await processInsight(action.prompt, docInfo, msgId, {
+            finish: (summary) => {
+                item.content = summary;
+
+                if (insightList.length >= MAX_INSIGHTS) {
+                    insightList.shift();
+                }
+
+                insightList.push(item);
+                browser.storage.local.set({ [DB_KEY.insightList]: insightList });
+                if (buttonElement) removeClass(buttonElement, "disabled");
+                setupInsightCard(true, newCard);
+            },
+            error: (err) => {
+                if (buttonElement) removeClass(buttonElement, "disabled");
+                if (err.name !== 'AbortError') {
+                    console.error('ProcessInsight error:', err);
+                    replaceElementContent(
+                        document.getElementById(msgId),
+                        browser.i18n.getMessage("cllamaError")
+                    );
+                }
+            }
+        });
+    }
+
     // Initialize
     loadInsights();
     loadActions();
     i18n();
+    runPendingInsight();
 });

@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Português"
+    "localLanguage": {
+        "message": "Português"
     },
     "browserActionTitle": {
         "message": "Assistente Inteligente de Navegação - cllama"
     },
     "cllamaDescription": {
-        "message": "Assistente Inteligente: Análise profunda personalizável + chat IA para cenários + tradução multilíngue. Compatível com Ollama local e AIs principais (OpenAI/DeepSeek/Zhipu) e seguro."
+        "message": "Copiloto de IA: análises e perguntas de páginas, chat multimodelo com habilidades. Funciona com Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Digite uma mensagem...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Análise Profunda"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Âncora de Conteúdo"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "Âncora de conteúdo usa seletores CSS para corresponder com precisão ao conteúdo principal da página"
     },
     "urlPrefix": {
         "message": "Prefixo de URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "Seletor CSS"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Receitas de Análise"
     },
-    "name":{
+    "name": {
         "message": "Nome"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Prompt"
+    },
+    "skill": {
+        "message": "Habilidades"
+    },
+    "skillList": {
+        "message": "Lista de Habilidades"
+    },
+    "skillListEmpty": {
+        "message": "Nenhuma habilidade configurada. Clique em \"Adicionar Habilidade\"."
+    },
+    "addSkill": {
+        "message": "Adicionar Habilidade"
+    },
+    "editSkill": {
+        "message": "Editar"
+    },
+    "deleteSkill": {
+        "message": "Excluir"
+    },
+    "skillName": {
+        "message": "Nome"
+    },
+    "skillDescription": {
+        "message": "Descrição"
+    },
+    "skillPrompt": {
+        "message": "Prompt"
+    },
+    "skillTools": {
+        "message": "Ferramentas (separadas por vírgulas)"
+    },
+    "skillToolsHint": {
+        "message": "Cada ferramenta é adicionada como uma linha: escolha a ferramenta (a descrição aparece automaticamente), preencha os argumentos padrão opcionais como JSON e salve."
+    },
+    "expSkills": {
+        "message": "Habilidades"
+    },
+    "skillHelp": {
+        "message": "Habilidades são capacidades reutilizáveis (como as habilidades em cc / codex / cline). Uma habilidade injeta um prompt de sistema no chat e pode permitir que o modelo chame as ferramentas selecionadas. Na barra lateral do chat, digite \"/\" para escolher e ativar uma habilidade."
+    },
+    "skillPickerEmpty": {
+        "message": "Nenhuma habilidade disponível. Adicione em Configurações → Habilidades."
+    },
+    "skillPickerNoMatch": {
+        "message": "Nenhuma habilidade correspondente."
+    },
+    "addTool": {
+        "message": "Adicionar Ferramenta"
+    },
+    "toolParam": {
+        "message": "Argumentos (JSON, opcional)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Selecionar uma ferramenta"
+    },
+    "toolRowsEmpty": {
+        "message": "Ainda não há ferramentas. Clique em \"Adicionar Ferramenta\"."
+    },
+    "skillDefaultCalculator": {
+        "message": "Calculadora"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Fazer cálculos com a ferramenta add_numbers."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Perguntas da página"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Responde às perguntas do usuário com base no conteúdo da página web atual."
+    },
+    "tool_current_time": {
+        "message": "Hora atual"
+    },
+    "tool_current_time_desc": {
+        "message": "Retorna a data e hora atuais no fuso do usuário."
+    },
+    "tool_add_numbers": {
+        "message": "Somar números"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Soma uma lista de números e retorna o total."
+    },
+    "tool_echo": {
+        "message": "Eco"
+    },
+    "tool_echo_desc": {
+        "message": "Retorna exatamente o texto informado."
+    },
+    "tool_fetch_url": {
+        "message": "Buscar URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Busca o conteúdo de texto de uma URL e retorna até maxLen caracteres; pode falhar por CORS ou permissões."
     },
     "wordsRemaining": {
         "message": "Palavras restantes"
@@ -43,10 +136,10 @@
         "message": "Chat Inteligente"
     },
     "scenario": {
-        "message" : "Cenário"
+        "message": "Cenário"
     },
     "ScenarioManage": {
-        "message" : "Gerenciamento de Cenários"
+        "message": "Gerenciamento de Cenários"
     },
     "inputSample": {
         "message": "Exemplo de entrada"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Importar"
     },
-    "export" :{
+    "export": {
         "message": "Exportar"
     },
-    "clear" : {
+    "clear": {
         "message": "Limpar"
     },
     "confirm": {
         "message": "Confirmar"
     },
-    "cancel":{
+    "cancel": {
         "message": "Cancelar"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Falha ao importar"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Falha ao obter lista de modelos"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Desculpe, encontrei alguns problemas. Por favor, tente novamente mais tarde ou verifique se suas informações de configuração do cllama estão corretas."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Prefixo de URL incorreto, deve começar com http ou https"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "Por favor, gere um breve resumo com base nas informações de conteúdo da página fornecida. Requisitos: 1. Máximo de 300 palavras. 2. Sempre gere as informações de resumo em {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Campo obrigatório não pode estar vazio"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Por favor, selecione pelo menos uma opção de exportação"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Por favor, selecione seu arquivo de dados cllama para importação"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Clique para selecionar arquivo"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Apenas arquivos no formato \".json\" são suportados"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Atenção: A importação substituirá parcialmente os dados existentes."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Falha na importação: Não há dados cllama no arquivo."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Nenhum dado encontrado para atualizar"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Geração de Prompt para LLM"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Você é um especialista em geração de prompts para LLM. Por favor, crie um prompt de assistente inteligente com base nos requisitos do usuário, orientando o LLM na geração de conteúdo. Requisitos:\n 1. Saída em formato Markdown\n 2. Alinhado com as necessidades do usuário, descrevendo o posicionamento, capacidades e base de conhecimento do assistente\n 3. O prompt deve ser claro, preciso e fácil de entender, o mais conciso possível mantendo a qualidade\n 4. Apenas o prompt deve ser exibido, sem explicações adicionais"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Por favor, me ajude a gerar um prompt de 'consultor jurídico'"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Idioma"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Arquivo selecionado: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "Quando ativado, os modelos de IA mostram seu processo de pensamento. Para modelos que suportam pensamento (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Calcular seguro"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Avalia com segurança uma expressão matemática com + - * / % ^ e parênteses."
+    },
+    "tool_text_stats": {
+        "message": "Estatísticas de texto"
+    },
+    "tool_text_stats_desc": {
+        "message": "Retorna estatísticas de um texto: caracteres, palavras, frases e caracteres CJK."
+    },
+    "tool_generate_uuid": {
+        "message": "Gerar UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Gera uma string UUID v4 aleatória."
+    },
+    "tool_random_number": {
+        "message": "Número aleatório"
+    },
+    "tool_random_number_desc": {
+        "message": "Retorna um inteiro aleatório entre min e max."
+    },
+    "tool_base64_encode": {
+        "message": "Codificar Base64"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Codifica o texto dado em base64 (seguro para UTF-8)."
+    },
+    "tool_base64_decode": {
+        "message": "Decodificar Base64"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Decodifica uma string base64 de volta para texto (seguro para UTF-8)."
+    },
+    "tool_url_encode": {
+        "message": "Codificar URL"
+    },
+    "tool_url_encode_desc": {
+        "message": "Codifica o texto dado em URL."
+    },
+    "tool_url_decode": {
+        "message": "Decodificar URL"
+    },
+    "tool_url_decode_desc": {
+        "message": "Decodifica o texto codificado dado."
+    },
+    "tool_get_browser_info": {
+        "message": "Informações do navegador"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Retorna informações do navegador/sistema: user agent, idioma, plataforma, fuso e carimbo de tempo."
+    },
+    "tool_get_page_content": {
+        "message": "Obter conteúdo da página"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Retorna o conteúdo da página web atual (título, URL e texto)."
+    },
+    "tool_convert_temperature": {
+        "message": "Converter temperatura"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Converte uma temperatura entre Celsius (C), Fahrenheit (F) e Kelvin (K)."
+    },
+    "tool_convert_length": {
+        "message": "Converter comprimento"
+    },
+    "tool_convert_length_desc": {
+        "message": "Converte um comprimento entre m, cm, mm, km, in, ft, yd e mi."
     }
 }

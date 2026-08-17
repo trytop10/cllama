@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Bahasa Indonesia"
+    "localLanguage": {
+        "message": "Bahasa Indonesia"
     },
     "browserActionTitle": {
         "message": "Asisten Penjelajahan Cerdas - cllama"
     },
     "cllamaDescription": {
-        "message": "Asisten Penjelajahan Cerdas: Analisis konten mendalam yang dapat disesuaikan + Dialog cerdas multi-skenario + Terjemahan multi-bahasa, mendukung layanan Ollama lokal dan AI(seperti OpenAI)."
+        "message": "Copilot AI untuk browser: wawasan & tanya jawab halaman web, chat multi-model dengan skill. Mendukung Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Masukkan pesan...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Wawasan Mendalam"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Jangkar Konten"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "Jangkar konten adalah untuk mencocokkan konten inti halaman dengan lebih akurat dengan mengonfigurasi pemilih CSS"
     },
     "urlPrefix": {
         "message": "Prefiks URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "Pemilih CSS"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Resep Wawasan"
     },
-    "name":{
+    "name": {
         "message": "Nama"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Prompt"
+    },
+    "skill": {
+        "message": "Keterampilan"
+    },
+    "skillList": {
+        "message": "Daftar Keterampilan"
+    },
+    "skillListEmpty": {
+        "message": "Belum ada keterampilan yang dikonfigurasi. Klik \"Tambah Keterampilan\"."
+    },
+    "addSkill": {
+        "message": "Tambah Keterampilan"
+    },
+    "editSkill": {
+        "message": "Edit"
+    },
+    "deleteSkill": {
+        "message": "Hapus"
+    },
+    "skillName": {
+        "message": "Nama"
+    },
+    "skillDescription": {
+        "message": "Deskripsi"
+    },
+    "skillPrompt": {
+        "message": "Prompt"
+    },
+    "skillTools": {
+        "message": "Alat (dipisah koma)"
+    },
+    "skillToolsHint": {
+        "message": "Setiap alat ditambahkan sebagai satu baris: pilih alat (deskripsi otomatis muncul), isi argumen bawaan opsional sebagai JSON, lalu simpan."
+    },
+    "expSkills": {
+        "message": "Keterampilan"
+    },
+    "skillHelp": {
+        "message": "Keterampilan adalah kemampuan yang dapat digunakan ulang (seperti skill di cc / codex / cline). Sebuah keterampilan menyuntikkan prompt sistem ke dalam obrolan dan dapat mengizinkan model memanggil alat yang dipilih. Di sidebar obrolan, ketik \"/\" untuk memilih dan mengaktifkan keterampilan."
+    },
+    "skillPickerEmpty": {
+        "message": "Tidak ada keterampilan tersedia. Tambahkan di Pengaturan → Keterampilan."
+    },
+    "skillPickerNoMatch": {
+        "message": "Tidak ada keterampilan yang cocok."
+    },
+    "addTool": {
+        "message": "Tambah Alat"
+    },
+    "toolParam": {
+        "message": "Argumen (JSON, opsional)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Pilih alat"
+    },
+    "toolRowsEmpty": {
+        "message": "Belum ada alat. Klik \"Tambah Alat\"."
+    },
+    "skillDefaultCalculator": {
+        "message": "Kalkulator"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Menghitung menggunakan alat add_numbers."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Tanya Halaman"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Menjawab pertanyaan pengguna berdasarkan konten halaman web saat ini."
+    },
+    "tool_current_time": {
+        "message": "Waktu Saat Ini"
+    },
+    "tool_current_time_desc": {
+        "message": "Mengembalikan tanggal dan waktu saat ini di zona waktu pengguna."
+    },
+    "tool_add_numbers": {
+        "message": "Tambah Angka"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Menjumlahkan daftar angka dan mengembalikan jumlahnya."
+    },
+    "tool_echo": {
+        "message": "Gema"
+    },
+    "tool_echo_desc": {
+        "message": "Mengembalikan teks yang diberikan apa adanya."
+    },
+    "tool_fetch_url": {
+        "message": "Ambil URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Mengambil konten teks dari URL dan mengembalikan hingga maxLen karakter; dapat gagal karena CORS atau izin."
     },
     "wordsRemaining": {
         "message": "Sisa Kata"
@@ -43,10 +136,10 @@
         "message": "Dialog Cerdas"
     },
     "scenario": {
-        "message" : "Skenario"
+        "message": "Skenario"
     },
     "ScenarioManage": {
-        "message" : "Manajemen Skenario"
+        "message": "Manajemen Skenario"
     },
     "inputSample": {
         "message": "Contoh Input"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Impor"
     },
-    "export" :{
+    "export": {
         "message": "Ekspor"
     },
-    "clear" : {
+    "clear": {
         "message": "Bersihkan"
     },
     "confirm": {
         "message": "Konfirmasi"
     },
-    "cancel":{
+    "cancel": {
         "message": "Batal"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Gagal mengimpor"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Gagal mendapatkan daftar model"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Maaf, saya mengalami beberapa masalah, silakan coba lagi nanti atau periksa apakah informasi konfigurasi cllama Anda benar."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Prefiks URL salah, harus dimulai dengan http atau https"
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "Harap buat ringkasan singkat berdasarkan konten informasi halaman yang diberikan, persyaratan: 1. Maksimal 300 kata. 2. Selalu buat informasi ringkasan dalam {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Item yang wajib diisi tidak boleh kosong"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Harap pilih setidaknya satu opsi ekspor"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Harap pilih file data cllama Anda untuk diproses impor"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Klik untuk memilih file"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Hanya mendukung file format \".json\""
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Catatan: Impor akan menimpa sebagian data asli."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Impor gagal: Data dalam file tidak memiliki data cllama."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Tidak ada data yang ditemukan untuk diperbarui"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Pembuatan Prompt Model Bahasa Besar"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Anda adalah ahli pembuatan prompt model bahasa besar, harap tulis prompt untuk asisten cerdas sesuai dengan kebutuhan pengguna untuk memandu model bahasa besar menghasilkan konten, persyaratan:\n 1. Output dalam format Markdown\n 2. Sesuai dengan kebutuhan pengguna, jelaskan posisi, kemampuan, cadangan pengetahuan asisten cerdas\n 3. Prompt harus jelas, akurat, mudah dipahami, dan sesingkat mungkin sambil tetap menjaga kualitas\n 4. Hanya output prompt, jangan output penjelasan tambahan"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Harap bantu saya membuat prompt untuk 'penasihat hukum'"
     },
     "apiSettingsCreativityLabel": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Bahasa"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "File terpilih: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "Jika diaktifkan, model AI akan menampilkan proses berpikirnya. Untuk model yang mendukung thinking (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Hitung Aman"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Mengevaluasi ekspresi matematika dengan aman menggunakan + - * / % ^ dan tanda kurung."
+    },
+    "tool_text_stats": {
+        "message": "Statistik Teks"
+    },
+    "tool_text_stats_desc": {
+        "message": "Mengembalikan statistik teks: karakter, kata, kalimat, dan karakter CJK."
+    },
+    "tool_generate_uuid": {
+        "message": "Buat UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Menghasilkan string UUID v4 acak."
+    },
+    "tool_random_number": {
+        "message": "Angka Acak"
+    },
+    "tool_random_number_desc": {
+        "message": "Mengembalikan bilangan bulat acak antara min dan max."
+    },
+    "tool_base64_encode": {
+        "message": "Encode Base64"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Mengenkode teks ke base64 (aman UTF-8)."
+    },
+    "tool_base64_decode": {
+        "message": "Decode Base64"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Mendekode string base64 kembali ke teks (aman UTF-8)."
+    },
+    "tool_url_encode": {
+        "message": "Encode URL"
+    },
+    "tool_url_encode_desc": {
+        "message": "Mengenkode teks ke URL."
+    },
+    "tool_url_decode": {
+        "message": "Decode URL"
+    },
+    "tool_url_decode_desc": {
+        "message": "Mendekode teks terenkode yang diberikan."
+    },
+    "tool_get_browser_info": {
+        "message": "Info Browser"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Mengembalikan info browser/sistem: user agent, bahasa, platform, zona waktu, dan stempel waktu."
+    },
+    "tool_get_page_content": {
+        "message": "Ambil Konten Halaman"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Mengembalikan konten halaman web saat ini (judul, URL, dan teks)."
+    },
+    "tool_convert_temperature": {
+        "message": "Konversi Suhu"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Mengonversi suhu antara Celsius (C), Fahrenheit (F), dan Kelvin (K)."
+    },
+    "tool_convert_length": {
+        "message": "Konversi Panjang"
+    },
+    "tool_convert_length_desc": {
+        "message": "Mengonversi panjang antara m, cm, mm, km, in, ft, yd, dan mi."
     }
 }

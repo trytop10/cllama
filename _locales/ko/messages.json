@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"한국어"
+    "localLanguage": {
+        "message": "한국어"
     },
     "browserActionTitle": {
         "message": "스마트 브라우징 도우미 - cllama"
     },
     "cllamaDescription": {
-        "message": "스마트 브라우징 도우미: 사용자 정의 가능한 심층 콘텐츠 분석 + 다중 시나리오 스마트 대화 + 다국어 번역, 로컬 Ollama 및 주류 AI(예: OpenAI, DeepSeek, Zhipu)."
+        "message": "브라우저 AI 코파일럿: 웹페이지 심층 분석 및 Q&A, 스킬 기반 멀티모델 채팅. Ollama, OpenAI, Gemini 지원."
     },
     "inputMessage": {
         "message": "메시지 입력...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "심층 통찰"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "콘텐츠 앵커"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "콘텐츠 앵커는 CSS 선택기를 구성하여 페이지 핵심 콘텐츠를 더 정확하게 일치시키는 것입니다."
     },
     "urlPrefix": {
         "message": "URL 접두사"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS 선택기"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "통찰 레시피"
     },
-    "name":{
+    "name": {
         "message": "이름"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "프롬프트"
+    },
+    "skill": {
+        "message": "스킬"
+    },
+    "skillList": {
+        "message": "스킬 목록"
+    },
+    "skillListEmpty": {
+        "message": "구성된 스킬이 없습니다. \"스킬 추가\"를 클릭하세요."
+    },
+    "addSkill": {
+        "message": "스킬 추가"
+    },
+    "editSkill": {
+        "message": "편집"
+    },
+    "deleteSkill": {
+        "message": "삭제"
+    },
+    "skillName": {
+        "message": "이름"
+    },
+    "skillDescription": {
+        "message": "설명"
+    },
+    "skillPrompt": {
+        "message": "프롬프트"
+    },
+    "skillTools": {
+        "message": "도구(쉼표로 구분)"
+    },
+    "skillToolsHint": {
+        "message": "각 도구는 한 줄로 추가됩니다. 도구를 선택(설명 자동 표시)하고, 선택 사항인 기본 인수를 JSON으로 입력한 후 저장하세요."
+    },
+    "expSkills": {
+        "message": "스킬"
+    },
+    "skillHelp": {
+        "message": "스킬은 재사용 가능한 능력입니다(cc / codex / cline의 스킬과 유사). 스킬은 채팅에 시스템 프롬프트를 주입하고 선택한 도구를 모델이 호출하도록 허용합니다. 채팅 사이드바에서 \"/\"를 입력하면 스킬을 선택하고 활성화할 수 있습니다."
+    },
+    "skillPickerEmpty": {
+        "message": "사용 가능한 스킬이 없습니다. 설정 → 스킬에서 추가하세요."
+    },
+    "skillPickerNoMatch": {
+        "message": "일치하는 스킬이 없습니다."
+    },
+    "addTool": {
+        "message": "도구 추가"
+    },
+    "toolParam": {
+        "message": "인수(JSON, 선택 사항)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "도구 선택"
+    },
+    "toolRowsEmpty": {
+        "message": "아직 도구가 없습니다. \"도구 추가\"를 클릭하세요."
+    },
+    "skillDefaultCalculator": {
+        "message": "계산기"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "add_numbers 도구로 계산합니다."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "페이지 Q&A"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "현재 웹페이지 내용을 바탕으로 사용자 질문에 답합니다."
+    },
+    "tool_current_time": {
+        "message": "현재 시간"
+    },
+    "tool_current_time_desc": {
+        "message": "사용자의 로케일로 현재 날짜와 시간을 반환합니다."
+    },
+    "tool_add_numbers": {
+        "message": "숫자 더하기"
+    },
+    "tool_add_numbers_desc": {
+        "message": "숫자 목록을 더하고 합계를 반환합니다."
+    },
+    "tool_echo": {
+        "message": "메아리"
+    },
+    "tool_echo_desc": {
+        "message": "주어진 텍스트를 그대로 반환합니다."
+    },
+    "tool_fetch_url": {
+        "message": "URL 가져오기"
+    },
+    "tool_fetch_url_desc": {
+        "message": "URL의 텍스트 내용을 가져와 최대 maxLen 문자까지 반환합니다. CORS 또는 권한으로 실패할 수 있습니다."
     },
     "wordsRemaining": {
         "message": "남은 단어 수"
@@ -43,10 +136,10 @@
         "message": "스마트 대화"
     },
     "scenario": {
-        "message" : "시나리오"
+        "message": "시나리오"
     },
     "ScenarioManage": {
-        "message" : "시나리오 관리"
+        "message": "시나리오 관리"
     },
     "inputSample": {
         "message": "입력 예시"
@@ -99,16 +192,16 @@
     "import": {
         "message": "가져오기"
     },
-    "export" :{
+    "export": {
         "message": "내보내기"
     },
-    "clear" : {
+    "clear": {
         "message": "지우기"
     },
     "confirm": {
         "message": "확인"
     },
-    "cancel":{
+    "cancel": {
         "message": "취소"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "가져오기 실패"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "모델 목록 가져오기 실패"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "죄송합니다. 문제가 발생했습니다. 나중에 다시 시도하거나 cllama 구성 정보가 올바른지 확인하십시오."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "URL 접두사가 올바르지 않습니다. http 또는 https로 시작해야 합니다."
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "제공된 페이지 정보 내용을 기반으로 짧은 요약을 생성하십시오. 요구 사항: 1. 최대 300자. 2. 항상 {localLanguage} 로 요약 정보를 생성하십시오."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "필수 항목은 비워 둘 수 없습니다."
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "하나 이상의 내보내기 옵션을 선택하십시오."
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "가져오기 처리를 위해 cllama 데이터 파일을 선택하십시오."
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "파일 선택 클릭"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "\".json\" 형식 파일만 지원합니다."
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "참고: 가져오기는 일부 원본 데이터를 덮어씁니다."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "가져오기 실패: 파일의 데이터에 cllama 데이터가 없습니다."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "업데이트할 데이터를 찾을 수 없습니다."
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "대규모 언어 모델 프롬프트 생성"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "당신은 대규모 언어 모델 프롬프트 생성 전문가입니다. 사용자의 요구에 따라 스마트 도우미의 프롬프트를 작성하여 대규모 언어 모델이 콘텐츠를 생성하도록 안내하십시오. 요구 사항:\n 1. Markdown 형식으로 출력\n 2. 사용자의 요구에 부합하고 스마트 도우미의 위치, 능력, 지식 보유량을 설명\n 3. 프롬프트는 명확하고 정확하며 이해하기 쉬워야 하며, 품질을 유지하면서 최대한 간결해야 합니다.\n 4. 프롬프트만 출력하고 불필요한 설명은 출력하지 마십시오."
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "'법률 고문'에 대한 프롬프트를 생성해 주세요."
     },
     "apiSettingsCreativityLabel": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "언어"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "선택한 파일: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "활성화하면 AI 모델이 사고 과정을 표시합니다. 사고 기능을 지원하는 모델용(Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "안전 계산"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "+ - * / % ^ 및 괄호를 사용한 수식을 안전하게 계산합니다."
+    },
+    "tool_text_stats": {
+        "message": "텍스트 통계"
+    },
+    "tool_text_stats_desc": {
+        "message": "문자, 단어, 문장, CJK 문자 수 등 텍스트 통계를 반환합니다."
+    },
+    "tool_generate_uuid": {
+        "message": "UUID 생성"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "무작위 UUID v4 문자열을 생성합니다."
+    },
+    "tool_random_number": {
+        "message": "난수"
+    },
+    "tool_random_number_desc": {
+        "message": "min과 max 사이의 무작위 정수를 반환합니다."
+    },
+    "tool_base64_encode": {
+        "message": "Base64 인코딩"
+    },
+    "tool_base64_encode_desc": {
+        "message": "주어진 텍스트를 base64로 인코딩합니다(UTF-8 안전)."
+    },
+    "tool_base64_decode": {
+        "message": "Base64 디코딩"
+    },
+    "tool_base64_decode_desc": {
+        "message": "base64 문자열을 텍스트로 디코딩합니다(UTF-8 안전)."
+    },
+    "tool_url_encode": {
+        "message": "URL 인코딩"
+    },
+    "tool_url_encode_desc": {
+        "message": "주어진 텍스트를 URL 인코딩합니다."
+    },
+    "tool_url_decode": {
+        "message": "URL 디코딩"
+    },
+    "tool_url_decode_desc": {
+        "message": "주어진 인코딩된 텍스트를 URL 디코딩합니다."
+    },
+    "tool_get_browser_info": {
+        "message": "브라우저 정보"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "브라우저/시스템 정보(사용자 에이전트, 언어, 플랫폼, 시간대, 타임스탬프)를 반환합니다."
+    },
+    "tool_get_page_content": {
+        "message": "페이지 내용 가져오기"
+    },
+    "tool_get_page_content_desc": {
+        "message": "현재 웹페이지의 내용(제목, URL, 본문)을 반환합니다."
+    },
+    "tool_convert_temperature": {
+        "message": "온도 변환"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "섭씨(C), 화씨(F), 켈빈(K) 간 온도를 변환합니다."
+    },
+    "tool_convert_length": {
+        "message": "길이 변환"
+    },
+    "tool_convert_length_desc": {
+        "message": "m, cm, mm, km, in, ft, yd, mi 간 길이를 변환합니다."
     }
 }

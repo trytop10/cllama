@@ -344,3 +344,83 @@ code.language-markdown {
 [data-bs-theme="dark"] .theme-icon-active {
     fill: var(--bs-body-color); /* Use a light color for icons in dark mode */
 }
+
+/* ── Skill picker (typing "/") ── */
+.skill-picker {
+    position: relative;
+    z-index: 1080;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    margin-bottom: 0.25rem;
+}
+
+.skill-picker-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.skill-picker-item:last-child {
+    border-bottom: none;
+}
+
+.skill-picker-item:hover,
+.skill-picker-item.skill-picker-active {
+    background-color: var(--bs-secondary-bg);
+}
+
+.skill-picker-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.skill-picker-desc {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.skill-picker-empty {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+
+/* ── Active skill indicator bar ── */
+.skill-bar {
+    background: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+    gap: 0.35rem;
+}
+
+.skill-bar-label {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+}
+
+.skill-bar-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.skill-bar-clear {
+    margin-left: auto;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--bs-secondary-color);
+    text-decoration: none;
+    padding: 0 0.25rem;
+}
+
+.skill-bar-clear:hover {
+    color: var(--bs-danger);
+}
+

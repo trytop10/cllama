@@ -1,8 +1,8 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills } from '../js/cllama.js';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
-import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags } from '../js/util.js';
+import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // API configuration settings
@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const bFish = document.getElementById("b_fish");
     const bCollapseAll = document.getElementById("b_collapseAll");
     const bExpandAll = document.getElementById("b_expandAll");
+    const skillPicker = document.getElementById("skillPicker");
+    const skillBar = document.getElementById("skillBar");
+    const skillNameSpan = document.getElementById("skillName");
     
     if (bFish) {
         bFish.title = browser.i18n.getMessage("fish_title");
@@ -55,9 +58,140 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentConfigurations = [];
     let apiSettingsPopover;
     let historyMemory = true;
+    let activeSkill = null;    // Currently active skill (or null)
+    let skills = [];           // All available skills
+    let skillPickerOpen = false;
+    let skillHighlight = -1;
 
     function generateMsgId(msgId) {
         return `msg_${msgId}`;
+    }
+
+    /**
+     * Load the available skills from storage.
+     */
+    async function refreshSkills() {
+        skills = await loadSkills();
+    }
+
+    /**
+     * Update the active-skill indicator bar.
+     */
+    function renderActiveSkillBar() {
+        if (!skillBar || !skillNameSpan) return;
+        if (activeSkill) {
+            skillNameSpan.textContent = activeSkill.name;
+            skillBar.classList.remove('d-none');
+            skillBar.classList.add('d-flex');
+        } else {
+            skillBar.classList.add('d-none');
+            skillBar.classList.remove('d-flex');
+        }
+    }
+
+    /**
+     * Show the skill picker filtered by the typed query.
+     * @param {string} query - Text after the leading "/"
+     */
+    function openSkillPicker(query) {
+        if (!skillPicker) return;
+        const q = (query || '').toLowerCase();
+
+        if (!skills.length) {
+            skillPicker.innerHTML = `<div class="skill-picker-empty">${browser.i18n.getMessage("skillPickerEmpty")}</div>`;
+            skillPicker.style.display = 'block';
+            skillPickerOpen = true;
+            skillHighlight = -1;
+            return;
+        }
+
+        const matches = skills.filter(s => !q || s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q));
+
+        if (!matches.length) {
+            skillPicker.innerHTML = `<div class="skill-picker-empty">${browser.i18n.getMessage("skillPickerNoMatch")}</div>`;
+            skillPicker.style.display = 'block';
+            skillPickerOpen = true;
+            skillHighlight = -1;
+            return;
+        }
+
+        skillHighlight = -1;
+        skillPicker.innerHTML = matches.map((s, i) =>
+            `<div class="skill-picker-item" data-index="${i}" data-id="${s.id}">
+                <span class="skill-picker-name">${s.name}</span>
+                <span class="skill-picker-desc">${s.description || ''}</span>
+            </div>`
+        ).join('');
+        skillPicker.style.display = 'block';
+        skillPickerOpen = true;
+
+        skillPicker.querySelectorAll('.skill-picker-item').forEach(el => {
+            el.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const skill = skills[parseInt(el.dataset.index, 10)];
+                if (skill) selectSkill(skill);
+            });
+        });
+    }
+
+    /**
+     * Close the skill picker.
+     */
+    function closeSkillPicker() {
+        if (!skillPicker) return;
+        skillPicker.style.display = 'none';
+        skillPicker.innerHTML = '';
+        skillPickerOpen = false;
+        skillHighlight = -1;
+    }
+
+    /**
+     * Highlight the item at the given index.
+     */
+    function setSkillHighlight(index) {
+        if (!skillPicker) return;
+        const items = skillPicker.querySelectorAll('.skill-picker-item');
+        if (!items.length) return;
+        skillHighlight = (index + items.length) % items.length;
+        items.forEach((el, i) => {
+            if (i === skillHighlight) el.classList.add('skill-picker-active');
+            else el.classList.remove('skill-picker-active');
+        });
+    }
+
+    /**
+     * Activate a skill and clear the "/..." prefix from the input.
+     */
+    function selectSkill(skill) {
+        activeSkill = skill;
+        closeSkillPicker();
+        renderActiveSkillBar();
+        if (msgInput) {
+            msgInput.value = '';
+            msgInput.focus();
+        }
+    }
+
+    /**
+     * Clear the currently active skill.
+     */
+    function clearActiveSkill() {
+        activeSkill = null;
+        closeSkillPicker();
+        renderActiveSkillBar();
+    }
+
+    /**
+     * Called on input: open the "/" skill picker when appropriate.
+     */
+    function handleSkillInput() {
+        const val = msgInput.value;
+        // Only trigger when "/" is the very first character of the draft.
+        if (val.startsWith('/')) {
+            openSkillPicker(val.slice(1));
+        } else {
+            closeSkillPicker();
+        }
     }
 
     /**
@@ -155,6 +289,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
+        // Inject current webpage content for skills that need it (usePage)
+        if (activeSkill?.usePage) {
+            try {
+                const pageInfo = await sendToContentScript({ action: "getPageInfo" });
+                if (pageInfo && pageInfo.content) {
+                    messagesForAPI.unshift({
+                        role: "user",
+                        content: `[Current webpage]\nTitle: ${pageInfo.title || ''}\nURL: ${pageInfo.url || ''}\n\nContent:\n${pageInfo.content}\n\nAnswer the user's question based on the webpage content above.`
+                    });
+                }
+            } catch (err) {
+                console.warn("Failed to get page info for skill:", err);
+            }
+        }
+
         responseId = chat(messagesForAPI, {
             msgDiv: assistantMsgDiv,
             messages: messagesContainer,
@@ -162,6 +311,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             temperature: apiSettings.temperature,
             top_p: apiSettings.top_p,
             think: apiSettings.think,
+            activeSkill: activeSkill,
             start: () => {
                 stopFlag = false;
                 setComponentState(true);
@@ -438,7 +588,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    // Skill picker keyboard navigation + send
+    msgInput.addEventListener('input', handleSkillInput);
+
     msgInput.addEventListener('keydown', (e) => {
+        if (skillPickerOpen) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setSkillHighlight(skillHighlight + 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setSkillHighlight(skillHighlight - 1);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                const items = skillPicker.querySelectorAll('.skill-picker-item');
+                if (skillHighlight >= 0 && items[skillHighlight]) {
+                    const skill = skills[parseInt(items[skillHighlight].dataset.index, 10)];
+                    if (skill) selectSkill(skill);
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeSkillPicker();
+            }
+            return;
+        }
+
         if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
             // Allow line break
         } else if (e.key === 'Enter') {
@@ -446,6 +620,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             sendMessage();
         }
     });
+
+    // Skill bar: clear active skill
+    if (skillBar) {
+        const clearSkillBtn = skillBar.querySelector("#clearSkill");
+        if (clearSkillBtn) clearSkillBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearActiveSkill();
+        });
+    }
 
     sendButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1201,5 +1384,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (modelSelectDiv) modelSelectDiv.style.display = "";
     }
 
+    refreshSkills();
+    renderActiveSkillBar();
     loadFishIconState();
 });

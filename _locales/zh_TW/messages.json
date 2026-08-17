@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"繁體中文"
+    "localLanguage": {
+        "message": "繁體中文"
     },
     "browserActionTitle": {
         "message": "智能瀏覽助手 - cllama"
     },
     "cllamaDescription": {
-        "message": "智能瀏覽助手：自訂深度內容分析+多場景智能對話+多語言翻譯，支援本地Ollama與主流AI服務(如OpenAI、DeepSeek、智譜)，保障安全與隱私。"
+        "message": "瀏覽器AI助手：網頁深度洞察與問答、帶技能/工具的多模型對話。支援 Ollama、OpenAI、Gemini 等本地與主流模型。"
     },
     "inputMessage": {
         "message": "請輸入訊息...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "深度洞察"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "內容錨點"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "內容錨點是通過配置CSS選擇器來更精準匹配頁面核心內容"
     },
     "urlPrefix": {
         "message": "網址前綴"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS選擇器"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "洞察配方"
     },
-    "name":{
+    "name": {
         "message": "名稱"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "提示語"
+    },
+    "skill": {
+        "message": "技能"
+    },
+    "skillList": {
+        "message": "技能列表"
+    },
+    "skillListEmpty": {
+        "message": "尚未配置技能。點擊「新增技能」建立。"
+    },
+    "addSkill": {
+        "message": "新增技能"
+    },
+    "editSkill": {
+        "message": "編輯"
+    },
+    "deleteSkill": {
+        "message": "刪除"
+    },
+    "skillName": {
+        "message": "名稱"
+    },
+    "skillDescription": {
+        "message": "描述"
+    },
+    "skillPrompt": {
+        "message": "提示詞"
+    },
+    "skillTools": {
+        "message": "工具（逗號分隔）"
+    },
+    "skillToolsHint": {
+        "message": "每個工具以一行新增：選擇工具（說明會自動顯示），如需可填寫可選預設參數（JSON 格式），最後儲存。"
+    },
+    "addTool": {
+        "message": "新增工具"
+    },
+    "toolParam": {
+        "message": "參數（JSON，可選）"
+    },
+    "toolSelectPlaceholder": {
+        "message": "選擇一個工具"
+    },
+    "toolRowsEmpty": {
+        "message": "暫無工具，點擊「新增工具」新增。"
+    },
+    "expSkills": {
+        "message": "技能"
+    },
+    "skillHelp": {
+        "message": "技能是可重複使用的能力（類似 cc / codex / cline 中的技能）。技能會向對話注入一條系統提示詞，並允許模型呼叫你在下方勾選綁定的工具。在聊天側邊欄輸入 \"/\" 即可選擇並啟動技能。"
+    },
+    "skillPickerEmpty": {
+        "message": "暫無可用技能。請在設定 → 技能中新增。"
+    },
+    "skillPickerNoMatch": {
+        "message": "沒有符合的技能。"
+    },
+    "skillDefaultCalculator": {
+        "message": "計算機"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "使用 add_numbers 工具做算術。"
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "網頁問答"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "根據目前網頁內容回答使用者問題。"
+    },
+    "tool_current_time": {
+        "message": "目前時間"
+    },
+    "tool_current_time_desc": {
+        "message": "傳回使用者本地時區的目前日期與時間。"
+    },
+    "tool_add_numbers": {
+        "message": "數字加總"
+    },
+    "tool_add_numbers_desc": {
+        "message": "對一組數字加總並傳回結果。"
+    },
+    "tool_echo": {
+        "message": "回顯"
+    },
+    "tool_echo_desc": {
+        "message": "原樣傳回給定的文字。"
+    },
+    "tool_fetch_url": {
+        "message": "抓取網頁"
+    },
+    "tool_fetch_url_desc": {
+        "message": "抓取指定 URL 的文字內容並傳回最多 maxLen 個字元；可能因 CORS 或權限受限而失敗。"
     },
     "wordsRemaining": {
         "message": "剩餘字數"
@@ -43,10 +136,10 @@
         "message": "智能對話"
     },
     "scenario": {
-        "message" : "場景"
+        "message": "場景"
     },
     "ScenarioManage": {
-        "message" : "場景管理"
+        "message": "場景管理"
     },
     "inputSample": {
         "message": "輸入範例"
@@ -99,16 +192,16 @@
     "import": {
         "message": "匯入"
     },
-    "export" :{
+    "export": {
         "message": "匯出"
     },
-    "clear" : {
+    "clear": {
         "message": "清空"
     },
     "confirm": {
         "message": "確定"
     },
-    "cancel":{
+    "cancel": {
         "message": "取消"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "匯入失敗"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "取得模型列表失敗"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "很抱歉，我遇到了一些問題，請稍後再試或者檢查一下您的cllama配置信息是否正確。"
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "網址前綴輸入不正確，必須以http或https開頭"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "請根據給定頁面信息內容生成簡短摘要，要求：1、最多300字。2、一律用{localLanguage}生成摘要信息。"
     },
-    "requiredError":{
+    "requiredError": {
         "message": "必填項不能為空"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "請至少選擇一個匯出選項"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "請選擇您的cllama數據文件進行匯入處理"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "點擊選擇文件"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "僅支援\".json\"格式文件"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "注意：匯入將覆蓋部分原有數據。"
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "匯入失敗：文件中的數據沒有cllama數據。"
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "沒有找到要更新的數據"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "語言大模型提示詞生成"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "你是一位大模型提示詞生成專家，請根據用戶的需求編寫一個智能助手的提示詞，來指導大模型進行內容生成，要求：\n 1. 以 Markdown 格式輸出\n 2. 貼合用戶需求，描述智能助手的定位、能力、知識儲備\n 3. 提示詞應清晰、精確、易於理解，在保持質量的同時，盡可能簡潔\n 4. 只輸出提示詞，不要輸出多餘解釋"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "請幫我生成一個'法律顧問'的提示詞"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "語言"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "已選擇文件: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "啟用後AI模型會展示其思考過程，適用於支援thinking的模型(Ollama 0.9+)。"
+    },
+    "tool_safe_calculate": {
+        "message": "安全計算"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "安全地求值數學運算式，支援 + - * / % ^ 與括號。"
+    },
+    "tool_text_stats": {
+        "message": "文字統計"
+    },
+    "tool_text_stats_desc": {
+        "message": "傳回文字統計：總字元、單字、句子與中文字元數。"
+    },
+    "tool_generate_uuid": {
+        "message": "產生 UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "產生隨機 UUID v4 字串。"
+    },
+    "tool_random_number": {
+        "message": "隨機數"
+    },
+    "tool_random_number_desc": {
+        "message": "傳回 min 與 max 之間的隨機整數。"
+    },
+    "tool_base64_encode": {
+        "message": "Base64 編碼"
+    },
+    "tool_base64_encode_desc": {
+        "message": "將指定文字編碼為 base64（UTF-8 安全）。"
+    },
+    "tool_base64_decode": {
+        "message": "Base64 解碼"
+    },
+    "tool_base64_decode_desc": {
+        "message": "將 base64 字串還原為文字（UTF-8 安全）。"
+    },
+    "tool_url_encode": {
+        "message": "URL 編碼"
+    },
+    "tool_url_encode_desc": {
+        "message": "對指定文字進行 URL 編碼。"
+    },
+    "tool_url_decode": {
+        "message": "URL 解碼"
+    },
+    "tool_url_decode_desc": {
+        "message": "對指定已編碼文字進行 URL 解碼。"
+    },
+    "tool_get_browser_info": {
+        "message": "瀏覽器資訊"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "傳回瀏覽器/系統資訊：使用者代理、語言、平台、時區與時間戳。"
+    },
+    "tool_get_page_content": {
+        "message": "取得網頁內容"
+    },
+    "tool_get_page_content_desc": {
+        "message": "傳回目前網頁的內容（標題、URL 與內文）。"
+    },
+    "tool_convert_temperature": {
+        "message": "溫度換算"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "在攝氏(C)、華氏(F)與克氏(K)之間換算溫度。"
+    },
+    "tool_convert_length": {
+        "message": "長度換算"
+    },
+    "tool_convert_length_desc": {
+        "message": "在 m、cm、mm、km、in、ft、yd、mi 之間換算長度。"
     }
 }

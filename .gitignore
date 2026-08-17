@@ -1,2 +1,4 @@
 dist/*
 dist/android/*
+doc/DEVELOPER_GUIDE_zh.md
+doc/MARKETPLACE_zh.md

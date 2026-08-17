@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"日本語"
+    "localLanguage": {
+        "message": "日本語"
     },
     "browserActionTitle": {
         "message": "スマートブラウジングアシスタント - cllama"
     },
     "cllamaDescription": {
-        "message": "スマートブラウザアシスタント：カスタマイズ可能なコンテンツ分析＋多シーンAI対話＋多言語翻訳。Ollamaローカル及び主要AIサービス(OpenAI/DeepSeek/智譜)に対応、プライバシー保護。"
+        "message": "ブラウザ向けAIコパイロット：Webページの深掘りとQ&A、スキル対応のマルチモデルチャット。Ollama、OpenAI、Gemini対応。"
     },
     "inputMessage": {
         "message": "メッセージを入力...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "詳細分析"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "コンテンツアンカー"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "コンテンツアンカーはCSSセレクターを使用してページの主要なコンテンツを正確に特定します"
     },
     "urlPrefix": {
         "message": "URLプレフィックス"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSSセレクター"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "分析レシピ"
     },
-    "name":{
+    "name": {
         "message": "名前"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "プロンプト"
+    },
+    "skill": {
+        "message": "スキル"
+    },
+    "skillList": {
+        "message": "スキル一覧"
+    },
+    "skillListEmpty": {
+        "message": "スキルが設定されていません。「スキルを追加」をクリックしてください。"
+    },
+    "addSkill": {
+        "message": "スキルを追加"
+    },
+    "editSkill": {
+        "message": "編集"
+    },
+    "deleteSkill": {
+        "message": "削除"
+    },
+    "skillName": {
+        "message": "名前"
+    },
+    "skillDescription": {
+        "message": "説明"
+    },
+    "skillPrompt": {
+        "message": "プロンプト"
+    },
+    "skillTools": {
+        "message": "ツール（カンマ区切り）"
+    },
+    "skillToolsHint": {
+        "message": "各ツールは1行で追加します：ツールを選択（説明は自動表示）、任意のデフォルト引数をJSONで入力して保存します。"
+    },
+    "expSkills": {
+        "message": "スキル"
+    },
+    "skillHelp": {
+        "message": "スキルは再利用可能な能力です（cc / codex / cline のスキルのようなもの）。スキルはチャットにシステムプロンプトを注入し、選択したツールの呼び出しをモデルに許可します。チャットサイドバーで「/」と入力するとスキルを選択・有効化できます。"
+    },
+    "skillPickerEmpty": {
+        "message": "利用可能なスキルがありません。設定 → スキル で追加してください。"
+    },
+    "skillPickerNoMatch": {
+        "message": "一致するスキルがありません。"
+    },
+    "addTool": {
+        "message": "ツールを追加"
+    },
+    "toolParam": {
+        "message": "引数（JSON、任意）"
+    },
+    "toolSelectPlaceholder": {
+        "message": "ツールを選択"
+    },
+    "toolRowsEmpty": {
+        "message": "ツールがまだありません。「ツールを追加」をクリックしてください。"
+    },
+    "skillDefaultCalculator": {
+        "message": "計算機"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "add_numbers ツールで計算を行います。"
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "ページQA"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "現在のウェブページの内容に基づいてユーザーの質問に答えます。"
+    },
+    "tool_current_time": {
+        "message": "現在の時刻"
+    },
+    "tool_current_time_desc": {
+        "message": "ユーザーのロケールで現在の日時を返します。"
+    },
+    "tool_add_numbers": {
+        "message": "数値の加算"
+    },
+    "tool_add_numbers_desc": {
+        "message": "数値のリストを加算し、合計を返します。"
+    },
+    "tool_echo": {
+        "message": "エコー"
+    },
+    "tool_echo_desc": {
+        "message": "指定されたテキストをそのまま返します。"
+    },
+    "tool_fetch_url": {
+        "message": "URL 取得"
+    },
+    "tool_fetch_url_desc": {
+        "message": "URL のテキスト内容を取得し、最大 maxLen 文字まで返します。CORS や権限により失敗する場合があります。"
     },
     "wordsRemaining": {
         "message": "残り文字数"
@@ -43,10 +136,10 @@
         "message": "スマートチャット"
     },
     "scenario": {
-        "message" : "シナリオ"
+        "message": "シナリオ"
     },
     "ScenarioManage": {
-        "message" : "シナリオ管理"
+        "message": "シナリオ管理"
     },
     "inputSample": {
         "message": "入力サンプル"
@@ -99,16 +192,16 @@
     "import": {
         "message": "インポート"
     },
-    "export" :{
+    "export": {
         "message": "エクスポート"
     },
-    "clear" : {
+    "clear": {
         "message": "クリア"
     },
     "confirm": {
         "message": "確認"
     },
-    "cancel":{
+    "cancel": {
         "message": "キャンセル"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "インポートに失敗しました"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "モデルリストの取得に失敗しました"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "申し訳ありませんが、問題が発生しました。後でもう一度試すか、cllamaの設定情報が正しいか確認してください。"
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "URLプレフィックスが正しくありません。httpまたはhttpsで始まる必要があります"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "指定されたページ情報の内容に基づいて簡潔な要約を生成してください。要件：1. 最大300文字。2. 常に{localLanguage}で要約情報を生成します。"
     },
-    "requiredError":{
+    "requiredError": {
         "message": "必須項目は空にできません"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "少なくとも1つのエクスポートオプションを選択してください"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "cllamaデータファイルを選択してインポート処理を行ってください"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "ファイルを選択"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "\".json\"形式のファイルのみサポートしています"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "注意：インポートすると既存のデータの一部が上書きされます。"
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "インポートに失敗しました：ファイルにcllamaデータが含まれていません。"
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "更新するデータが見つかりませんでした"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "LLMプロンプト生成"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "あなたはLLMプロンプト生成の専門家です。ユーザーの要求に基づいて、コンテンツ生成を導くスマートアシスタントのプロンプトを作成してください。要件：\n 1. Markdown形式で出力\n 2. ユーザーの要求に沿って、スマートアシスタントの位置付け、能力、知識を記述\n 3. プロンプトは明確で正確、理解しやすく、品質を保ちつつ可能な限り簡潔に\n 4. プロンプトのみを出力し、余分な説明は不要"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "「法律顧問」のプロンプトを生成してください"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "言語"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "選択したファイル: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "有効にすると、AIモデルが思考プロセスを表示します。思考機能をサポートするモデル向け（Ollama 0.9+）。"
+    },
+    "tool_safe_calculate": {
+        "message": "安全計算"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "「+ - * / % ^」と括弧を使った数式を安全に評価します。"
+    },
+    "tool_text_stats": {
+        "message": "テキスト統計"
+    },
+    "tool_text_stats_desc": {
+        "message": "文字数・単語数・文数・CJK文字数などのテキスト統計を返します。"
+    },
+    "tool_generate_uuid": {
+        "message": "UUID生成"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "ランダムなUUID v4文字列を生成します。"
+    },
+    "tool_random_number": {
+        "message": "乱数"
+    },
+    "tool_random_number_desc": {
+        "message": "min と max の間のランダムな整数を返します。"
+    },
+    "tool_base64_encode": {
+        "message": "Base64エンコード"
+    },
+    "tool_base64_encode_desc": {
+        "message": "指定テキストをbase64にエンコードします（UTF-8対応）。"
+    },
+    "tool_base64_decode": {
+        "message": "Base64デコード"
+    },
+    "tool_base64_decode_desc": {
+        "message": "base64文字列をテキストにデコードします（UTF-8対応）。"
+    },
+    "tool_url_encode": {
+        "message": "URLエンコード"
+    },
+    "tool_url_encode_desc": {
+        "message": "指定テキストをURLエンコードします。"
+    },
+    "tool_url_decode": {
+        "message": "URLデコード"
+    },
+    "tool_url_decode_desc": {
+        "message": "指定のエンコード済みテキストをURLデコードします。"
+    },
+    "tool_get_browser_info": {
+        "message": "ブラウザ情報"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "ユーザーエージェント・言語・プラットフォーム・タイムゾーン・タイムスタンプを返します。"
+    },
+    "tool_get_page_content": {
+        "message": "ページ内容取得"
+    },
+    "tool_get_page_content_desc": {
+        "message": "現在のウェブページの内容（タイトル・URL・本文）を返します。"
+    },
+    "tool_convert_temperature": {
+        "message": "温度換算"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "摂氏(C)・華氏(F)・ケルビン(K)間で温度を換算します。"
+    },
+    "tool_convert_length": {
+        "message": "長さ換算"
+    },
+    "tool_convert_length_desc": {
+        "message": "m、cm、mm、km、in、ft、yd、mi 間で長さを換算します。"
     }
 }

@@ -122,6 +122,7 @@ export class ChatGPTClient {
     let thinkingText = '';
     let contentText = '';
     let buffer = '';
+    let completedNormally = false;
 
     try {
       while (true) {
@@ -186,6 +187,7 @@ export class ChatGPTClient {
         console.warn('Unprocessed residual data:', buffer);
       }
 
+      completedNormally = true;
       this.activeSessions.delete(sessionId);
       if (typeof options.onComplete === 'function') {
         const fullResponse = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentText;
@@ -200,7 +202,10 @@ export class ChatGPTClient {
         throw error;
       }
     } finally {
-      if (reader) {
+      // Only cancel the reader when the stream did not complete normally.
+      // Cancelling a finished stream can leave a reset keep-alive connection
+      // that breaks the immediately-following request (e.g. tool-call loop).
+      if (!completedNormally && reader) {
         await reader.cancel().catch(() => {});
       }
     }

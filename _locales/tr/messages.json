@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Türkçe"
+    "localLanguage": {
+        "message": "Türkçe"
     },
     "browserActionTitle": {
         "message": "Akıllı Tarama Asistanı - cllama"
     },
     "cllamaDescription": {
-        "message": "Akıllı Tarama Asistanı: Özelleştirilebilir derin içerik analizi + Çok senaryolu akıllı diyalog + Çok dilli çeviri, yerel Ollama ve ana akım AI (OpenAI, DeepSeek, Zhipu gibi)."
+        "message": "Tarayıcı için yapay zekâ yardımcısı: sayfa analizi ve soru-cevap, becerili çoklu model sohbet. Ollama, OpenAI, Gemini destekli."
     },
     "inputMessage": {
         "message": "Mesaj girin...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Derin İçgörü"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "İçerik Bağlantısı"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "İçerik bağlantısı, CSS seçicileri yapılandırarak sayfa çekirdek içeriğini daha doğru bir şekilde eşleştirmektir."
     },
     "urlPrefix": {
         "message": "URL Öneki"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS Seçici"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "İçgörü Tarifleri"
     },
-    "name":{
+    "name": {
         "message": "Ad"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "İstem"
+    },
+    "skill": {
+        "message": "Beceriler"
+    },
+    "skillList": {
+        "message": "Beceri Listesi"
+    },
+    "skillListEmpty": {
+        "message": "Yapılandırılmış beceri yok. \"Beceri Ekle\" düğmesine tıklayın."
+    },
+    "addSkill": {
+        "message": "Beceri Ekle"
+    },
+    "editSkill": {
+        "message": "Düzenle"
+    },
+    "deleteSkill": {
+        "message": "Sil"
+    },
+    "skillName": {
+        "message": "Ad"
+    },
+    "skillDescription": {
+        "message": "Açıklama"
+    },
+    "skillPrompt": {
+        "message": "İstem"
+    },
+    "skillTools": {
+        "message": "Araçlar (virgülle ayrılmış)"
+    },
+    "skillToolsHint": {
+        "message": "Her araç bir satır olarak eklenir: aracı seçin (açıklama otomatik görünür), isteğe bağlı varsayılan argümanları JSON olarak doldurun ve kaydedin."
+    },
+    "expSkills": {
+        "message": "Beceriler"
+    },
+    "skillHelp": {
+        "message": "Beceriler yeniden kullanılabilir yeteneklerdir (cc / codex / cline'daki beceriler gibi). Bir beceri sohbete bir sistem istemi enjekte eder ve modelin seçili araçları çağırmasına izin verebilir. Sohbet kenar çubuğunda \"/\" yazarak bir beceri seçip etkinleştirebilirsiniz."
+    },
+    "skillPickerEmpty": {
+        "message": "Kullanılabilir beceri yok. Ayarlar → Beceriler bölümünden ekleyin."
+    },
+    "skillPickerNoMatch": {
+        "message": "Eşleşen beceri yok."
+    },
+    "addTool": {
+        "message": "Araç Ekle"
+    },
+    "toolParam": {
+        "message": "Argümanlar (JSON, isteğe bağlı)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Bir araç seçin"
+    },
+    "toolRowsEmpty": {
+        "message": "Henüz araç yok. \"Araç Ekle\" düğmesine tıklayın."
+    },
+    "skillDefaultCalculator": {
+        "message": "Hesap Makinesi"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "add_numbers aracıyla aritmetik yapın."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Sayfa Sohbeti"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Kullanıcının sorularını geçerli web sayfasının içeriğine göre yanıtlar."
+    },
+    "tool_current_time": {
+        "message": "Geçerli Saat"
+    },
+    "tool_current_time_desc": {
+        "message": "Kullanıcının yerel saat diliminde geçerli tarih ve saati döndürür."
+    },
+    "tool_add_numbers": {
+        "message": "Sayıları Topla"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Bir sayı listesini toplar ve sonucu döndürür."
+    },
+    "tool_echo": {
+        "message": "Yankı"
+    },
+    "tool_echo_desc": {
+        "message": "Verilen metni aynen döndürür."
+    },
+    "tool_fetch_url": {
+        "message": "URL Getir"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Bir URL'nin metin içeriğini getirir ve en fazla maxLen karakter döndürür; CORS veya izinler nedeniyle başarısız olabilir."
     },
     "wordsRemaining": {
         "message": "Kalan Kelime"
@@ -43,10 +136,10 @@
         "message": "Akıllı Diyalog"
     },
     "scenario": {
-        "message" : "Senaryo"
+        "message": "Senaryo"
     },
     "ScenarioManage": {
-        "message" : "Senaryo Yönetimi"
+        "message": "Senaryo Yönetimi"
     },
     "inputSample": {
         "message": "Giriş Örneği"
@@ -99,16 +192,16 @@
     "import": {
         "message": "İçe Aktar"
     },
-    "export" :{
+    "export": {
         "message": "Dışa Aktar"
     },
-    "clear" : {
+    "clear": {
         "message": "Temizle"
     },
     "confirm": {
         "message": "Onayla"
     },
-    "cancel":{
+    "cancel": {
         "message": "İptal"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "İçe aktarma başarısız"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Model listesi alınamadı"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Üzgünüm, bazı sorunlar yaşadım, lütfen daha sonra tekrar deneyin veya cllama yapılandırma bilgilerinizin doğru olup olmadığını kontrol edin."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "URL öneki yanlış, http veya https ile başlamalıdır."
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "Verilen sayfa bilgi içeriğine göre kısa bir özet oluşturun, gereksinimler: 1. En fazla 300 kelime. 2. Her zaman {localLanguage} olarak özet bilgisi oluşturun."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Gerekli öğe boş olamaz"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Lütfen en az bir dışa aktarma seçeneği seçin"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Lütfen içe aktarma işlemi için cllama veri dosyanızı seçin"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Dosya seçmek için tıklayın"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Yalnızca \".json\" formatındaki dosyalar desteklenir."
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Not: İçe aktarma, orijinal verilerin bir kısmını üzerine yazacaktır."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "İçe aktarma başarısız: Dosyadaki verilerde cllama verisi yok."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Güncellenecek veri bulunamadı"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Büyük Dil Modeli İstem Oluşturma"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Siz büyük dil modeli istem oluşturma uzmanısınız, lütfen kullanıcının ihtiyaçlarına göre akıllı asistan için bir istem yazarak büyük dil modelini içerik oluşturmaya yönlendirin, gereksinimler:\n 1. Markdown formatında çıktı\n 2. Kullanıcının ihtiyaçlarına uygun, akıllı asistanın konumunu, yeteneklerini, bilgi birikimini açıklayın\n 3. İstem açık, doğru, anlaşılır ve kaliteyi korurken mümkün olduğunca kısa olmalıdır.\n 4. Yalnızca istemi çıktılayın, gereksiz açıklamaları çıktılamayın."
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "'Hukuk danışmanı' için bir istem oluşturmama yardım edin."
     },
     "apiSettingsCreativityLabel": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Dil"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Seçilen Dosya: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "Etkinleştirildiğinde, AI modelleri düşünme sürecini gösterir. Düşünmeyi destekleyen modeller için (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Güvenli Hesap"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "+ - * / % ^ ve parantez kullanarak bir matematik ifadesini güvenle değerlendirir."
+    },
+    "tool_text_stats": {
+        "message": "Metin İstatistikleri"
+    },
+    "tool_text_stats_desc": {
+        "message": "Bir metnin istatistiklerini döndürür: karakter, kelime, cümle ve CJK karakterleri."
+    },
+    "tool_generate_uuid": {
+        "message": "UUID Üret"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Rastgele bir UUID v4 dizesi üretir."
+    },
+    "tool_random_number": {
+        "message": "Rastgele Sayı"
+    },
+    "tool_random_number_desc": {
+        "message": "min ve max arasında rastgele bir tam sayı döndürür."
+    },
+    "tool_base64_encode": {
+        "message": "Base64 Kodla"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Verilen metni base64 olarak kodlar (UTF-8 güvenli)."
+    },
+    "tool_base64_decode": {
+        "message": "Base64 Çöz"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Bir base64 dizesini metne geri çözer (UTF-8 güvenli)."
+    },
+    "tool_url_encode": {
+        "message": "URL Kodla"
+    },
+    "tool_url_encode_desc": {
+        "message": "Verilen metni URL kodlar."
+    },
+    "tool_url_decode": {
+        "message": "URL Çöz"
+    },
+    "tool_url_decode_desc": {
+        "message": "Verilen kodlanmış metni URL çözer."
+    },
+    "tool_get_browser_info": {
+        "message": "Tarayıcı Bilgisi"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Tarayıcı/sistem bilgisini döndürür: kullanıcı aracısı, dil, platform, saat dilimi ve zaman damgası."
+    },
+    "tool_get_page_content": {
+        "message": "Sayfa İçeriğini Al"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Geçerli web sayfasının içeriğini döndürür (başlık, URL ve metin)."
+    },
+    "tool_convert_temperature": {
+        "message": "Sıcaklık Dönüştür"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Bir sıcaklığı Celsius (C), Fahrenheit (F) ve Kelvin (K) arasında dönüştürür."
+    },
+    "tool_convert_length": {
+        "message": "Uzunluk Dönüştür"
+    },
+    "tool_convert_length_desc": {
+        "message": "Bir uzunluğu m, cm, mm, km, in, ft, yd ve mi arasında dönüştürür."
     }
 }

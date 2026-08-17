@@ -132,27 +132,44 @@ const parseJSON = async function* (itr) {
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
   const reader = itr.getReader();
-  while (true) {
-    const { done, value: chunk } = await reader.read();
-    if (done) {
-      break;
+  try {
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) {
+        break;
+      }
+      buffer += decoder.decode(chunk);
+      const parts = buffer.split("\n");
+      buffer = parts.pop() ?? "";
+      for (const part of parts) {
+        try {
+          yield JSON.parse(part);
+        } catch (error) {
+          console.warn("invalid json: ", part);
+        }
+      }
     }
-    buffer += decoder.decode(chunk);
-    const parts = buffer.split("\n");
-    buffer = parts.pop() ?? "";
-    for (const part of parts) {
+    for (const part of buffer.split("\n").filter((p) => p !== "")) {
       try {
         yield JSON.parse(part);
       } catch (error) {
         console.warn("invalid json: ", part);
       }
     }
-  }
-  for (const part of buffer.split("\n").filter((p) => p !== "")) {
+  } finally {
+    // Always release the reader (even when the outer iterator stops early at
+    // the "done" message). Otherwise the underlying fetch stream stays locked
+    // / half-open, and a back-to-back request (e.g. the tool-call loop) may
+    // reuse that broken connection and fail with "ResponseError: EOF".
     try {
-      yield JSON.parse(part);
-    } catch (error) {
-      console.warn("invalid json: ", part);
+      await reader.cancel();
+    } catch (e) {
+      // ignore
+    }
+    try {
+      reader.releaseLock();
+    } catch (e) {
+      // ignore
     }
   }
 };

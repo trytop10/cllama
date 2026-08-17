@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Tiếng Việt"
+    "localLanguage": {
+        "message": "Tiếng Việt"
     },
     "browserActionTitle": {
         "message": "Trợ lý duyệt web thông minh - cllama"
     },
     "cllamaDescription": {
-        "message": "Trợ lý duyệt web thông minh: Phân tích nội dung chuyên sâu có thể tùy chỉnh + Đối thoại thông minh đa kịch bản + Dịch đa ngôn ngữ, hỗ trợ dịch vụ Ollama cục bộ và AI chính thống."
+        "message": "Trợ lý AI cho trình duyệt: phân tích và hỏi đáp trang web, chat đa mô hình với kỹ năng. Hỗ trợ Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Nhập tin nhắn...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Thông tin chi tiết"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Neo nội dung"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "Neo nội dung giúp khớp nội dung cốt lõi của trang chính xác hơn bằng cách định cấu hình bộ chọn CSS"
     },
     "urlPrefix": {
         "message": "Tiền tố URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "Bộ chọn CSS"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Công thức thông tin chi tiết"
     },
-    "name":{
+    "name": {
         "message": "Tên"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Lời nhắc"
+    },
+    "skill": {
+        "message": "Kỹ năng"
+    },
+    "skillList": {
+        "message": "Danh sách kỹ năng"
+    },
+    "skillListEmpty": {
+        "message": "Chưa có kỹ năng nào được cấu hình. Nhấp \"Thêm kỹ năng\"."
+    },
+    "addSkill": {
+        "message": "Thêm kỹ năng"
+    },
+    "editSkill": {
+        "message": "Chỉnh sửa"
+    },
+    "deleteSkill": {
+        "message": "Xóa"
+    },
+    "skillName": {
+        "message": "Tên"
+    },
+    "skillDescription": {
+        "message": "Mô tả"
+    },
+    "skillPrompt": {
+        "message": "Lời nhắc"
+    },
+    "skillTools": {
+        "message": "Công cụ (phân tách bằng dấu phẩy)"
+    },
+    "skillToolsHint": {
+        "message": "Mỗi công cụ được thêm dưới dạng một dòng: chọn công cụ (mô tả tự động hiển thị), điền tham số mặc định tùy chọn dưới dạng JSON rồi lưu."
+    },
+    "expSkills": {
+        "message": "Kỹ năng"
+    },
+    "skillHelp": {
+        "message": "Kỹ năng là các khả năng có thể tái sử dụng (giống kỹ năng trong cc / codex / cline). Một kỹ năng sẽ tiêm lời nhắc hệ thống vào cuộc trò chuyện và có thể cho phép mô hình gọi các công cụ đã chọn. Trong thanh bên trò chuyện, gõ \"/\" để chọn và kích hoạt một kỹ năng."
+    },
+    "skillPickerEmpty": {
+        "message": "Không có kỹ năng nào khả dụng. Thêm trong Cài đặt → Kỹ năng."
+    },
+    "skillPickerNoMatch": {
+        "message": "Không có kỹ năng phù hợp."
+    },
+    "addTool": {
+        "message": "Thêm công cụ"
+    },
+    "toolParam": {
+        "message": "Tham số (JSON, tùy chọn)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Chọn một công cụ"
+    },
+    "toolRowsEmpty": {
+        "message": "Chưa có công cụ nào. Nhấp \"Thêm công cụ\"."
+    },
+    "skillDefaultCalculator": {
+        "message": "Máy tính"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Thực hiện phép tính bằng công cụ add_numbers."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Hỏi đáp trang"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Trả lời câu hỏi của người dùng dựa trên nội dung trang web hiện tại."
+    },
+    "tool_current_time": {
+        "message": "Thời gian hiện tại"
+    },
+    "tool_current_time_desc": {
+        "message": "Trả về ngày và giờ hiện tại theo múi giờ của người dùng."
+    },
+    "tool_add_numbers": {
+        "message": "Cộng số"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Cộng một danh sách các số và trả về tổng."
+    },
+    "tool_echo": {
+        "message": "Tiếng vọng"
+    },
+    "tool_echo_desc": {
+        "message": "Trả về chính xác văn bản đã cho."
+    },
+    "tool_fetch_url": {
+        "message": "Lấy URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Lấy nội dung văn bản của URL và trả về tối đa maxLen ký tự; có thể thất bại do CORS hoặc quyền."
     },
     "wordsRemaining": {
         "message": "Số từ còn lại"
@@ -43,10 +136,10 @@
         "message": "Đối thoại thông minh"
     },
     "scenario": {
-        "message" : "Kịch bản"
+        "message": "Kịch bản"
     },
     "ScenarioManage": {
-        "message" : "Quản lý kịch bản"
+        "message": "Quản lý kịch bản"
     },
     "inputSample": {
         "message": "Ví dụ nhập liệu"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Nhập"
     },
-    "export" :{
+    "export": {
         "message": "Xuất"
     },
-    "clear" : {
+    "clear": {
         "message": "Xóa"
     },
     "confirm": {
         "message": "Xác nhận"
     },
-    "cancel":{
+    "cancel": {
         "message": "Hủy"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Nhập thất bại"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Không thể lấy danh sách mô hình"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Xin lỗi, tôi gặp một số vấn đề, vui lòng thử lại sau hoặc kiểm tra xem thông tin cấu hình cllama của bạn có chính xác không."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Tiền tố URL không đúng, phải bắt đầu bằng http hoặc https"
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "Vui lòng tạo bản tóm tắt ngắn gọn dựa trên nội dung thông tin trang được cung cấp, yêu cầu: 1. Tối đa 300 từ. 2. Luôn tạo thông tin tóm tắt bằng {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Mục bắt buộc không được để trống"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Vui lòng chọn ít nhất một tùy chọn xuất"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Vui lòng chọn tệp dữ liệu cllama của bạn để xử lý nhập"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Nhấp để chọn tệp"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Chỉ hỗ trợ tệp định dạng \".json\""
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Lưu ý: Nhập sẽ ghi đè một phần dữ liệu gốc."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Nhập thất bại: Dữ liệu trong tệp không có dữ liệu cllama."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Không tìm thấy dữ liệu cần cập nhật"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Tạo lời nhắc mô hình ngôn ngữ lớn"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Bạn là chuyên gia tạo lời nhắc mô hình ngôn ngữ lớn, vui lòng viết lời nhắc cho trợ lý thông minh theo nhu cầu của người dùng để hướng dẫn mô hình ngôn ngữ lớn tạo nội dung, yêu cầu:\n 1. Xuất ở định dạng Markdown\n 2. Phù hợp với nhu cầu của người dùng, mô tả vị trí, khả năng, kiến thức dự trữ của trợ lý thông minh\n 3. Lời nhắc phải rõ ràng, chính xác, dễ hiểu, và càng ngắn gọn càng tốt trong khi vẫn giữ chất lượng\n 4. Chỉ xuất lời nhắc, không xuất giải thích thừa"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Vui lòng giúp tôi tạo lời nhắc cho 'cố vấn pháp lý'"
     },
     "apiSettingsCreativityLabel": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Ngôn ngữ"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Tệp đã chọn: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "Khi được bật, các mô hình AI sẽ hiển thị quá trình suy nghĩ của chúng. Dành cho các mô hình hỗ trợ suy nghĩ (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Tính an toàn"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Đánh giá an toàn biểu thức toán học với + - * / % ^ và dấu ngoặc."
+    },
+    "tool_text_stats": {
+        "message": "Thống kê văn bản"
+    },
+    "tool_text_stats_desc": {
+        "message": "Trả về thống kê văn bản: ký tự, từ, câu và ký tự CJK."
+    },
+    "tool_generate_uuid": {
+        "message": "Tạo UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Tạo chuỗi UUID v4 ngẫu nhiên."
+    },
+    "tool_random_number": {
+        "message": "Số ngẫu nhiên"
+    },
+    "tool_random_number_desc": {
+        "message": "Trả về số nguyên ngẫu nhiên giữa min và max."
+    },
+    "tool_base64_encode": {
+        "message": "Mã hóa Base64"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Mã hóa văn bản thành base64 (an toàn UTF-8)."
+    },
+    "tool_base64_decode": {
+        "message": "Giải mã Base64"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Giải mã chuỗi base64 trở lại văn bản (an toàn UTF-8)."
+    },
+    "tool_url_encode": {
+        "message": "Mã hóa URL"
+    },
+    "tool_url_encode_desc": {
+        "message": "Mã hóa URL văn bản đã cho."
+    },
+    "tool_url_decode": {
+        "message": "Giải mã URL"
+    },
+    "tool_url_decode_desc": {
+        "message": "Giải mã văn bản đã mã hóa đã cho."
+    },
+    "tool_get_browser_info": {
+        "message": "Thông tin trình duyệt"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Trả về thông tin trình duyệt/hệ thống: user agent, ngôn ngữ, nền tảng, múi giờ và dấu thời gian."
+    },
+    "tool_get_page_content": {
+        "message": "Lấy nội dung trang"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Trả về nội dung trang web hiện tại (tiêu đề, URL và văn bản)."
+    },
+    "tool_convert_temperature": {
+        "message": "Đổi nhiệt độ"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Chuyển đổi nhiệt độ giữa Celsius (C), Fahrenheit (F) và Kelvin (K)."
+    },
+    "tool_convert_length": {
+        "message": "Đổi độ dài"
+    },
+    "tool_convert_length_desc": {
+        "message": "Chuyển đổi độ dài giữa m, cm, mm, km, in, ft, yd và mi."
     }
 }

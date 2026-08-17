@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"English"
+    "localLanguage": {
+        "message": "English"
     },
     "browserActionTitle": {
         "message": "Smart Browsing Assistant - cllama"
     },
     "cllamaDescription": {
-        "message": "Customizable depth insights + multi-scenario AI chat + multilingual translation. Supports Ollama & major AI services(OpenAI/Gemini)"
+        "message": "Browser AI copilot: deep webpage insights & Q&A, skill-powered multi-model chat. Works with Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Please enter a message...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Deep Insight"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Content Anchor"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "Content anchor uses CSS selectors to more accurately match page core content"
     },
     "urlPrefix": {
         "message": "URL Prefix"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS Selector"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Insight Recipes"
     },
-    "name":{
+    "name": {
         "message": "Name"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Prompt"
+    },
+    "skill": {
+        "message": "Skills"
+    },
+    "skillList": {
+        "message": "Skill List"
+    },
+    "skillListEmpty": {
+        "message": "No skills configured. Click \"Add Skill\" to create one."
+    },
+    "addSkill": {
+        "message": "Add Skill"
+    },
+    "editSkill": {
+        "message": "Edit"
+    },
+    "deleteSkill": {
+        "message": "Delete"
+    },
+    "skillName": {
+        "message": "Name"
+    },
+    "skillDescription": {
+        "message": "Description"
+    },
+    "skillPrompt": {
+        "message": "Prompt"
+    },
+    "skillTools": {
+        "message": "Tools (comma-separated)"
+    },
+    "skillToolsHint": {
+        "message": "Each tool is added as a row: pick the tool (its description shows automatically), fill optional default args as JSON, then save."
+    },
+    "addTool": {
+        "message": "Add Tool"
+    },
+    "toolParam": {
+        "message": "Args (JSON, optional)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Select a tool"
+    },
+    "toolRowsEmpty": {
+        "message": "No tools yet. Click \"Add Tool\" to add one."
+    },
+    "expSkills": {
+        "message": "Skills"
+    },
+    "skillHelp": {
+        "message": "Skills are reusable capabilities (like the skills in cc / codex / cline). A skill injects a system prompt into the chat and may allow the model to call the tools you select below. In the chat sidebar, type \"/\" to pick and activate a skill."
+    },
+    "skillPickerEmpty": {
+        "message": "No skills available. Add some in Settings → Skills."
+    },
+    "skillPickerNoMatch": {
+        "message": "No matching skill."
+    },
+    "skillDefaultCalculator": {
+        "message": "Calculator"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Do arithmetic using the add_numbers tool."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Page Q&A"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Answer the user's questions based on the current webpage content."
+    },
+    "tool_current_time": {
+        "message": "Current Time"
+    },
+    "tool_current_time_desc": {
+        "message": "Returns the current date and time in the user's locale."
+    },
+    "tool_add_numbers": {
+        "message": "Add Numbers"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Adds a list of numbers and returns the sum."
+    },
+    "tool_echo": {
+        "message": "Echo"
+    },
+    "tool_echo_desc": {
+        "message": "Echoes back the exact text given in the text argument."
+    },
+    "tool_fetch_url": {
+        "message": "Fetch URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Fetches the text content of a URL and returns up to maxLen characters."
     },
     "wordsRemaining": {
         "message": "Words remaining"
@@ -43,10 +136,10 @@
         "message": "Smart Chat"
     },
     "scenario": {
-        "message" : "Scenario"
+        "message": "Scenario"
     },
     "ScenarioManage": {
-        "message" : "Scenario Management"
+        "message": "Scenario Management"
     },
     "inputSample": {
         "message": "Input Sample"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Import"
     },
-    "export" :{
+    "export": {
         "message": "Export"
     },
-    "clear" : {
+    "clear": {
         "message": "Clear"
     },
     "confirm": {
         "message": "Confirm"
     },
-    "cancel":{
+    "cancel": {
         "message": "Cancel"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Import failed"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Failed to get model list"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Sorry, I encountered some problems. Please try again later or check if your cllama configuration information is correct."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Incorrect URL prefix input, must start with http or https"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "Please generate a brief summary based on the given page content. Requirements: 1. Maximum 300 words. 2. Always generate summary information in {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Required field cannot be empty"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Please select at least one export option"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Please select your cllama data file for import"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Click to select file"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Only \".json\" format files are supported"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Note: Importing will overwrite some existing data."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Import failed: No cllama data found in the file."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "No data found to update"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "LLM Prompt Generation"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "You are an expert in LLM prompt generation. Please create a smart assistant prompt based on user requirements, guiding the LLM in content generation. Requirements:\n 1. Output in Markdown format\n 2. Align with user needs, describing the smart assistant's positioning, capabilities, and knowledge base\n 3. The prompt should be clear, precise, and easy to understand, as concise as possible while maintaining quality\n 4. Only output the prompt, no additional explanations"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Please help me generate a 'legal advisor' prompt"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Language"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Selected File: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "When enabled, AI models will show their thinking process. For models that support thinking (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Safe Calculate"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Safely evaluates a math expression using + - * / % ^ and parentheses."
+    },
+    "tool_text_stats": {
+        "message": "Text Stats"
+    },
+    "tool_text_stats_desc": {
+        "message": "Returns statistics for a text: total chars, words, sentences and CJK characters."
+    },
+    "tool_generate_uuid": {
+        "message": "Generate UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Generates a random UUID v4 string."
+    },
+    "tool_random_number": {
+        "message": "Random Number"
+    },
+    "tool_random_number_desc": {
+        "message": "Returns a random integer between min and max."
+    },
+    "tool_base64_encode": {
+        "message": "Base64 Encode"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Encodes the given text to base64 (UTF-8 safe)."
+    },
+    "tool_base64_decode": {
+        "message": "Base64 Decode"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Decodes a base64 string back to text (UTF-8 safe)."
+    },
+    "tool_url_encode": {
+        "message": "URL Encode"
+    },
+    "tool_url_encode_desc": {
+        "message": "URL-encodes the given text."
+    },
+    "tool_url_decode": {
+        "message": "URL Decode"
+    },
+    "tool_url_decode_desc": {
+        "message": "URL-decodes the given encoded text."
+    },
+    "tool_get_browser_info": {
+        "message": "Browser Info"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Returns browser/system info: user agent, language, platform, timezone and timestamp."
+    },
+    "tool_get_page_content": {
+        "message": "Get Page Content"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Returns the content of the current webpage (title, url and text)."
+    },
+    "tool_convert_temperature": {
+        "message": "Convert Temperature"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Converts a temperature between Celsius (C), Fahrenheit (F) and Kelvin (K)."
+    },
+    "tool_convert_length": {
+        "message": "Convert Length"
+    },
+    "tool_convert_length_desc": {
+        "message": "Converts a length between m, cm, mm, km, in, ft, yd and mi."
     }
 }

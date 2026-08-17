@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Français"
+    "localLanguage": {
+        "message": "Français"
     },
     "browserActionTitle": {
         "message": "Assistant de Navigation Intelligent - cllama"
     },
     "cllamaDescription": {
-        "message": "Analyse de contenu personnalisable + dialogue IA multi-scénarios + traduction multilingue. Prend en charge Ollama local et IA majeures (OpenAI/DeepSeek/Zhipu)."
+        "message": "Copilote IA : analyses et questions sur les pages, chat multimodal avec compétences. Compatible Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Saisissez un message...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Analyse Approfondie"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Ancre de Contenu"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "L'ancre de contenu utilise des sélecteurs CSS pour cibler précisément le contenu principal de la page"
     },
     "urlPrefix": {
         "message": "Préfixe URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "Sélecteur CSS"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Recettes d'Analyse"
     },
-    "name":{
+    "name": {
         "message": "Nom"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Invite"
+    },
+    "skill": {
+        "message": "Compétences"
+    },
+    "skillList": {
+        "message": "Liste des compétences"
+    },
+    "skillListEmpty": {
+        "message": "Aucune compétence configurée. Cliquez sur \"Ajouter une compétence\"."
+    },
+    "addSkill": {
+        "message": "Ajouter une compétence"
+    },
+    "editSkill": {
+        "message": "Modifier"
+    },
+    "deleteSkill": {
+        "message": "Supprimer"
+    },
+    "skillName": {
+        "message": "Nom"
+    },
+    "skillDescription": {
+        "message": "Description"
+    },
+    "skillPrompt": {
+        "message": "Instruction"
+    },
+    "skillTools": {
+        "message": "Outils (séparés par des virgules)"
+    },
+    "skillToolsHint": {
+        "message": "Chaque outil est ajouté en une ligne : choisissez l'outil (la description s'affiche automatiquement), remplissez éventuellement les arguments par défaut en JSON, puis enregistrez."
+    },
+    "expSkills": {
+        "message": "Compétences"
+    },
+    "skillHelp": {
+        "message": "Les compétences sont des capacités réutilisables (comme dans cc / codex / cline). Une compétence injecte une instruction système dans le chat et peut permettre au modèle d'appeler les outils sélectionnés. Dans la barre latérale du chat, tapez \"/\" pour choisir et activer une compétence."
+    },
+    "skillPickerEmpty": {
+        "message": "Aucune compétence disponible. Ajoutez-en dans Paramètres → Compétences."
+    },
+    "skillPickerNoMatch": {
+        "message": "Aucune compétence correspondante."
+    },
+    "addTool": {
+        "message": "Ajouter un outil"
+    },
+    "toolParam": {
+        "message": "Arguments (JSON, facultatif)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Sélectionner un outil"
+    },
+    "toolRowsEmpty": {
+        "message": "Aucun outil pour l'instant. Cliquez sur \"Ajouter un outil\"."
+    },
+    "skillDefaultCalculator": {
+        "message": "Calculatrice"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Faire des calculs avec l'outil add_numbers."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Questions de page"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Répond aux questions de l'utilisateur en se basant sur le contenu de la page web actuelle."
+    },
+    "tool_current_time": {
+        "message": "Heure actuelle"
+    },
+    "tool_current_time_desc": {
+        "message": "Renvoie la date et l'heure actuelles dans le fuseau de l'utilisateur."
+    },
+    "tool_add_numbers": {
+        "message": "Additionner"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Additionne une liste de nombres et renvoie la somme."
+    },
+    "tool_echo": {
+        "message": "Écho"
+    },
+    "tool_echo_desc": {
+        "message": "Renvoie exactement le texte donné."
+    },
+    "tool_fetch_url": {
+        "message": "Récupérer une URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Récupère le texte d'une URL et renvoie jusqu'à maxLen caractères ; peut échouer en raison de CORS ou des permissions."
     },
     "wordsRemaining": {
         "message": "Mots restants"
@@ -43,10 +136,10 @@
         "message": "Chat Intelligent"
     },
     "scenario": {
-        "message" : "Scénario"
+        "message": "Scénario"
     },
     "ScenarioManage": {
-        "message" : "Gestion des Scénarios"
+        "message": "Gestion des Scénarios"
     },
     "inputSample": {
         "message": "Exemple de saisie"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Importer"
     },
-    "export" :{
+    "export": {
         "message": "Exporter"
     },
-    "clear" : {
+    "clear": {
         "message": "Effacer"
     },
     "confirm": {
         "message": "Confirmer"
     },
-    "cancel":{
+    "cancel": {
         "message": "Annuler"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Échec de l'importation"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Échec de la récupération de la liste des modèles"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Désolé, un problème est survenu. Veuillez réessayer plus tard ou vérifier votre configuration cllama."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Préfixe URL incorrect, doit commencer par http ou https"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "Veuillez générer un bref résumé du contenu de la page fourni. Exigences : 1. Maximum 300 mots. 2. Toujours générer le résumé en {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Le champ obligatoire ne peut pas être vide"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Veuillez sélectionner au moins une option d'exportation"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Veuillez sélectionner votre fichier de données cllama à importer"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Sélectionner un fichier"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Seuls les fichiers au format \".json\" sont pris en charge"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Remarque : L'importation écrasera partiellement les données existantes."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Échec de l'importation : Aucune donnée cllama trouvée dans le fichier."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Aucune donnée à mettre à jour trouvée"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Génération d'Invites pour LLM"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Vous êtes un expert en génération d'invites pour LLM. Veuillez créer une invite d'assistant intelligent basée sur les exigences de l'utilisateur, guidant le LLM dans la génération de contenu. Exigences :\n 1. Sortie au format Markdown\n 2. Aligné sur les besoins de l'utilisateur, décrivant le positionnement, les capacités et la base de connaissances de l'assistant\n 3. L'invite doit être claire, précise et facile à comprendre, aussi concise que possible tout en maintenant la qualité\n 4. Ne produire que l'invite, sans explications supplémentaires"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Veuillez m'aider à générer une invite de 'conseiller juridique'"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Langue"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Fichier sélectionné : "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "Lorsqu'il est activé, les modèles d'IA montrent leur processus de réflexion. Pour les modèles qui prennent en charge la réflexion (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Calculer sûr"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Évalue en toute sécurité une expression mathématique avec + - * / % ^ et parenthèses."
+    },
+    "tool_text_stats": {
+        "message": "Statistiques de texte"
+    },
+    "tool_text_stats_desc": {
+        "message": "Renvoie des statistiques d'un texte : caractères, mots, phrases et caractères CJK."
+    },
+    "tool_generate_uuid": {
+        "message": "Générer un UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Génère une chaîne UUID v4 aléatoire."
+    },
+    "tool_random_number": {
+        "message": "Nombre aléatoire"
+    },
+    "tool_random_number_desc": {
+        "message": "Renvoie un entier aléatoire entre min et max."
+    },
+    "tool_base64_encode": {
+        "message": "Encoder en base64"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Encode le texte donné en base64 (sûr UTF-8)."
+    },
+    "tool_base64_decode": {
+        "message": "Décoder en base64"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Décode une chaîne base64 en texte (sûr UTF-8)."
+    },
+    "tool_url_encode": {
+        "message": "Encoder une URL"
+    },
+    "tool_url_encode_desc": {
+        "message": "Encode le texte donné en URL."
+    },
+    "tool_url_decode": {
+        "message": "Décoder une URL"
+    },
+    "tool_url_decode_desc": {
+        "message": "Décode le texte encodé donné."
+    },
+    "tool_get_browser_info": {
+        "message": "Infos navigateur"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Renvoie les infos navigateur/système : user agent, langue, plateforme, fuseau et horodatage."
+    },
+    "tool_get_page_content": {
+        "message": "Obtenir le contenu de page"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Renvoie le contenu de la page web actuelle (titre, URL et texte)."
+    },
+    "tool_convert_temperature": {
+        "message": "Convertir la température"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Convertit une température entre Celsius (C), Fahrenheit (F) et Kelvin (K)."
+    },
+    "tool_convert_length": {
+        "message": "Convertir une longueur"
+    },
+    "tool_convert_length_desc": {
+        "message": "Convertit une longueur entre m, cm, mm, km, in, ft, yd et mi."
     }
 }

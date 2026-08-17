@@ -119,6 +119,16 @@
 
       </div>
 
+      <!-- Skill picker (shown when typing "/") -->
+      <div id="skillPicker" class="skill-picker" style="display: none;"></div>
+
+      <!-- Active skill indicator bar -->
+      <div id="skillBar" class="skill-bar d-none align-items-center p-1 border border-bottom-0 rounded-top">
+        <span class="skill-bar-label">🧩 Skill:</span>
+        <span id="skillName" class="skill-bar-name"></span>
+        <a href="#" id="clearSkill" class="skill-bar-clear" title="Clear skill">×</a>
+      </div>
+
       <!-- Text Input Area -->
       <div class="input-group">
         <textarea id="msgInput" class="form-control i18n"  i18n="placeholder" placeholder="inputMessage" rows="3"></textarea>

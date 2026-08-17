@@ -5,6 +5,7 @@ import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
 import { getServiceInstance } from './client/client.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags } from './util.js';
+import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildNativeTools, runTool, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 
 export const browser = typeof chrome !== 'undefined' ? chrome : browser;
 export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
@@ -288,89 +289,138 @@ export async function chat(historyMessages, options) {
 
   const ops = cloneOllamaOptions(options);
 
-  const response = await clientService.sendRequest(msgs, {
-    model: options?.model,
-    options: ops,
-    onStart: () => {
-      typeof options?.start === 'function' && options.start();
-    },
-    onStream: (_, full, sessionId) => {
-      if (options.stop()) {
-        clientService.abort(sessionId);
-        typeof options?.finish === 'function' && options.finish();
-        historyMessages.pop();
-        return;
+  // Decide tool-calling strategy for the active skill.
+  const activeSkill = options?.activeSkill || null;
+  const skillHasTools = activeSkill && Array.isArray(activeSkill.tools) && activeSkill.tools.length;
+  let useNativeTools = false;
+  let nativeTools = [];
+  if (skillHasTools && runtimeConfig.service === 'ollama' && typeof clientService.hasNativeTools === 'function') {
+    useNativeTools = await clientService.hasNativeTools(options?.model);
+    if (useNativeTools) nativeTools = buildNativeTools(activeSkill);
+  }
+
+  // Inject the active skill's prompt (+ text-protocol tool instructions only
+  // when NOT using native function calling).
+  if (activeSkill) {
+    const skillMsg = useNativeTools ? (activeSkill.prompt || '') : buildSkillSystemMessage(activeSkill);
+    if (skillMsg) {
+      if (isGoogle) {
+        msgs.unshift({ role: 'user', parts: [{ text: skillMsg }] });
+      } else {
+        // Avoid a separate "system" message: some models / Ollama builds
+        // reject a system message with "ResponseError: EOF". Prepend the skill
+        // text to the first user message instead.
+        const firstUser = msgs.findIndex(m => m.role === 'user' && typeof m.content === 'string');
+        if (firstUser >= 0) {
+          msgs[firstUser] = { ...msgs[firstUser], content: skillMsg + '\n\n' + msgs[firstUser].content };
+        } else {
+          msgs.unshift({ role: 'user', content: skillMsg });
+        }
       }
-      renderWithDebounce(msgDiv, full);
-      if (!options?.stopScroll())
-        messages.scrollTop = messages.scrollHeight;
-    },
-    onComplete: (fullResponse, id) => {
-      renderWithDebounce(msgDiv, fullResponse);
-      thinkCollapseExpanded(msgDiv);
-      historyMessages.push({ role: 'assistant', content: fullResponse, rtime: Date.now() });
-      typeof options?.finish === 'function' && options.finish(historyMessages);
-    },
-    onError: (error, id) => {
-      if (error.name !== 'AbortError')
-        balert(`[${id}] Error:${error}`, { title: "Error" });
-    }
-  });
-  return response;
-}
-
-/**
- * Translates text using configured translation service
- * @param {string} input - Text to translate
- * @param {Function} callback - Callback receiving translated chunks
- * @param {Object} options - Additional options including stop flag
- */
-export async function translate(input, callback, options) {
-  await getClientService();
-
-  const tranServiceName = runtimeConfig.tranService;
-  let clientService = chatClient;
-  let serviceConfig = runtimeConfig;
-
-  if (tranServiceName && runtimeConfig.dsList) {
-    const foundConfig = runtimeConfig.dsList.find(item => item.service === tranServiceName);
-    if (foundConfig) {
-      clientService = getServiceInstance(foundConfig);
-      serviceConfig = foundConfig;
     }
   }
-  
-  const isGoogle = isGemini(serviceConfig);
-  let messages;
-  if (isGoogle) {
-    messages = [{
-      role: 'user',
-      parts: [
-        { text: runtimeConfig.tranPrompt },
-        { text: input }
-      ]
-    }];
-  } else {
-    messages = [
-      { role: 'system', content: runtimeConfig.tranPrompt },
-      { role: 'user', content: input }
-    ];
-  }
-  
-  const ops = { temperature: runtimeConfig.tranTemperature, top_p: runtimeConfig.tranTopP, think: runtimeConfig.tranThink };
 
-  clientService.sendRequest(messages, {
-    options: ops,
-    onStream: (_, full) => {
-      callback(full);
-      if (options?.stop()) {
-        clientService.abortAllSessions();
+  // Tool-call loop: send a request, and if the model requests tools, execute
+  // them and feed the results back until we get a final answer.
+  let finalResponse = '';
+  for (let step = 0; step <= SKILL_TOOL_MAX_ITER; step++) {
+    let full = '';
+    let lastToolCalls = null;
+    try {
+      // Await the full sendRequest (including its internal cleanup/finally)
+      // so the underlying connection is fully released BEFORE the next request
+      // is issued.
+      const requestPromise = clientService.sendRequest(msgs, {
+        model: options?.model,
+        options: ops,
+        tools: useNativeTools ? nativeTools : undefined,
+        onStart: () => {
+          typeof options?.start === 'function' && options.start();
+        },
+        onStream: (_, text, sessionId) => {
+          if (options.stop()) {
+            clientService.abort(sessionId);
+            typeof options?.finish === 'function' && options.finish();
+            full = text;
+            return;
+          }
+          renderWithDebounce(msgDiv, stripToolCalls(text));
+          if (!options?.stopScroll())
+            messages.scrollTop = messages.scrollHeight;
+        },
+        onComplete: (text, id, toolCalls) => {
+          renderWithDebounce(msgDiv, stripToolCalls(text));
+          thinkCollapseExpanded(msgDiv);
+          full = text;
+          lastToolCalls = toolCalls || null;
+        },
+        onError: (error, id) => {
+          if (error.name !== 'AbortError')
+            balert(`[${id}] Error:${error}`, { title: "Error" });
+        }
+      });
+      await requestPromise;
+    } catch (err) {
+      // A transport/stream error (e.g. Ollama "ResponseError: EOF"). Show an
+      // error and stop gracefully instead of throwing an uncaught promise.
+      if (err.name !== 'AbortError') {
+        console.error('Chat request error:', err);
+        replaceElementContent(msgDiv, browser.i18n.getMessage("cllamaError"));
       }
-    },
-    onComplete: (fullResponse, id) => {
-      callback(removeThinkTags(fullResponse));
+      if (!options.stop()) typeof options?.finish === 'function' && options.finish(historyMessages);
+      break;
     }
-  });
+
+    // If the request was stopped mid-stream, do not continue the tool loop.
+    if (options.stop()) break;
+
+    // Native function-calling path (Ollama models with tools capability).
+    if (useNativeTools && lastToolCalls && lastToolCalls.length && step < SKILL_TOOL_MAX_ITER) {
+      const results = [];
+      for (const tc of lastToolCalls) {
+        const fname = tc.function?.name;
+        let fargs = tc.function?.arguments;
+        if (typeof fargs === 'string') {
+          try { fargs = JSON.parse(fargs); } catch (e) { fargs = {}; }
+        }
+        replaceElementContent(msgDiv, `🔧 running ${fname}...`);
+        const resultText = await runTool(fname, fargs || {}, activeSkill);
+        results.push({ tool_name: fname, content: resultText });
+      }
+      msgs.push({ role: 'assistant', content: full, tool_calls: lastToolCalls });
+      for (const r of results) msgs.push({ role: 'tool', content: r.content, tool_name: r.tool_name });
+      continue;
+    }
+
+    // Text-protocol path (models without native tools).
+    const calls = activeSkill && !useNativeTools ? parseToolCalls(full) : [];
+    if (calls.length && step < SKILL_TOOL_MAX_ITER) {
+      const results = [];
+      for (const call of calls) {
+        replaceElementContent(msgDiv, `🔧 running ${call.name}...`);
+        const resultText = await executeToolCall(call, activeSkill);
+        results.push(resultText);
+      }
+      const toolResultContent = results.join('\n\n');
+      if (isGoogle) {
+        msgs.push({ role: 'model', parts: [{ text: full }] });
+        msgs.push({ role: 'user', parts: [{ text: toolResultContent }] });
+      } else {
+        msgs.push({ role: 'assistant', content: full });
+        msgs.push({ role: 'user', content: toolResultContent });
+      }
+      continue;
+    }
+
+    finalResponse = stripToolCalls(full);
+    break;
+  }
+
+  if (!options.stop()) {
+    historyMessages.push({ role: 'assistant', content: finalResponse, rtime: Date.now() });
+    typeof options?.finish === 'function' && options.finish(historyMessages);
+  }
+  return finalResponse;
 }
 
 /**
@@ -432,6 +482,57 @@ export async function loadDefaultActions() {
     return [];
 }
 
+// Default skills used when the user has not configured any.
+export const SKILL_DEFAULTS = [
+  {
+    id: 'calculator',
+    name: browser.i18n.getMessage('skillDefaultCalculator'),
+    description: browser.i18n.getMessage('skillDefaultCalculatorDesc'),
+    prompt: 'You are a helpful assistant. When the user asks you to add numbers or do arithmetic, use the add_numbers tool and explain the result.',
+    tools: [{ name: 'add_numbers', args: { numbers: [1, 2] } }]
+  },
+  {
+    id: 'general-helper',
+    name: browser.i18n.getMessage('skillDefaultGeneralHelper'),
+    description: browser.i18n.getMessage('skillDefaultGeneralHelperDesc'),
+    prompt: 'You are a helpful assistant that answers the user\'s questions about the current webpage. The webpage content is provided in the conversation; use it as your main source. If you need the latest page content, call get_page_content. Use other tools (current_time, echo) when they help.',
+    tools: [{ name: 'get_page_content', args: {} }, { name: 'current_time', args: {} }, { name: 'echo', args: {} }],
+    usePage: true
+  }
+];
+
+/**
+ * Load the list of skills from storage (fallback to defaults).
+ * @returns {Promise<Array>} Array of skill objects
+ */
+export function loadSkills() {
+  return new Promise((resolve) => {
+    browser.storage.local.get(DB_KEY.skillList, (data) => {
+      const stored = data[DB_KEY.skillList];
+      resolve(stored && stored.length ? stored : SKILL_DEFAULTS);
+    });
+  });
+}
+
+/**
+ * Persist the list of skills to storage.
+ * @param {Array} skills - Skill objects
+ * @returns {Promise<void>}
+ */
+export function saveSkills(skills) {
+  return new Promise((resolve) => browser.storage.local.set({ [DB_KEY.skillList]: skills }, resolve));
+}
+
+/**
+ * Find a skill by id.
+ * @param {string} id - Skill id
+ * @returns {Promise<Object|null>}
+ */
+export async function getSkillById(id) {
+  const skills = await loadSkills();
+  return skills.find((s) => String(s.id) === String(id)) || null;
+}
+
 // Browser storage keys
 export const DB_KEY = {
   base: "base",
@@ -441,7 +542,9 @@ export const DB_KEY = {
   insightList: "insightList",
   dsList: "dsList",
   apiConfig: "apiConfig",
-  fishIconActive: "fishIconActive"
+  fishIconActive: "fishIconActive",
+  pendingInsight: "pendingInsight",
+  skillList: "skillList"
 };
 
 // Initialize theme system for extension pages

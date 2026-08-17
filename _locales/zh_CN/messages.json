@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"中文"
+    "localLanguage": {
+        "message": "中文"
     },
     "browserActionTitle": {
         "message": "智能浏览助手-cllama"
     },
     "cllamaDescription": {
-        "message": "智能浏览助手：可自定义的深度内容分析+多场景的智能对话+多语言翻译，支持本地Ollama与主流AI(如OpenAI、DeepSeek、智谱)。"
+        "message": "浏览器AI助手：网页深度洞察与问答、带技能/工具的多模型对话。支持 Ollama、OpenAI、Gemini 等本地及主流模型。"
     },
     "inputMessage": {
         "message": "请输入消息...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "深度洞察"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "内容锚点"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "内容锚点是通过配置CSS选择器来更精准匹配页面核心内容"
     },
     "urlPrefix": {
         "message": "网址前缀"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS选择器"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "洞察配方"
     },
-    "name":{
+    "name": {
         "message": "名称"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "提示语"
+    },
+    "skill": {
+        "message": "技能"
+    },
+    "skillList": {
+        "message": "技能列表"
+    },
+    "skillListEmpty": {
+        "message": "尚未配置技能。点击\"新增技能\"创建。"
+    },
+    "addSkill": {
+        "message": "新增技能"
+    },
+    "editSkill": {
+        "message": "编辑"
+    },
+    "deleteSkill": {
+        "message": "删除"
+    },
+    "skillName": {
+        "message": "名称"
+    },
+    "skillDescription": {
+        "message": "描述"
+    },
+    "skillPrompt": {
+        "message": "提示词"
+    },
+    "skillTools": {
+        "message": "工具（逗号分隔）"
+    },
+    "skillToolsHint": {
+        "message": "每个工具以一行添加：选择工具（说明会自动显示），如需可填写可选默认参数（JSON 格式），最后保存。"
+    },
+    "addTool": {
+        "message": "添加工具"
+    },
+    "toolParam": {
+        "message": "参数（JSON，可选）"
+    },
+    "toolSelectPlaceholder": {
+        "message": "选择一个工具"
+    },
+    "toolRowsEmpty": {
+        "message": "暂无工具，点击\"添加工具\"添加。"
+    },
+    "expSkills": {
+        "message": "技能"
+    },
+    "skillHelp": {
+        "message": "技能是可复用的能力（类似 cc / codex / cline 中的技能）。技能会向对话注入一条系统提示词，并允许模型调用你在下方勾选绑定的工具。在聊天侧边栏输入 \"/\" 即可选择并激活技能。"
+    },
+    "skillPickerEmpty": {
+        "message": "暂无可用技能。请在设置 → 技能中添加。"
+    },
+    "skillPickerNoMatch": {
+        "message": "没有匹配的技能。"
+    },
+    "skillDefaultCalculator": {
+        "message": "计算器"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "使用 add_numbers 工具做算术。"
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "网页问答"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "根据当前网页内容回答用户问题。"
+    },
+    "tool_current_time": {
+        "message": "当前时间"
+    },
+    "tool_current_time_desc": {
+        "message": "返回用户本地时区的当前日期与时间。"
+    },
+    "tool_add_numbers": {
+        "message": "数字求和"
+    },
+    "tool_add_numbers_desc": {
+        "message": "对一组数字求和并返回结果。"
+    },
+    "tool_echo": {
+        "message": "回显"
+    },
+    "tool_echo_desc": {
+        "message": "原样返回给定的文本。"
+    },
+    "tool_fetch_url": {
+        "message": "抓取网页"
+    },
+    "tool_fetch_url_desc": {
+        "message": "抓取指定 URL 的文本内容并返回最多 maxLen 个字符；可能因 CORS 或权限受限而失败。"
     },
     "wordsRemaining": {
         "message": "剩余字数"
@@ -43,10 +136,10 @@
         "message": "智能对话"
     },
     "scenario": {
-        "message" : "场景"
+        "message": "场景"
     },
     "ScenarioManage": {
-        "message" : "场景管理"
+        "message": "场景管理"
     },
     "inputSample": {
         "message": "输入样例"
@@ -99,16 +192,16 @@
     "import": {
         "message": "导入"
     },
-    "export" :{
+    "export": {
         "message": "导出"
     },
-    "clear" : {
+    "clear": {
         "message": "清空"
     },
     "confirm": {
         "message": "确定"
     },
-    "cancel":{
+    "cancel": {
         "message": "取消"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "导入失败"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "获取模型列表失败"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "很抱歉，我遇到了一些问题，请稍后再试或者检查一下您的cllama配置信息是否正确。"
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "网址前缀输入不正确，必须以http或https开头"
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "请根据给定页面信息内容生成简短摘要，要求：1、最多300字。2、一律用{localLanguage}生成摘要信息。"
     },
-    "requiredError":{
+    "requiredError": {
         "message": "必输项不能为空"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "请至少选择一个导出选项"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "请选择您的cllama数据文件进行导入处理"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "点击选择文件"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "仅支持\".json\"格式文件"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "注意：导入将覆盖部分原有数据。"
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "导入失败：文件中的数据没有cllama数据。"
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "没有找到要更新的数据"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "语言大模型提示词生成"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "你是一位大模型提示词生成专家，请根据用户的需求编写一个智能助手的提示词，来指导大模型进行内容生成，要求：\n 1. 以 Markdown 格式输出\n 2. 贴合用户需求，描述智能助手的定位、能力、知识储备\n 3. 提示词应清晰、精确、易于理解，在保持质量的同时，尽可能简洁\n 4. 只输出提示词，不要输出多余解释"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "请帮我生成一个'法律顾问'的提示词"
     },
     "apiSettingsCreativityLabel": {
@@ -226,19 +319,18 @@
         "message": "若选中则发送该文件给AI服务",
         "description": "Activate button title"
     },
-    
     "fileTooLarge": {
         "message": "文件太大，最好不要超过1M。"
-    }, 
+    },
     "api_configuration": {
         "message": "API配置"
     },
     "other": {
         "message": "其他"
-    },  
+    },
     "insightServiceLabel": {
         "message": "洞察AI"
-    }, 
+    },
     "tranServiceLabel": {
         "message": "翻译AI"
     },
@@ -248,10 +340,10 @@
     "OtherDesc": {
         "message": "支持兼容OpenAI API协议的API接口服务。"
     },
-    "language":{
+    "language": {
         "message": "语言"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "已选择文件: "
     },
     "resend": {
@@ -268,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "启用后AI模型会展示其思考过程，适用于支持thinking的模型(Ollama 0.9+)。"
+    },
+    "tool_safe_calculate": {
+        "message": "安全计算"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "安全地求值数学表达式，支持 + - * / % ^ 与括号。"
+    },
+    "tool_text_stats": {
+        "message": "文本统计"
+    },
+    "tool_text_stats_desc": {
+        "message": "返回文本统计：总字符、单词、句子与中文字符数。"
+    },
+    "tool_generate_uuid": {
+        "message": "生成 UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "生成随机 UUID v4 字符串。"
+    },
+    "tool_random_number": {
+        "message": "随机数"
+    },
+    "tool_random_number_desc": {
+        "message": "返回 min 与 max 之间的随机整数。"
+    },
+    "tool_base64_encode": {
+        "message": "Base64 编码"
+    },
+    "tool_base64_encode_desc": {
+        "message": "将给定文本编码为 base64（UTF-8 安全）。"
+    },
+    "tool_base64_decode": {
+        "message": "Base64 解码"
+    },
+    "tool_base64_decode_desc": {
+        "message": "将 base64 字符串还原为文本（UTF-8 安全）。"
+    },
+    "tool_url_encode": {
+        "message": "URL 编码"
+    },
+    "tool_url_encode_desc": {
+        "message": "对给定文本进行 URL 编码。"
+    },
+    "tool_url_decode": {
+        "message": "URL 解码"
+    },
+    "tool_url_decode_desc": {
+        "message": "对给定已编码文本进行 URL 解码。"
+    },
+    "tool_get_browser_info": {
+        "message": "浏览器信息"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "返回浏览器/系统信息：用户代理、语言、平台、时区与时间戳。"
+    },
+    "tool_get_page_content": {
+        "message": "获取网页内容"
+    },
+    "tool_get_page_content_desc": {
+        "message": "返回当前网页的内容（标题、URL 与正文）。"
+    },
+    "tool_convert_temperature": {
+        "message": "温度换算"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "在摄氏(C)、华氏(F)与开尔文(K)之间换算温度。"
+    },
+    "tool_convert_length": {
+        "message": "长度换算"
+    },
+    "tool_convert_length_desc": {
+        "message": "在 m、cm、mm、km、in、ft、yd、mi 之间换算长度。"
     }
 }

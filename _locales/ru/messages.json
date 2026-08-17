@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"Русский"
+    "localLanguage": {
+        "message": "Русский"
     },
     "browserActionTitle": {
         "message": "Умный помощник для браузера - cllama"
     },
     "cllamaDescription": {
-        "message": "Умный ассистент: Глубокий анализ контента + AI-диалоги + перевод. Поддержка локального Ollama и ведущих ИИ-сервисов (OpenAI/DeepSeek/Zhipu) с защитой данных."
+        "message": "ИИ-помощник для браузера: глубокий анализ и вопросы по страницам, мультимодельный чат со скиллами. Поддержка Ollama, OpenAI, Gemini."
     },
     "inputMessage": {
         "message": "Введите сообщение...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "Глубокий анализ"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "Якорь контента"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "Якорь контента использует CSS-селекторы для точного определения основного содержимого страницы"
     },
     "urlPrefix": {
         "message": "Префикс URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "CSS-селектор"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "Рецепты анализа"
     },
-    "name":{
+    "name": {
         "message": "Название"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "Промт"
+    },
+    "skill": {
+        "message": "Навыки"
+    },
+    "skillList": {
+        "message": "Список навыков"
+    },
+    "skillListEmpty": {
+        "message": "Навыки не настроены. Нажмите «Добавить навык»."
+    },
+    "addSkill": {
+        "message": "Добавить навык"
+    },
+    "editSkill": {
+        "message": "Изменить"
+    },
+    "deleteSkill": {
+        "message": "Удалить"
+    },
+    "skillName": {
+        "message": "Название"
+    },
+    "skillDescription": {
+        "message": "Описание"
+    },
+    "skillPrompt": {
+        "message": "Подсказка"
+    },
+    "skillTools": {
+        "message": "Инструменты (через запятую)"
+    },
+    "skillToolsHint": {
+        "message": "Каждый инструмент добавляется строкой: выберите инструмент (описание появится автоматически), при желании заполните параметры по умолчанию в формате JSON и сохраните."
+    },
+    "expSkills": {
+        "message": "Навыки"
+    },
+    "skillHelp": {
+        "message": "Навыки — это переиспользуемые возможности (как навыки в cc / codex / cline). Навык внедряет системную подсказку в чат и может разрешить модели вызывать выбранные инструменты. В боковой панели чата введите «/», чтобы выбрать и активировать навык."
+    },
+    "skillPickerEmpty": {
+        "message": "Нет доступных навыков. Добавьте их в Настройки → Навыки."
+    },
+    "skillPickerNoMatch": {
+        "message": "Нет подходящего навыка."
+    },
+    "addTool": {
+        "message": "Добавить инструмент"
+    },
+    "toolParam": {
+        "message": "Параметры (JSON, необязательно)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "Выберите инструмент"
+    },
+    "toolRowsEmpty": {
+        "message": "Пока нет инструментов. Нажмите «Добавить инструмент»."
+    },
+    "skillDefaultCalculator": {
+        "message": "Калькулятор"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "Выполнение вычислений с помощью инструмента add_numbers."
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "Вопросы по странице"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "Отвечает на вопросы пользователя на основе содержимого текущей веб-страницы."
+    },
+    "tool_current_time": {
+        "message": "Текущее время"
+    },
+    "tool_current_time_desc": {
+        "message": "Возвращает текущие дату и время в локали пользователя."
+    },
+    "tool_add_numbers": {
+        "message": "Сложить числа"
+    },
+    "tool_add_numbers_desc": {
+        "message": "Складывает список чисел и возвращает сумму."
+    },
+    "tool_echo": {
+        "message": "Эхо"
+    },
+    "tool_echo_desc": {
+        "message": "Возвращает заданный текст без изменений."
+    },
+    "tool_fetch_url": {
+        "message": "Получить URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "Получает текстовое содержимое URL и возвращает до maxLen символов; может завершиться ошибкой из-за CORS или прав."
     },
     "wordsRemaining": {
         "message": "Осталось слов"
@@ -43,10 +136,10 @@
         "message": "Умный чат"
     },
     "scenario": {
-        "message" : "Сценарий"
+        "message": "Сценарий"
     },
     "ScenarioManage": {
-        "message" : "Управление сценариями"
+        "message": "Управление сценариями"
     },
     "inputSample": {
         "message": "Пример ввода"
@@ -99,16 +192,16 @@
     "import": {
         "message": "Импорт"
     },
-    "export" :{
+    "export": {
         "message": "Экспорт"
     },
-    "clear" : {
+    "clear": {
         "message": "Очистить"
     },
     "confirm": {
         "message": "Подтвердить"
     },
-    "cancel":{
+    "cancel": {
         "message": "Отмена"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "Ошибка импорта"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "Не удалось получить список моделей"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "Извините, я столкнулся с некоторыми проблемами. Пожалуйста, попробуйте позже или проверьте правильность настроек cllama."
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "Некорректный префикс URL, должен начинаться с http или https"
     },
     "waitMessage": {
@@ -150,37 +243,37 @@
     "summaryPrompt": {
         "message": "Пожалуйста, создайте краткое резюме на основе предоставленной информации о содержимом страницы. Требования: 1. Максимум 300 слов. 2. Всегда генерируйте информацию резюме на {localLanguage}."
     },
-    "requiredError":{
+    "requiredError": {
         "message": "Обязательное поле не может быть пустым"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "Пожалуйста, выберите хотя бы один вариант экспорта"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "Пожалуйста, выберите файл данных cllama для импорта"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "Нажмите для выбора файла"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "Поддерживаются только файлы формата \".json\""
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "Внимание: Импорт частично перезапишет существующие данные."
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "Ошибка импорта: В файле не найдены данные cllama."
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "Не найдено данных для обновления"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "Генерация промтов для LLM"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "Вы эксперт по генерации промтов для LLM. Пожалуйста, создайте промт для умного помощника на основе требований пользователя, направляя LLM в генерации контента. Требования:\n 1. Вывод в формате Markdown\n 2. Соответствие потребностям пользователя, описание позиционирования, возможностей и базы знаний помощника\n 3. Промт должен быть четким, точным и легким для понимания, максимально лаконичным при сохранении качества\n 4. Выводите только промт, без дополнительных объяснений"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "Пожалуйста, помогите мне сгенерировать промт для 'юридического консультанта'"
     },
     "confirmClearChat": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "Язык"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "Выбранный файл: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "При включении модели ИИ будут показывать свой процесс мышления. Для моделей, поддерживающих thinking (Ollama 0.9+)."
+    },
+    "tool_safe_calculate": {
+        "message": "Безопасный расчёт"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "Безопасно вычисляет математическое выражение с + - * / % ^ и скобками."
+    },
+    "tool_text_stats": {
+        "message": "Статистика текста"
+    },
+    "tool_text_stats_desc": {
+        "message": "Возвращает статистику текста: символы, слова, предложения и CJK-символы."
+    },
+    "tool_generate_uuid": {
+        "message": "Сгенерировать UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "Генерирует случайную строку UUID v4."
+    },
+    "tool_random_number": {
+        "message": "Случайное число"
+    },
+    "tool_random_number_desc": {
+        "message": "Возвращает случайное целое число между min и max."
+    },
+    "tool_base64_encode": {
+        "message": "Base64 кодировать"
+    },
+    "tool_base64_encode_desc": {
+        "message": "Кодирует заданный текст в base64 (UTF-8 безопасно)."
+    },
+    "tool_base64_decode": {
+        "message": "Base64 декодировать"
+    },
+    "tool_base64_decode_desc": {
+        "message": "Декодирует строку base64 обратно в текст (UTF-8 безопасно)."
+    },
+    "tool_url_encode": {
+        "message": "URL кодировать"
+    },
+    "tool_url_encode_desc": {
+        "message": "URL-кодирует заданный текст."
+    },
+    "tool_url_decode": {
+        "message": "URL декодировать"
+    },
+    "tool_url_decode_desc": {
+        "message": "Декодирует заданный закодированный текст."
+    },
+    "tool_get_browser_info": {
+        "message": "Информация о браузере"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "Возвращает информацию о браузере/системе: user agent, язык, платформа, часовой пояс и метка времени."
+    },
+    "tool_get_page_content": {
+        "message": "Получить содержимое страницы"
+    },
+    "tool_get_page_content_desc": {
+        "message": "Возвращает содержимое текущей веб-страницы (заголовок, URL и текст)."
+    },
+    "tool_convert_temperature": {
+        "message": "Перевести температуру"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "Переводит температуру между Цельсием (C), Фаренгейтом (F) и Кельвином (K)."
+    },
+    "tool_convert_length": {
+        "message": "Перевести длину"
+    },
+    "tool_convert_length_desc": {
+        "message": "Переводит длину между м, см, мм, км, дюйм, фут, ярд и миля."
     }
 }

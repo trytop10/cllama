@@ -1,12 +1,12 @@
 {
-    "localLanguage":{
-        "message":"ไทย"
+    "localLanguage": {
+        "message": "ไทย"
     },
     "browserActionTitle": {
         "message": "ผู้ช่วยการเรียกดูอัจฉริยะ - cllama"
     },
     "cllamaDescription": {
-        "message": "ผู้ช่วยการเรียกดูอัจฉริยะ: การวิเคราะห์เนื้อหาเชิงลึกที่ปรับแต่งได้ + การสนทนาอัจฉริยะในหลายสถานการณ์ + การแปลหลายภาษา รองรับบริการ Ollama ในเครื่องและ AI หลัก(เช่น OpenAI, DeepSeek)"
+        "message": "AI ผู้ช่วยในเบราว์เซอร์: วิเคราะห์และถามตอบหน้าเว็บ แชทหลายโมเดลพร้อมสกิล รองรับ Ollama, OpenAI, Gemini"
     },
     "inputMessage": {
         "message": "ป้อนข้อความ...",
@@ -15,26 +15,119 @@
     "Insightify": {
         "message": "ข้อมูลเชิงลึก"
     },
-    "urlCssSelector":{
+    "urlCssSelector": {
         "message": "จุดยึดเนื้อหา"
     },
-    "urlCssSelectorDesc":{
+    "urlCssSelectorDesc": {
         "message": "จุดยึดเนื้อหาช่วยให้จับคู่เนื้อหาหลักของหน้าเว็บได้แม่นยำยิ่งขึ้นโดยการกำหนดตัวเลือก CSS"
     },
     "urlPrefix": {
         "message": "คำนำหน้า URL"
     },
-    "cssSelector":{
+    "cssSelector": {
         "message": "ตัวเลือก CSS"
     },
-    "InsightRecipes":{
+    "InsightRecipes": {
         "message": "สูตรข้อมูลเชิงลึก"
     },
-    "name":{
+    "name": {
         "message": "ชื่อ"
     },
-    "Prompt":{
+    "Prompt": {
         "message": "พร้อมท์"
+    },
+    "skill": {
+        "message": "ทักษะ"
+    },
+    "skillList": {
+        "message": "รายการทักษะ"
+    },
+    "skillListEmpty": {
+        "message": "ยังไม่มีการกำหนดทักษะ คลิก \"เพิ่มทักษะ\""
+    },
+    "addSkill": {
+        "message": "เพิ่มทักษะ"
+    },
+    "editSkill": {
+        "message": "แก้ไข"
+    },
+    "deleteSkill": {
+        "message": "ลบ"
+    },
+    "skillName": {
+        "message": "ชื่อ"
+    },
+    "skillDescription": {
+        "message": "คำอธิบาย"
+    },
+    "skillPrompt": {
+        "message": "พร้อมท์"
+    },
+    "skillTools": {
+        "message": "เครื่องมือ (คั่นด้วยเครื่องหมายจุลภาค)"
+    },
+    "skillToolsHint": {
+        "message": "แต่ละเครื่องมือจะถูกเพิ่มเป็นหนึ่งบรรทัด: เลือกเครื่องมือ (คำอธิบายจะแสดงอัตโนมัติ) กรอกอาร์กิวเมนต์เริ่มต้นที่เลือกได้เป็น JSON แล้วบันทึก"
+    },
+    "expSkills": {
+        "message": "ทักษะ"
+    },
+    "skillHelp": {
+        "message": "ทักษะคือความสามารถที่นำกลับมาใช้ใหม่ได้ (เหมือนทักษะใน cc / codex / cline) ทักษะจะฉีดพร้อมท์ของระบบเข้าสู่การแชท และอาจอนุญาตให้โมเดลเรียกใช้เครื่องมือที่เลือกได้ พิมพ์ \"/\" ในแถบด้านข้างการแชทเพื่อเลือกและเปิดใช้งานทักษะ"
+    },
+    "skillPickerEmpty": {
+        "message": "ไม่มีทักษะที่พร้อมใช้งาน เพิ่มใน การตั้งค่า → ทักษะ"
+    },
+    "skillPickerNoMatch": {
+        "message": "ไม่มีทักษะที่ตรงกัน"
+    },
+    "addTool": {
+        "message": "เพิ่มเครื่องมือ"
+    },
+    "toolParam": {
+        "message": "อาร์กิวเมนต์ (JSON, ไม่บังคับ)"
+    },
+    "toolSelectPlaceholder": {
+        "message": "เลือกเครื่องมือ"
+    },
+    "toolRowsEmpty": {
+        "message": "ยังไม่มีเครื่องมือ คลิก \"เพิ่มเครื่องมือ\""
+    },
+    "skillDefaultCalculator": {
+        "message": "เครื่องคิดเลข"
+    },
+    "skillDefaultCalculatorDesc": {
+        "message": "คำนวณโดยใช้เครื่องมือ add_numbers"
+    },
+    "skillDefaultGeneralHelper": {
+        "message": "ถาม-ตอบหน้าเว็บ"
+    },
+    "skillDefaultGeneralHelperDesc": {
+        "message": "ตอบคำถามของผู้ใช้ตามเนื้อหาของหน้าเว็บปัจจุบัน"
+    },
+    "tool_current_time": {
+        "message": "เวลาปัจจุบัน"
+    },
+    "tool_current_time_desc": {
+        "message": "ส่งคืนวันที่และเวลาปัจจุบันตามเขตเวลาของผู้ใช้"
+    },
+    "tool_add_numbers": {
+        "message": "บวกตัวเลข"
+    },
+    "tool_add_numbers_desc": {
+        "message": "บวกรายการตัวเลขและส่งคืนผลรวม"
+    },
+    "tool_echo": {
+        "message": "เสียงสะท้อน"
+    },
+    "tool_echo_desc": {
+        "message": "ส่งคืนข้อความที่กำหนดแบบเดิม"
+    },
+    "tool_fetch_url": {
+        "message": "ดึง URL"
+    },
+    "tool_fetch_url_desc": {
+        "message": "ดึงเนื้อหาข้อความของ URL และส่งคืนสูงสุด maxLen ตัวอักษร อาจล้มเหลวเนื่องจาก CORS หรือสิทธิ์"
     },
     "wordsRemaining": {
         "message": "คำที่เหลือ"
@@ -43,10 +136,10 @@
         "message": "การสนทนาอัจฉริยะ"
     },
     "scenario": {
-        "message" : "สถานการณ์"
+        "message": "สถานการณ์"
     },
     "ScenarioManage": {
-        "message" : "การจัดการสถานการณ์"
+        "message": "การจัดการสถานการณ์"
     },
     "inputSample": {
         "message": "ตัวอย่างการป้อนข้อมูล"
@@ -99,16 +192,16 @@
     "import": {
         "message": "นำเข้า"
     },
-    "export" :{
+    "export": {
         "message": "ส่งออก"
     },
-    "clear" : {
+    "clear": {
         "message": "ล้าง"
     },
     "confirm": {
         "message": "ยืนยัน"
     },
-    "cancel":{
+    "cancel": {
         "message": "ยกเลิก"
     },
     "saveSuccessMessage": {
@@ -120,7 +213,7 @@
     "importFailMessage": {
         "message": "นำเข้าล้มเหลว"
     },
-    "getModuleListFailMessage":{
+    "getModuleListFailMessage": {
         "message": "ไม่สามารถรับรายการโมเดลได้"
     },
     "tranPrompt": {
@@ -132,7 +225,7 @@
     "cllamaError": {
         "message": "ขออภัย ฉันพบปัญหาบางอย่ง โปรดลองอีกครั้งในภายหลัง หรือตรวจสอบว่าข้อมูลการกำหนดค่า cllama ของคุณถูกต้องหรือไม่"
     },
-    "urlPrefixError":{
+    "urlPrefixError": {
         "message": "คำนำหน้า URL ไม่ถูกต้อง ต้องขึ้นต้นด้วย http หรือ https"
     },
     "waitMessage": {
@@ -153,37 +246,37 @@
     "summaryPrompt": {
         "message": "โปรดสร้างสรุปสั้นๆ ตามเนื้อหาข้อมูลหน้าเว็บที่ให้มา ข้อกำหนด: 1. ไม่เกิน 300 คำ 2. สร้างข้อมูลสรุปเป็น {localLanguage} เสมอ"
     },
-    "requiredError":{
+    "requiredError": {
         "message": "รายการที่จำเป็นต้องไม่ว่างเปล่า"
     },
-    "exportOptionEmptyError":{
+    "exportOptionEmptyError": {
         "message": "โปรดเลือกตัวเลือกการส่งออกอย่างน้อยหนึ่งรายการ"
     },
-    "importPromptMsg1":{
+    "importPromptMsg1": {
         "message": "โปรดเลือกไฟล์ข้อมูล cllama ของคุณเพื่อดำเนินการนำเข้า"
     },
-    "importPromptMsg2":{
+    "importPromptMsg2": {
         "message": "คลิกเพื่อเลือกไฟล์"
     },
-    "importPromptMsg3":{
+    "importPromptMsg3": {
         "message": "รองรับเฉพาะไฟล์รูปแบบ \".json\" เท่านั้น"
     },
-    "importWarnMsg1":{
+    "importWarnMsg1": {
         "message": "หมายเหตุ: การนำเข้าจะเขียนทับข้อมูลเดิมบางส่วน"
     },
-    "importFailMsg1":{
+    "importFailMsg1": {
         "message": "นำเข้าล้มเหลว: ข้อมูลในไฟล์ไม่มีข้อมูล cllama"
     },
-    "noUpdateDataError":{
+    "noUpdateDataError": {
         "message": "ไม่พบข้อมูลที่จะอัปเดต"
     },
-    "directorExample1_name":{
+    "directorExample1_name": {
         "message": "การสร้างพร้อมท์โมเดลภาษาขนาดใหญ่"
     },
-    "directorExample1_prompt":{
+    "directorExample1_prompt": {
         "message": "คุณเป็นผู้เชี่ยวชาญด้านการสร้างพร้อมท์โมเดลภาษาขนาดใหญ่ โปรดเขียนพร้อมท์สำหรับผู้ช่วยอัจฉริยะตามความต้องการของผู้ใช้ เพื่อแนะนำโมเดลภาษาขนาดใหญ่ในการสร้างเนื้อหา ข้อกำหนด:\n 1. ส่งออกในรูปแบบ Markdown\n 2. สอดคล้องกับความต้องการของผู้ใช้ อธิบายตำแหน่ง ความสามารถ และความรู้ของผู้ช่วยอัจฉริยะ\n 3. พร้อมท์ควรชัดเจน แม่นยำ และเข้าใจง่าย กระชับที่สุดเท่าที่จะทำได้ในขณะที่ยังคงคุณภาพ\n 4. ส่งออกเฉพาะพร้อมท์ ไม่ต้องมีคำอธิบายเพิ่มเติม"
     },
-    "directorExample1_sample":{
+    "directorExample1_sample": {
         "message": "โปรดช่วยฉันสร้างพร้อมท์สำหรับ 'ที่ปรึกษากฎหมาย'"
     },
     "apiSettingsCreativityLabel": {
@@ -250,7 +343,7 @@
     "language": {
         "message": "ภาษา"
     },
-    "selectedFile":{
+    "selectedFile": {
         "message": "ไฟล์ที่เลือก: "
     },
     "resend": {
@@ -267,5 +360,77 @@
     },
     "thinkModeDesc": {
         "message": "เมื่อเปิดใช้งาน โมเดล AI จะแสดงกระบวนการคิดของตน สำหรับโมเดลที่รองรับการคิด (Ollama 0.9+)"
+    },
+    "tool_safe_calculate": {
+        "message": "คำนวณปลอดภัย"
+    },
+    "tool_safe_calculate_desc": {
+        "message": "ประเมินนิพจน์คณิตศาสตร์ด้วย + - * / % ^ และวงเล็บอย่างปลอดภัย"
+    },
+    "tool_text_stats": {
+        "message": "สถิติข้อความ"
+    },
+    "tool_text_stats_desc": {
+        "message": "ส่งคืนสถิติของข้อความ: อักขระ คำ ประโยค และอักขระ CJK"
+    },
+    "tool_generate_uuid": {
+        "message": "สร้าง UUID"
+    },
+    "tool_generate_uuid_desc": {
+        "message": "สร้างสตริง UUID v4 แบบสุ่ม"
+    },
+    "tool_random_number": {
+        "message": "ตัวเลขสุ่ม"
+    },
+    "tool_random_number_desc": {
+        "message": "ส่งคืนจำนวนเต็มสุ่มระหว่าง min และ max"
+    },
+    "tool_base64_encode": {
+        "message": "เข้ารหัส Base64"
+    },
+    "tool_base64_encode_desc": {
+        "message": "เข้ารหัสข้อความเป็น base64 (ปลอดภัย UTF-8)"
+    },
+    "tool_base64_decode": {
+        "message": "ถอดรหัส Base64"
+    },
+    "tool_base64_decode_desc": {
+        "message": "ถอดรหัสสตริง base64 กลับเป็นข้อความ (ปลอดภัย UTF-8)"
+    },
+    "tool_url_encode": {
+        "message": "เข้ารหัส URL"
+    },
+    "tool_url_encode_desc": {
+        "message": "เข้ารหัสข้อความที่กำหนดเป็น URL"
+    },
+    "tool_url_decode": {
+        "message": "ถอดรหัส URL"
+    },
+    "tool_url_decode_desc": {
+        "message": "ถอดรหัสข้อความที่เข้ารหัสที่กำหนด"
+    },
+    "tool_get_browser_info": {
+        "message": "ข้อมูลเบราว์เซอร์"
+    },
+    "tool_get_browser_info_desc": {
+        "message": "ส่งคืนข้อมูลเบราว์เซอร์/ระบบ: user agent ภาษา แพลตฟอร์ม เขตเวลา และเวลา"
+    },
+    "tool_get_page_content": {
+        "message": "ดึงเนื้อหาหน้า"
+    },
+    "tool_get_page_content_desc": {
+        "message": "ส่งคืนเนื้อหาของหน้าเว็บปัจจุบัน (ชื่อเรื่อง URL และข้อความ)"
+    },
+    "tool_convert_temperature": {
+        "message": "แปลงอุณหภูมิ"
+    },
+    "tool_convert_temperature_desc": {
+        "message": "แปลงอุณหภูมิระหว่างเซลเซียส (C) ฟาเรนไฮต์ (F) และเคลวิน (K)"
+    },
+    "tool_convert_length": {
+        "message": "แปลงความยาว"
+    },
+    "tool_convert_length_desc": {
+        "message": "แปลงความยาวระหว่าง m, cm, mm, km, in, ft, yd และ mi"
     }
 }
