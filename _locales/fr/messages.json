@@ -37,16 +37,16 @@
         "message": "Invite"
     },
     "skill": {
-        "message": "Compétences"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Liste des compétences"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Aucune compétence configurée. Cliquez sur \"Ajouter une compétence\"."
+        "message": "Aucun Skill configuré. Cliquez sur « Ajouter un Skill »."
     },
     "addSkill": {
-        "message": "Ajouter une compétence"
+        "message": "Ajouter un Skill"
     },
     "editSkill": {
         "message": "Modifier"
@@ -64,19 +64,19 @@
         "message": "Instruction"
     },
     "skillTools": {
-        "message": "Outils (séparés par des virgules)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Chaque outil est ajouté en une ligne : choisissez l'outil (la description s'affiche automatiquement), remplissez éventuellement les arguments par défaut en JSON, puis enregistrez."
     },
     "expSkills": {
-        "message": "Compétences"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Les compétences sont des capacités réutilisables (comme dans cc / codex / cline). Une compétence injecte une instruction système dans le chat et peut permettre au modèle d'appeler les outils sélectionnés. Dans la barre latérale du chat, tapez \"/\" pour choisir et activer une compétence."
+        "message": "Les compétences sont des capacités réutilisables (comme dans cc / codex / cline). Une compétence injecte une instruction système dans le chat et peut permettre au modèle d'appeler les outils sélectionnés. Dans la barre latérale du chat, tapez « / » pour choisir et activer une compétence."
     },
     "skillPickerEmpty": {
-        "message": "Aucune compétence disponible. Ajoutez-en dans Paramètres → Compétences."
+        "message": "Aucune compétence disponible. Ajoutez-en dans Paramètres."
     },
     "skillPickerNoMatch": {
         "message": "Aucune compétence correspondante."
@@ -91,7 +91,7 @@
         "message": "Sélectionner un outil"
     },
     "toolRowsEmpty": {
-        "message": "Aucun outil pour l'instant. Cliquez sur \"Ajouter un outil\"."
+        "message": "Aucun outil pour l'instant. Cliquez sur « Ajouter un outil »."
     },
     "skillDefaultCalculator": {
         "message": "Calculatrice"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Convertit une longueur entre m, cm, mm, km, in, ft, yd et mi."
+    },
+    "skillAutoSelect": {
+        "message": "Choisir un Skill automatiquement"
+    },
+    "skillBarAutoHint": {
+        "message": "L'IA choisira un Skill quand c'est pertinent. Cliquez pour en choisir un."
+    },
+    "skillBarFixedHint": {
+        "message": "L'IA utilisera ce Skill. Cliquez pour changer ou effacer."
+    },
+    "skillNoSkill": {
+        "message": "Aucun Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skills désactivés. Cliquez pour en choisir un ou activer Auto."
+    },
+    "skillDefaultDateTime": {
+        "message": "Date et heure"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Répond aux questions sur la date, l'heure et le jour de la semaine actuels."
+    },
+    "skillAutoMode": {
+        "message": "Auto"
     }
 }

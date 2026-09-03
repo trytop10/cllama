@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Converts a length between m, cm, mm, km, in, ft, yd and mi."
+    },
+    "skillBarAutoHint": {
+        "message": "AI will choose a Skill when relevant. Click to pick one."
+    },
+    "skillBarFixedHint": {
+        "message": "AI will use this Skill. Click to change or clear."
+    },
+    "skillNoSkill": {
+        "message": "No Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skills are off. Click to pick one or enable Auto."
+    },
+    "skillAutoSelect": {
+        "message": "Auto-select Skill"
+    },
+    "skillAutoMode": {
+        "message": "Auto"
+    },
+    "skillDefaultDateTime": {
+        "message": "Date & Time"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Answers questions about the current date, time and weekday."
     }
 }

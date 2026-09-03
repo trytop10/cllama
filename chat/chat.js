@@ -1,5 +1,5 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments } from '../js/cllama.js';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
@@ -58,7 +58,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentConfigurations = [];
     let apiSettingsPopover;
     let historyMemory = true;
-    let activeSkill = null;    // Currently active skill (or null)
+    let activeSkill = null;    // Currently fixed skill (or null)
+    let activeSkillArgs = '';  // Argument string captured when "/skill args..." ran
+    let skillDisabled = false; // true => "No Skill (off)" mode: no Skill injection
     let skills = [];           // All available skills
     let skillPickerOpen = false;
     let skillHighlight = -1;
@@ -75,17 +77,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
-     * Update the active-skill indicator bar.
+     * Update the skill status capsule. Three states: a fixed Skill
+     * (activeSkill != null), "Auto" (activeSkill == null, model may self-select),
+     * and "No Skill / off" (skillDisabled). Hidden entirely when there are no
+     * configured Skills.
      */
     function renderActiveSkillBar() {
         if (!skillBar || !skillNameSpan) return;
-        if (activeSkill) {
-            skillNameSpan.textContent = activeSkill.name;
-            skillBar.classList.remove('d-none');
-            skillBar.classList.add('d-flex');
-        } else {
+        const clearSkillBtn = skillBar.querySelector("#clearSkill");
+        const labelEl = skillBar.querySelector(".skill-bar-label");
+        // No usable skills => hide the whole bar (Skill feature is off).
+        if (!skills.length) {
             skillBar.classList.add('d-none');
             skillBar.classList.remove('d-flex');
+            return;
+        }
+        skillBar.classList.remove('d-none');
+        skillBar.classList.add('d-flex');
+
+        if (skillDisabled) {
+            if (labelEl) labelEl.style.display = '';
+            skillNameSpan.textContent = browser.i18n.getMessage("skillNoSkill") || 'No Skill';
+            skillBar.title = browser.i18n.getMessage("skillBarOffHint") || 'Skills are off. Click to pick one or enable Auto.';
+            if (clearSkillBtn) clearSkillBtn.style.display = 'none';
+        } else if (activeSkill) {
+            if (labelEl) labelEl.style.display = '';
+            skillNameSpan.textContent = activeSkill.name;
+            skillBar.title = browser.i18n.getMessage("skillBarFixedHint") || 'AI will use this Skill';
+            if (clearSkillBtn) clearSkillBtn.style.display = '';
+        } else {
+            // Auto mode: AI picks a Skill when relevant. Keep the same capsule
+            // shape (icon prefix + status) as when a Skill is fixed.
+            skillNameSpan.textContent = browser.i18n.getMessage("skillAutoSelect") || 'Auto-select Skill';
+            skillBar.title = browser.i18n.getMessage("skillBarAutoHint") || 'AI will choose a Skill when relevant. Click to pick one.';
+            if (clearSkillBtn) clearSkillBtn.style.display = 'none';
         }
     }
 
@@ -116,8 +141,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         skillHighlight = -1;
-        skillPicker.innerHTML = matches.map((s, i) =>
-            `<div class="skill-picker-item" data-index="${i}" data-id="${s.id}">
+        const isAutoState = !activeSkill && !skillDisabled;
+        // State-control rows ("Auto" / "No Skill"). While in Auto + a typed query
+        // we keep the list focused on matching Skills; otherwise expose the
+        // controls so the user can switch mode.
+        const autoRow =
+            `<div class="skill-picker-item skill-picker-autoskill" data-auto="1">
+                <span class="skill-picker-name">${browser.i18n.getMessage("skillAutoSelect") || "Let AI choose a Skill"}</span>
+              </div>`;
+        const offRow =
+            `<div class="skill-picker-item skill-picker-autoskill" data-off="1">
+                <span class="skill-picker-name">${browser.i18n.getMessage("skillNoSkill") || "No Skill"}</span>
+              </div>`;
+        let controls = '';
+        if (!q || !isAutoState) {
+            if (!isAutoState) controls += autoRow;   // already Auto => hide
+            if (!skillDisabled) controls += offRow;  // already off => hide
+        }
+        skillPicker.innerHTML = controls + matches.map((s) =>
+            `<div class="skill-picker-item" data-id="${s.id}">
                 <span class="skill-picker-name">${s.name}</span>
                 <span class="skill-picker-desc">${s.description || ''}</span>
             </div>`
@@ -125,10 +167,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         skillPicker.style.display = 'block';
         skillPickerOpen = true;
 
-        skillPicker.querySelectorAll('.skill-picker-item').forEach(el => {
+        const autoEl = skillPicker.querySelector('[data-auto]');
+        if (autoEl) {
+            autoEl.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                clearActiveSkill();
+            });
+        }
+        const offEl = skillPicker.querySelector('[data-off]');
+        if (offEl) {
+            offEl.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                disableSkills();
+            });
+        }
+        skillPicker.querySelectorAll('.skill-picker-item[data-id]').forEach(el => {
             el.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                const skill = skills[parseInt(el.dataset.index, 10)];
+                const id = el.getAttribute('data-id');
+                const skill = skills.find(s => String(s.id) === String(id));
                 if (skill) selectSkill(skill);
             });
         });
@@ -164,6 +221,8 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function selectSkill(skill) {
         activeSkill = skill;
+        activeSkillArgs = '';
+        skillDisabled = false;
         closeSkillPicker();
         renderActiveSkillBar();
         if (msgInput) {
@@ -177,8 +236,60 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function clearActiveSkill() {
         activeSkill = null;
+        activeSkillArgs = '';
+        skillDisabled = false; // go back to Auto (model may self-select)
+        // Drop a leftover "/..." draft used to open the picker (keep real text).
+        if (msgInput && msgInput.value.startsWith('/')) msgInput.value = '';
         closeSkillPicker();
         renderActiveSkillBar();
+    }
+
+    /**
+     * Switch to "No Skill (off)": no Skill index / tools are injected at all and
+     * the model answers as a plain assistant until the user picks or enables Auto.
+     */
+    function disableSkills() {
+        activeSkill = null;
+        activeSkillArgs = '';
+        skillDisabled = true;
+        // Drop a leftover "/..." draft used to open the picker (keep real text).
+        if (msgInput && msgInput.value.startsWith('/')) msgInput.value = '';
+        closeSkillPicker();
+        renderActiveSkillBar();
+    }
+
+    /**
+     * Parse a draft that starts with "/" into an inline Skill command.
+     * Format: "/skillname [args...]". Returns null when the first token does not
+     * exactly match a known Skill (so fuzzy "/" autocomplete keeps working).
+     * @param {string} text - The raw input draft.
+     * @returns {null|{skill:Object, args:string}}
+     */
+    function parseSkillCommand(text) {
+        if (!text) return null;
+        const m = /^\/[ \t]*([^\s]+)[ \t]*(.*)$/.exec(text);
+        if (!m) return null;
+        const skill = skills.find(s => s.name.toLowerCase() === m[1].toLowerCase());
+        return skill ? { skill, args: m[2] || '' } : null;
+    }
+
+    /**
+     * Commit the currently highlighted item of the skill picker (arrow navigation).
+     */
+    function commitHighlightedSkill() {
+        const items = skillPicker.querySelectorAll('.skill-picker-item');
+        if (skillHighlight >= 0 && items[skillHighlight]) {
+            const el = items[skillHighlight];
+            if (el.hasAttribute('data-auto')) {
+                clearActiveSkill();
+            } else if (el.hasAttribute('data-off')) {
+                disableSkills();
+            } else {
+                const id = el.getAttribute('data-id');
+                const skill = skills.find(s => String(s.id) === String(id));
+                if (skill) selectSkill(skill);
+            }
+        }
     }
 
     /**
@@ -186,9 +297,13 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function handleSkillInput() {
         const val = msgInput.value;
-        // Only trigger when "/" is the very first character of the draft.
+        // Only trigger when "/" is the very first character of the draft. The
+        // query is the first token only, so "/name arg1 arg2" keeps matching
+        // "name" (args are handled as an inline command on send).
         if (val.startsWith('/')) {
-            openSkillPicker(val.slice(1));
+            const rest = val.slice(1).trimStart();
+            const query = rest.split(/\s+/, 1)[0] || '';
+            openSkillPicker(query);
         } else {
             closeSkillPicker();
         }
@@ -238,7 +353,22 @@ document.addEventListener("DOMContentLoaded", async () => {
      * Send message: handle user input, add system prompts, call chat API
      */
     async function sendMessage() {
-        const messageContent = msgInput.value.trim();
+        // Inline "/skill [args...]" command: fix that Skill (sticky) and treat
+        // everything after its name as the message / $ARGUMENTS. A bare "/skill"
+        // with no args just activates the Skill and sends nothing.
+        let rawMessage = msgInput.value;
+        const cmd = parseSkillCommand(rawMessage);
+        if (cmd) {
+            activeSkill = cmd.skill;
+            activeSkillArgs = cmd.args || '';
+            skillDisabled = false; // adopting a Skill overrides "off"
+            if (skillPickerOpen) closeSkillPicker();
+            renderActiveSkillBar();
+            rawMessage = cmd.args;
+            msgInput.value = cmd.args;
+        }
+
+        const messageContent = rawMessage.trim();
         const rtime = Date.now();
         if (!messageContent) return;
 
@@ -300,7 +430,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
                 }
             } catch (err) {
-                console.warn("Failed to get page info for skill:", err);
+                // Expected when the active tab has no injected content script
+                // (chrome:// / about: pages, the extension's own pages, PDF
+                // viewer, or a tab that was just closed). This is not a real
+                // failure: the skill simply proceeds without page content.
+                // Only surface genuinely unexpected errors to the console.
+                const errMsg = String((err && err.message) || err);
+                const noContentScript =
+                    /receiving end does not exist/i.test(errMsg) ||
+                    /could not establish connection/i.test(errMsg);
+                if (!noContentScript) {
+                    console.warn("Failed to get page info for skill:", err);
+                }
             }
         }
 
@@ -311,7 +452,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             temperature: apiSettings.temperature,
             top_p: apiSettings.top_p,
             think: apiSettings.think,
-            activeSkill: activeSkill,
+            activeSkill: activeSkill ? { ...activeSkill, prompt: applySkillArguments(activeSkill.prompt || '', activeSkillArgs) } : null,
+            skills: skillDisabled ? [] : skills,
             start: () => {
                 stopFlag = false;
                 setComponentState(true);
@@ -599,13 +741,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 setSkillHighlight(skillHighlight - 1);
-            } else if (e.key === 'Enter' || e.key === 'Tab') {
-                e.preventDefault();
-                const items = skillPicker.querySelectorAll('.skill-picker-item');
-                if (skillHighlight >= 0 && items[skillHighlight]) {
-                    const skill = skills[parseInt(items[skillHighlight].dataset.index, 10)];
-                    if (skill) selectSkill(skill);
+            } else if (e.key === 'Enter') {
+                // An exact "/skillname [args]" command adopts the Skill and sends
+                // the trailing text; otherwise Enter commits the highlighted pick.
+                if (parseSkillCommand(msgInput.value)) {
+                    e.preventDefault();
+                    sendMessage();
+                } else {
+                    e.preventDefault();
+                    commitHighlightedSkill();
                 }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                commitHighlightedSkill();
             } else if (e.key === 'Escape') {
                 e.preventDefault();
                 closeSkillPicker();
@@ -621,12 +769,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // Skill bar: clear active skill
+    // Skill bar: clear active skill / open picker
     if (skillBar) {
         const clearSkillBtn = skillBar.querySelector("#clearSkill");
         if (clearSkillBtn) clearSkillBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             clearActiveSkill();
+        });
+        // Clicking the bar (not the ×) opens the picker.
+        skillBar.addEventListener('click', (e) => {
+            if (e.target.closest('#clearSkill')) return;
+            openSkillPicker('');
         });
     }
 
@@ -653,7 +807,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 1024 * 1024) {
+        if (file.size > 1024 * 1024 * 5) {
             alert(browser.i18n.getMessage("fileTooLarge"));
             return;
         }
@@ -1384,7 +1538,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (modelSelectDiv) modelSelectDiv.style.display = "";
     }
 
-    refreshSkills();
-    renderActiveSkillBar();
+    refreshSkills().then(() => renderActiveSkillBar());
     loadFishIconState();
 });

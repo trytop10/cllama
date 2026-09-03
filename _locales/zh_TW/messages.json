@@ -37,16 +37,16 @@
         "message": "提示語"
     },
     "skill": {
-        "message": "技能"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "技能列表"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "尚未配置技能。點擊「新增技能」建立。"
+        "message": "尚未設定 Skill。點擊「新增 Skill」建立。"
     },
     "addSkill": {
-        "message": "新增技能"
+        "message": "新增 Skill"
     },
     "editSkill": {
         "message": "編輯"
@@ -64,7 +64,7 @@
         "message": "提示詞"
     },
     "skillTools": {
-        "message": "工具（逗號分隔）"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "每個工具以一行新增：選擇工具（說明會自動顯示），如需可填寫可選預設參數（JSON 格式），最後儲存。"
@@ -82,10 +82,10 @@
         "message": "暫無工具，點擊「新增工具」新增。"
     },
     "expSkills": {
-        "message": "技能"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "技能是可重複使用的能力（類似 cc / codex / cline 中的技能）。技能會向對話注入一條系統提示詞，並允許模型呼叫你在下方勾選綁定的工具。在聊天側邊欄輸入 \"/\" 即可選擇並啟動技能。"
+        "message": "技能是可重複使用的能力（類似 cc / codex / cline 中的技能）。技能會向對話注入一條系統提示詞，並允許模型呼叫你在下方選擇綁定的工具。在聊天側邊欄輸入「/」即可選擇並啟動技能。"
     },
     "skillPickerEmpty": {
         "message": "暫無可用技能。請在設定 → 技能中新增。"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "在 m、cm、mm、km、in、ft、yd、mi 之間換算長度。"
+    },
+    "skillBarAutoHint": {
+        "message": "AI 會在需要時自動選用 Skill。點擊可選擇指定。"
+    },
+    "skillBarFixedHint": {
+        "message": "AI 將使用此 Skill。點擊可更換或清除。"
+    },
+    "skillNoSkill": {
+        "message": "無 Skill"
+    },
+    "skillBarOffHint": {
+        "message": "已關閉 Skill。點擊可選擇或啟用自動選擇。"
+    },
+    "skillAutoSelect": {
+        "message": "自動選擇 Skill"
+    },
+    "skillAutoMode": {
+        "message": "自動選擇"
+    },
+    "skillDefaultDateTime": {
+        "message": "日期與時間"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "回答目前日期、時間與星期等日期相關問題。"
     }
 }

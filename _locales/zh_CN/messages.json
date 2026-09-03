@@ -37,16 +37,16 @@
         "message": "提示语"
     },
     "skill": {
-        "message": "技能"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "技能列表"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "尚未配置技能。点击\"新增技能\"创建。"
+        "message": "尚未配置 Skill。点击“新增 Skill”创建。"
     },
     "addSkill": {
-        "message": "新增技能"
+        "message": "新增 Skill"
     },
     "editSkill": {
         "message": "编辑"
@@ -64,7 +64,7 @@
         "message": "提示词"
     },
     "skillTools": {
-        "message": "工具（逗号分隔）"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "每个工具以一行添加：选择工具（说明会自动显示），如需可填写可选默认参数（JSON 格式），最后保存。"
@@ -79,13 +79,13 @@
         "message": "选择一个工具"
     },
     "toolRowsEmpty": {
-        "message": "暂无工具，点击\"添加工具\"添加。"
+        "message": "暂无工具，点击“添加工具”添加。"
     },
     "expSkills": {
-        "message": "技能"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "技能是可复用的能力（类似 cc / codex / cline 中的技能）。技能会向对话注入一条系统提示词，并允许模型调用你在下方勾选绑定的工具。在聊天侧边栏输入 \"/\" 即可选择并激活技能。"
+        "message": "技能是可复用的能力（类似 cc / codex / cline 中的技能）。技能会向对话注入一条系统提示词，并允许模型调用你在下方选择绑定的工具。在聊天侧边栏输入 “/” 即可选择并激活技能。"
     },
     "skillPickerEmpty": {
         "message": "暂无可用技能。请在设置 → 技能中添加。"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "在 m、cm、mm、km、in、ft、yd、mi 之间换算长度。"
+    },
+    "skillBarAutoHint": {
+        "message": "AI 会在需要时自动选用 Skill。点击可选择指定。"
+    },
+    "skillBarFixedHint": {
+        "message": "AI 将使用此 Skill。点击可更换或清除。"
+    },
+    "skillNoSkill": {
+        "message": "无 Skill"
+    },
+    "skillBarOffHint": {
+        "message": "已关闭 Skill。点击可选择或启用自动选择。"
+    },
+    "skillAutoSelect": {
+        "message": "自动选择 Skill"
+    },
+    "skillAutoMode": {
+        "message": "自动选择"
+    },
+    "skillDefaultDateTime": {
+        "message": "日期与时间"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "回答当前日期、时间与星期等日期相关问题。"
     }
 }

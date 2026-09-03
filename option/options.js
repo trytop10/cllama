@@ -378,7 +378,7 @@ function renderToolRows() {
         <div class="d-flex align-items-center gap-2">
           <select class="form-select form-select-sm tool-select flex-grow-1">
             <option value="">${browser.i18n.getMessage("toolSelectPlaceholder")}</option>
-            ${tools.map(t => `<option value="${t.name}" ${item.name === t.name ? 'selected' : ''}>${toolLabel(t)}</option>`).join('')}
+            ${tools.map(t => `<option value="${t.name}" ${item.name === t.name ? 'selected' : ''}>${t.name}(${toolLabel(t)})</option>`).join('')}
           </select>
           <button type="button" class="btn btn-sm btn-compact btn-outline-danger tool-del-btn" title="${browser.i18n.getMessage("deleteSkill")}">×</button>
         </div>

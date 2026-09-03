@@ -424,3 +424,21 @@ code.language-markdown {
     color: var(--bs-danger);
 }
 
+.skill-bar {
+    cursor: pointer;
+}
+
+.skill-bar-clear {
+    cursor: pointer;
+}
+
+.skill-picker-autoskill {
+    border-bottom: 1px solid var(--bs-border-color);
+    margin-bottom: 0.25rem;
+}
+
+.skill-picker-autoskill .skill-picker-name {
+    color: var(--bs-link-color);
+    font-weight: 600;
+}
+

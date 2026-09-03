@@ -141,12 +141,18 @@ export class ChatGPTClient {
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
+        // 'data: [DONE]' marks the end of an OpenAI SSE stream. We must stop
+        // the outer read loop here: some servers/proxies reset the connection
+        // right after [DONE], so an extra reader.read() would throw
+        // "TypeError: Error in input stream" and wipe a fully-received answer.
+        let streamEnded = false;
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
 
           if (trimmedLine === 'data: [DONE]') {
             buffer = '';
+            streamEnded = true;
             break;
           }
 
@@ -181,6 +187,10 @@ export class ChatGPTClient {
             throw new Error(`Error: ${jsonError.message}`);
           }
         }
+
+        // Exit the read loop as soon as the stream terminator was seen, so we
+        // don't attempt another reader.read() on a possibly-reset connection.
+        if (streamEnded) break;
       }
 
       if (buffer.trim()) {

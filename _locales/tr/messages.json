@@ -37,16 +37,16 @@
         "message": "İstem"
     },
     "skill": {
-        "message": "Beceriler"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Beceri Listesi"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Yapılandırılmış beceri yok. \"Beceri Ekle\" düğmesine tıklayın."
+        "message": "Yapılandırılmış Skill yok. Skill Ekle düğmesine tıklayın."
     },
     "addSkill": {
-        "message": "Beceri Ekle"
+        "message": "Skill Ekle"
     },
     "editSkill": {
         "message": "Düzenle"
@@ -64,19 +64,19 @@
         "message": "İstem"
     },
     "skillTools": {
-        "message": "Araçlar (virgülle ayrılmış)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Her araç bir satır olarak eklenir: aracı seçin (açıklama otomatik görünür), isteğe bağlı varsayılan argümanları JSON olarak doldurun ve kaydedin."
     },
     "expSkills": {
-        "message": "Beceriler"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Beceriler yeniden kullanılabilir yeteneklerdir (cc / codex / cline'daki beceriler gibi). Bir beceri sohbete bir sistem istemi enjekte eder ve modelin seçili araçları çağırmasına izin verebilir. Sohbet kenar çubuğunda \"/\" yazarak bir beceri seçip etkinleştirebilirsiniz."
+        "message": "Beceriler yeniden kullanılabilir yeteneklerdir (cc / codex / cline'daki beceriler gibi). Bir beceri sohbete bir sistem istemi enjekte eder ve modelin seçili araçları çağırmasına izin verebilir. Sohbet kenar çubuğunda / yazarak bir beceri seçip etkinleştirebilirsiniz."
     },
     "skillPickerEmpty": {
-        "message": "Kullanılabilir beceri yok. Ayarlar → Beceriler bölümünden ekleyin."
+        "message": "Kullanılabilir beceri yok. Ayarlar bölümünden ekleyin."
     },
     "skillPickerNoMatch": {
         "message": "Eşleşen beceri yok."
@@ -91,7 +91,7 @@
         "message": "Bir araç seçin"
     },
     "toolRowsEmpty": {
-        "message": "Henüz araç yok. \"Araç Ekle\" düğmesine tıklayın."
+        "message": "Henüz araç yok. Araç Ekle düğmesine tıklayın."
     },
     "skillDefaultCalculator": {
         "message": "Hesap Makinesi"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Bir uzunluğu m, cm, mm, km, in, ft, yd ve mi arasında dönüştürür."
+    },
+    "skillAutoSelect": {
+        "message": "Skill'i otomatik seç"
+    },
+    "skillBarAutoHint": {
+        "message": "AI gerekli olduğunda bir Skill seçer. Seçmek için tıklayın."
+    },
+    "skillBarFixedHint": {
+        "message": "AI bu Skill'i kullanacak. Değiştirmek veya temizlemek için tıklayın."
+    },
+    "skillNoSkill": {
+        "message": "Skill Yok"
+    },
+    "skillBarOffHint": {
+        "message": "Skill kapalı. Seçmek veya Otomatik’i etkinleştirmek için tıklayın."
+    },
+    "skillDefaultDateTime": {
+        "message": "Tarih ve Saat"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Geçerli tarih, saat ve haftanın günü hakkındaki soruları yanıtlar."
+    },
+    "skillAutoMode": {
+        "message": "Otomatik"
     }
 }

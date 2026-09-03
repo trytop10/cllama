@@ -37,16 +37,16 @@
         "message": "Lời nhắc"
     },
     "skill": {
-        "message": "Kỹ năng"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Danh sách kỹ năng"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Chưa có kỹ năng nào được cấu hình. Nhấp \"Thêm kỹ năng\"."
+        "message": "Chưa có Skill nào được cấu hình. Nhấp Thêm Skill."
     },
     "addSkill": {
-        "message": "Thêm kỹ năng"
+        "message": "Thêm Skill"
     },
     "editSkill": {
         "message": "Chỉnh sửa"
@@ -64,19 +64,19 @@
         "message": "Lời nhắc"
     },
     "skillTools": {
-        "message": "Công cụ (phân tách bằng dấu phẩy)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Mỗi công cụ được thêm dưới dạng một dòng: chọn công cụ (mô tả tự động hiển thị), điền tham số mặc định tùy chọn dưới dạng JSON rồi lưu."
     },
     "expSkills": {
-        "message": "Kỹ năng"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Kỹ năng là các khả năng có thể tái sử dụng (giống kỹ năng trong cc / codex / cline). Một kỹ năng sẽ tiêm lời nhắc hệ thống vào cuộc trò chuyện và có thể cho phép mô hình gọi các công cụ đã chọn. Trong thanh bên trò chuyện, gõ \"/\" để chọn và kích hoạt một kỹ năng."
+        "message": "Kỹ năng là các khả năng có thể tái sử dụng (giống kỹ năng trong cc / codex / cline). Một kỹ năng sẽ tiêm lời nhắc hệ thống vào cuộc trò chuyện và có thể cho phép mô hình gọi các công cụ đã chọn. Trong thanh bên trò chuyện, gõ / để chọn và kích hoạt một kỹ năng."
     },
     "skillPickerEmpty": {
-        "message": "Không có kỹ năng nào khả dụng. Thêm trong Cài đặt → Kỹ năng."
+        "message": "Không có kỹ năng nào khả dụng. Thêm trong Cài đặt."
     },
     "skillPickerNoMatch": {
         "message": "Không có kỹ năng phù hợp."
@@ -91,7 +91,7 @@
         "message": "Chọn một công cụ"
     },
     "toolRowsEmpty": {
-        "message": "Chưa có công cụ nào. Nhấp \"Thêm công cụ\"."
+        "message": "Chưa có công cụ nào. Nhấp Thêm công cụ."
     },
     "skillDefaultCalculator": {
         "message": "Máy tính"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Chuyển đổi độ dài giữa m, cm, mm, km, in, ft, yd và mi."
+    },
+    "skillAutoSelect": {
+        "message": "Tự động chọn Skill"
+    },
+    "skillBarAutoHint": {
+        "message": "AI sẽ chọn Skill phù hợp khi cần. Nhấp để chọn."
+    },
+    "skillBarFixedHint": {
+        "message": "AI sẽ dùng Skill này. Nhấp để đổi hoặc xóa."
+    },
+    "skillNoSkill": {
+        "message": "Không có Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skill đã tắt. Bấm để chọn hoặc bật Tự động."
+    },
+    "skillDefaultDateTime": {
+        "message": "Ngày & Giờ"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Trả lời câu hỏi về ngày, giờ và thứ hiện tại."
+    },
+    "skillAutoMode": {
+        "message": "Tự động"
     }
 }

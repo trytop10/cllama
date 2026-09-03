@@ -37,16 +37,16 @@
         "message": "Prompt"
     },
     "skill": {
-        "message": "Habilidades"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Lista de Habilidades"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Nenhuma habilidade configurada. Clique em \"Adicionar Habilidade\"."
+        "message": "Nenhum Skill configurado. Clique em Adicionar Skill."
     },
     "addSkill": {
-        "message": "Adicionar Habilidade"
+        "message": "Adicionar Skill"
     },
     "editSkill": {
         "message": "Editar"
@@ -64,19 +64,19 @@
         "message": "Prompt"
     },
     "skillTools": {
-        "message": "Ferramentas (separadas por vírgulas)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Cada ferramenta é adicionada como uma linha: escolha a ferramenta (a descrição aparece automaticamente), preencha os argumentos padrão opcionais como JSON e salve."
     },
     "expSkills": {
-        "message": "Habilidades"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Habilidades são capacidades reutilizáveis (como as habilidades em cc / codex / cline). Uma habilidade injeta um prompt de sistema no chat e pode permitir que o modelo chame as ferramentas selecionadas. Na barra lateral do chat, digite \"/\" para escolher e ativar uma habilidade."
+        "message": "Habilidades são capacidades reutilizáveis (como as habilidades em cc / codex / cline). Uma habilidade injeta um prompt de sistema no chat e pode permitir que o modelo chame as ferramentas selecionadas. Na barra lateral do chat, digite / para escolher e ativar uma habilidade."
     },
     "skillPickerEmpty": {
-        "message": "Nenhuma habilidade disponível. Adicione em Configurações → Habilidades."
+        "message": "Nenhuma habilidade disponível. Adicione em Configurações."
     },
     "skillPickerNoMatch": {
         "message": "Nenhuma habilidade correspondente."
@@ -91,7 +91,7 @@
         "message": "Selecionar uma ferramenta"
     },
     "toolRowsEmpty": {
-        "message": "Ainda não há ferramentas. Clique em \"Adicionar Ferramenta\"."
+        "message": "Ainda não há ferramentas. Clique em Adicionar Ferramenta."
     },
     "skillDefaultCalculator": {
         "message": "Calculadora"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Converte um comprimento entre m, cm, mm, km, in, ft, yd e mi."
+    },
+    "skillAutoSelect": {
+        "message": "Escolher Skill automaticamente"
+    },
+    "skillBarAutoHint": {
+        "message": "A IA escolherá um Skill quando relevante. Clique para escolher um."
+    },
+    "skillBarFixedHint": {
+        "message": "A IA usará este Skill. Clique para trocar ou limpar."
+    },
+    "skillNoSkill": {
+        "message": "Sem Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skills desativados. Clique para escolher um ou ativar Auto."
+    },
+    "skillDefaultDateTime": {
+        "message": "Data e hora"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Responde a perguntas sobre a data, hora e dia da semana atuais."
+    },
+    "skillAutoMode": {
+        "message": "Automático"
     }
 }

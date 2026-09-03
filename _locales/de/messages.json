@@ -37,16 +37,16 @@
         "message": "Aufforderung"
     },
     "skill": {
-        "message": "Fähigkeiten"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Fähigkeitenliste"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Keine Fähigkeiten konfiguriert. Klicken Sie auf \"Fähigkeit hinzufügen\"."
+        "message": "Keine Skills konfiguriert. Klicken Sie auf „Skill hinzufügen“."
     },
     "addSkill": {
-        "message": "Fähigkeit hinzufügen"
+        "message": "Skill hinzufügen"
     },
     "editSkill": {
         "message": "Bearbeiten"
@@ -64,19 +64,19 @@
         "message": "Anweisung"
     },
     "skillTools": {
-        "message": "Werkzeuge (kommagetrennt)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Jedes Werkzeug wird als Zeile hinzugefügt: Werkzeug wählen (Beschreibung erscheint automatisch), optionale Standardparameter als JSON ausfüllen, dann speichern."
     },
     "expSkills": {
-        "message": "Fähigkeiten"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Fähigkeiten sind wiederverwendbare Fähigkeiten (wie in cc / codex / cline). Eine Fähigkeit injiziert eine Systemanweisung in den Chat und kann dem Modell erlauben, die ausgewählten Werkzeuge aufzurufen. Tippen Sie in der Chat-Seitenleiste \"/\", um eine Fähigkeit auszuwählen und zu aktivieren."
+        "message": "Fähigkeiten sind wiederverwendbare Fähigkeiten (wie in cc / codex / cline). Eine Fähigkeit injiziert eine Systemanweisung in den Chat und kann dem Modell erlauben, die ausgewählten Werkzeuge aufzurufen. Tippen Sie in der Chat-Seitenleiste „/“, um eine Fähigkeit auszuwählen und zu aktivieren."
     },
     "skillPickerEmpty": {
-        "message": "Keine Fähigkeiten verfügbar. Fügen Sie welche unter Einstellungen → Fähigkeiten hinzu."
+        "message": "Keine Fähigkeiten verfügbar. Fügen Sie welche unter Einstellungen hinzu."
     },
     "skillPickerNoMatch": {
         "message": "Keine passende Fähigkeit."
@@ -91,7 +91,7 @@
         "message": "Werkzeug wählen"
     },
     "toolRowsEmpty": {
-        "message": "Noch keine Werkzeuge. Klicken Sie auf \"Werkzeug hinzufügen\"."
+        "message": "Noch keine Werkzeuge. Klicken Sie auf „Werkzeug hinzufügen“."
     },
     "skillDefaultCalculator": {
         "message": "Rechner"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Rechnet Längen zwischen m, cm, mm, km, in, ft, yd und mi um."
+    },
+    "skillAutoSelect": {
+        "message": "Skill automatisch wählen"
+    },
+    "skillBarAutoHint": {
+        "message": "Die KI wählt bei Bedarf ein Skill. Klicken zum Auswählen."
+    },
+    "skillBarFixedHint": {
+        "message": "Die KI verwendet dieses Skill. Klicken zum Ändern oder Zurücksetzen."
+    },
+    "skillNoSkill": {
+        "message": "Kein Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skills sind deaktiviert. Klicken zum Auswählen oder Automatik aktivieren."
+    },
+    "skillDefaultDateTime": {
+        "message": "Datum & Uhrzeit"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Beantwortet Fragen zu aktuellem Datum, Uhrzeit und Wochentag."
+    },
+    "skillAutoMode": {
+        "message": "Automatisch"
     }
 }

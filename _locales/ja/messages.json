@@ -37,16 +37,16 @@
         "message": "プロンプト"
     },
     "skill": {
-        "message": "スキル"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "スキル一覧"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "スキルが設定されていません。「スキルを追加」をクリックしてください。"
+        "message": "Skillが設定されていません。「Skillを追加」をクリックしてください。"
     },
     "addSkill": {
-        "message": "スキルを追加"
+        "message": "Skillを追加"
     },
     "editSkill": {
         "message": "編集"
@@ -64,19 +64,19 @@
         "message": "プロンプト"
     },
     "skillTools": {
-        "message": "ツール（カンマ区切り）"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "各ツールは1行で追加します：ツールを選択（説明は自動表示）、任意のデフォルト引数をJSONで入力して保存します。"
     },
     "expSkills": {
-        "message": "スキル"
+        "message": "Skills"
     },
     "skillHelp": {
         "message": "スキルは再利用可能な能力です（cc / codex / cline のスキルのようなもの）。スキルはチャットにシステムプロンプトを注入し、選択したツールの呼び出しをモデルに許可します。チャットサイドバーで「/」と入力するとスキルを選択・有効化できます。"
     },
     "skillPickerEmpty": {
-        "message": "利用可能なスキルがありません。設定 → スキル で追加してください。"
+        "message": "利用可能なスキルがありません。設定で追加してください。"
     },
     "skillPickerNoMatch": {
         "message": "一致するスキルがありません。"
@@ -124,10 +124,10 @@
         "message": "指定されたテキストをそのまま返します。"
     },
     "tool_fetch_url": {
-        "message": "URL 取得"
+        "message": "URL取得"
     },
     "tool_fetch_url_desc": {
-        "message": "URL のテキスト内容を取得し、最大 maxLen 文字まで返します。CORS や権限により失敗する場合があります。"
+        "message": "URLのテキスト内容を取得し、最大 maxLen 文字まで返します。CORSや権限により失敗する場合があります。"
     },
     "wordsRemaining": {
         "message": "残り文字数"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "m、cm、mm、km、in、ft、yd、mi 間で長さを換算します。"
+    },
+    "skillAutoSelect": {
+        "message": "Skill を自動選択"
+    },
+    "skillBarAutoHint": {
+        "message": "必要に応じて AI が Skill を選びます。クリックして選択。"
+    },
+    "skillBarFixedHint": {
+        "message": "この Skill を使用します。クリックで変更・解除。"
+    },
+    "skillNoSkill": {
+        "message": "Skillなし"
+    },
+    "skillBarOffHint": {
+        "message": "Skillはオフです。クリックで選択または自動選択を有効化してください。"
+    },
+    "skillDefaultDateTime": {
+        "message": "日付と時刻"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "現在の日付・時刻・曜日に関する質問に答えます。"
+    },
+    "skillAutoMode": {
+        "message": "自動"
     }
 }

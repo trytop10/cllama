@@ -37,16 +37,16 @@
         "message": "พร้อมท์"
     },
     "skill": {
-        "message": "ทักษะ"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "รายการทักษะ"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "ยังไม่มีการกำหนดทักษะ คลิก \"เพิ่มทักษะ\""
+        "message": "ยังไม่มี Skill ที่กำหนด คลิกเพิ่ม Skill"
     },
     "addSkill": {
-        "message": "เพิ่มทักษะ"
+        "message": "เพิ่ม Skill"
     },
     "editSkill": {
         "message": "แก้ไข"
@@ -64,19 +64,19 @@
         "message": "พร้อมท์"
     },
     "skillTools": {
-        "message": "เครื่องมือ (คั่นด้วยเครื่องหมายจุลภาค)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "แต่ละเครื่องมือจะถูกเพิ่มเป็นหนึ่งบรรทัด: เลือกเครื่องมือ (คำอธิบายจะแสดงอัตโนมัติ) กรอกอาร์กิวเมนต์เริ่มต้นที่เลือกได้เป็น JSON แล้วบันทึก"
     },
     "expSkills": {
-        "message": "ทักษะ"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "ทักษะคือความสามารถที่นำกลับมาใช้ใหม่ได้ (เหมือนทักษะใน cc / codex / cline) ทักษะจะฉีดพร้อมท์ของระบบเข้าสู่การแชท และอาจอนุญาตให้โมเดลเรียกใช้เครื่องมือที่เลือกได้ พิมพ์ \"/\" ในแถบด้านข้างการแชทเพื่อเลือกและเปิดใช้งานทักษะ"
+        "message": "ทักษะคือความสามารถที่นำกลับมาใช้ใหม่ได้ (เหมือนทักษะใน cc / codex / cline) ทักษะจะฉีดพร้อมท์ของระบบเข้าสู่การแชท และอาจอนุญาตให้โมเดลเรียกใช้เครื่องมือที่เลือกได้ พิมพ์ / ในแถบด้านข้างการแชทเพื่อเลือกและเปิดใช้งานทักษะ"
     },
     "skillPickerEmpty": {
-        "message": "ไม่มีทักษะที่พร้อมใช้งาน เพิ่มใน การตั้งค่า → ทักษะ"
+        "message": "ไม่มีทักษะที่พร้อมใช้งาน เพิ่มใน การตั้งค่า"
     },
     "skillPickerNoMatch": {
         "message": "ไม่มีทักษะที่ตรงกัน"
@@ -91,7 +91,7 @@
         "message": "เลือกเครื่องมือ"
     },
     "toolRowsEmpty": {
-        "message": "ยังไม่มีเครื่องมือ คลิก \"เพิ่มเครื่องมือ\""
+        "message": "ยังไม่มีเครื่องมือ คลิกเพิ่มเครื่องมือ"
     },
     "skillDefaultCalculator": {
         "message": "เครื่องคิดเลข"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "แปลงความยาวระหว่าง m, cm, mm, km, in, ft, yd และ mi"
+    },
+    "skillAutoSelect": {
+        "message": "เลือก Skill อัตโนมัติ"
+    },
+    "skillBarAutoHint": {
+        "message": "AI จะเลือก Skill ที่เกี่ยวข้อง คลิกเพื่อเลือก"
+    },
+    "skillBarFixedHint": {
+        "message": "AI จะใช้ Skill นี้ คลิกเพื่อเปลี่ยนหรือล้าง"
+    },
+    "skillNoSkill": {
+        "message": "ไม่มี Skill"
+    },
+    "skillBarOffHint": {
+        "message": "ปิด Skill แล้ว คลิกเพื่อเลือกหรือเปิดใช้งานอัตโนมัติ"
+    },
+    "skillDefaultDateTime": {
+        "message": "วันที่และเวลา"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "ตอบคำถามเกี่ยวกับวันที่ เวลา และวันปัจจุบัน"
+    },
+    "skillAutoMode": {
+        "message": "อัตโนมัติ"
     }
 }

@@ -37,16 +37,16 @@
         "message": "Prompt"
     },
     "skill": {
-        "message": "Keterampilan"
+        "message": "Skills"
     },
     "skillList": {
-        "message": "Daftar Keterampilan"
+        "message": "Skill List"
     },
     "skillListEmpty": {
-        "message": "Belum ada keterampilan yang dikonfigurasi. Klik \"Tambah Keterampilan\"."
+        "message": "Belum ada Skill yang dikonfigurasi. Klik Tambah Skill."
     },
     "addSkill": {
-        "message": "Tambah Keterampilan"
+        "message": "Tambah Skill"
     },
     "editSkill": {
         "message": "Edit"
@@ -64,19 +64,19 @@
         "message": "Prompt"
     },
     "skillTools": {
-        "message": "Alat (dipisah koma)"
+        "message": "Tools"
     },
     "skillToolsHint": {
         "message": "Setiap alat ditambahkan sebagai satu baris: pilih alat (deskripsi otomatis muncul), isi argumen bawaan opsional sebagai JSON, lalu simpan."
     },
     "expSkills": {
-        "message": "Keterampilan"
+        "message": "Skills"
     },
     "skillHelp": {
-        "message": "Keterampilan adalah kemampuan yang dapat digunakan ulang (seperti skill di cc / codex / cline). Sebuah keterampilan menyuntikkan prompt sistem ke dalam obrolan dan dapat mengizinkan model memanggil alat yang dipilih. Di sidebar obrolan, ketik \"/\" untuk memilih dan mengaktifkan keterampilan."
+        "message": "Keterampilan adalah kemampuan yang dapat digunakan ulang (seperti skill di cc / codex / cline). Sebuah keterampilan menyuntikkan prompt sistem ke dalam obrolan dan dapat mengizinkan model memanggil alat yang dipilih. Di sidebar obrolan, ketik / untuk memilih dan mengaktifkan keterampilan."
     },
     "skillPickerEmpty": {
-        "message": "Tidak ada keterampilan tersedia. Tambahkan di Pengaturan → Keterampilan."
+        "message": "Tidak ada keterampilan tersedia. Tambahkan di Pengaturan."
     },
     "skillPickerNoMatch": {
         "message": "Tidak ada keterampilan yang cocok."
@@ -91,7 +91,7 @@
         "message": "Pilih alat"
     },
     "toolRowsEmpty": {
-        "message": "Belum ada alat. Klik \"Tambah Alat\"."
+        "message": "Belum ada alat. Klik Tambah Alat."
     },
     "skillDefaultCalculator": {
         "message": "Kalkulator"
@@ -432,5 +432,29 @@
     },
     "tool_convert_length_desc": {
         "message": "Mengonversi panjang antara m, cm, mm, km, in, ft, yd, dan mi."
+    },
+    "skillAutoSelect": {
+        "message": "Pilih Skill secara otomatis"
+    },
+    "skillBarAutoHint": {
+        "message": "AI akan memilih Skill yang relevan. Klik untuk memilih."
+    },
+    "skillBarFixedHint": {
+        "message": "AI akan menggunakan Skill ini. Klik untuk mengubah atau menghapus."
+    },
+    "skillNoSkill": {
+        "message": "Tanpa Skill"
+    },
+    "skillBarOffHint": {
+        "message": "Skill nonaktif. Klik untuk memilih atau mengaktifkan Otomatis."
+    },
+    "skillDefaultDateTime": {
+        "message": "Tanggal & Waktu"
+    },
+    "skillDefaultDateTimeDesc": {
+        "message": "Menjawab pertanyaan tentang tanggal, waktu, dan hari saat ini."
+    },
+    "skillAutoMode": {
+        "message": "Otomatis"
     }
 }

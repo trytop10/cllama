@@ -5,7 +5,7 @@ import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
 import { getServiceInstance } from './client/client.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags } from './util.js';
-import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildNativeTools, runTool, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
+import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 
 export const browser = typeof chrome !== 'undefined' ? chrome : browser;
 export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
@@ -25,6 +25,27 @@ export const defaultSettings = {
 
 let runtimeConfig = { ...defaultSettings }, chatClient;
 let _configManuallySet = false;
+
+// Per-model cache: whether injecting a skill as a "system" message is usable.
+// undefined/absent => assume usable; set to false after a failed attempt, so
+// that model falls back to user injection without re-triggering EOF.
+const skillSystemCache = new Map();
+let _skillCacheLoaded = false;
+
+// Native function definition for the model to adopt a Skill on demand. Only
+// offered in "Auto" mode on backends with native function calling.
+const USE_SKILL_TOOL = {
+  type: 'function',
+  function: {
+    name: 'use_skill',
+    description: "Activate one of the available Skills by its exact name so that its instructions and tools become usable. Call it before using that Skill's tools.",
+    parameters: {
+      type: 'object',
+      properties: { name: { type: 'string', description: 'The exact name of the Skill to activate' } },
+      required: ['name']
+    }
+  }
+};
 
 /**
  * Loads configuration from browser storage
@@ -289,33 +310,70 @@ export async function chat(historyMessages, options) {
 
   const ops = cloneOllamaOptions(options);
 
-  // Decide tool-calling strategy for the active skill.
+  const modelKey = options?.model || runtimeConfig.modelName || 'default';
+  // Load persisted "system disabled" model list into the in-memory cache once.
+  await loadSkillSystemCache();
+  let skillUsedSystem = false;
+
+  // Decide the skill mode and tool-calling strategy.
+  // - activeSkill set             => user forced that one Skill (use it only).
+  // - activeSkill null & skills[] => "Auto": the model may call use_skill() to
+  //   adopt a Skill on demand — via native function-calling on Ollama, or via
+  //   the text <tool_call> protocol on any other backend (adoptedSkill below).
   const activeSkill = options?.activeSkill || null;
+  let adoptedSkill = null; // Skill the model adopts mid-turn in Auto mode
+  const autoSkills = (!activeSkill && Array.isArray(options?.skills) && options.skills.length) ? options.skills : null;
   const skillHasTools = activeSkill && Array.isArray(activeSkill.tools) && activeSkill.tools.length;
+
   let useNativeTools = false;
   let nativeTools = [];
-  if (skillHasTools && runtimeConfig.service === 'ollama' && typeof clientService.hasNativeTools === 'function') {
-    useNativeTools = await clientService.hasNativeTools(options?.model);
-    if (useNativeTools) nativeTools = buildNativeTools(activeSkill);
+  if (runtimeConfig.service === 'ollama' && typeof clientService.hasNativeTools === 'function') {
+    if (skillHasTools || autoSkills) {
+      useNativeTools = await clientService.hasNativeTools(options?.model);
+      if (useNativeTools) {
+        // Auto exposes only use_skill first; a forced Skill exposes its tools.
+        nativeTools = activeSkill ? buildNativeTools(activeSkill) : [USE_SKILL_TOOL];
+      }
+    }
   }
 
-  // Inject the active skill's prompt (+ text-protocol tool instructions only
-  // when NOT using native function calling).
+  // Build the text to inject. Prefer a real "system" message only when a skill
+  // is forced and the model tolerates system; Auto always merges into a user
+  // message to avoid EOF on qwen3-style models.
+  let injectText = '';
+  // Prefer a real "system" message on non-Google backends when the model is
+  // known to tolerate it; otherwise merge into the first user message. We
+  // default to system and only fall back to user per-model (cache) or after a
+  // failed attempt (see catch) — including in Auto mode.
+  const allowSystemForInject = !isGoogle && skillSystemCache.get(modelKey) !== false;
   if (activeSkill) {
-    const skillMsg = useNativeTools ? (activeSkill.prompt || '') : buildSkillSystemMessage(activeSkill);
-    if (skillMsg) {
-      if (isGoogle) {
-        msgs.unshift({ role: 'user', parts: [{ text: skillMsg }] });
+    injectText = useNativeTools ? (activeSkill.prompt || '') : buildSkillSystemMessage(activeSkill);
+  } else if (autoSkills) {
+    const lines = autoSkills.map(s => `- ${s.name}: ${s.description || ''}`).join('\n');
+    if (useNativeTools) {
+      injectText = 'Available Skills:\n' + lines + '\n\nTo use a Skill, call the use_skill tool with its exact name, then follow its instructions and call its tools.';
+    } else {
+      // Text-protocol Auto mode (non-Ollama backends or models without native
+      // tools): tell the model how to adopt a Skill through <tool_call> syntax.
+      injectText = 'Available Skills:\n' + lines +
+        '\n\nIf one of the Skills above is relevant to the user request, do not answer yet. ' +
+        'Instead reply with exactly one line:\n' +
+        '<tool_call><tool_name>use_skill</tool_name><args>{"name":"EXACT_SKILL_NAME"}</args></tool_call>\n' +
+        'Then STOP and wait for the result, and follow the Skill instructions it returns.';
+    }
+  }
+  if (injectText) {
+    if (isGoogle) {
+      msgs.unshift({ role: 'user', parts: [{ text: injectText }] });
+    } else if (allowSystemForInject) {
+      msgs.unshift({ role: 'system', content: injectText });
+      skillUsedSystem = true;
+    } else {
+      const firstUser = msgs.findIndex(m => m.role === 'user' && typeof m.content === 'string');
+      if (firstUser >= 0) {
+        msgs[firstUser] = { ...msgs[firstUser], content: injectText + '\n\n' + msgs[firstUser].content };
       } else {
-        // Avoid a separate "system" message: some models / Ollama builds
-        // reject a system message with "ResponseError: EOF". Prepend the skill
-        // text to the first user message instead.
-        const firstUser = msgs.findIndex(m => m.role === 'user' && typeof m.content === 'string');
-        if (firstUser >= 0) {
-          msgs[firstUser] = { ...msgs[firstUser], content: skillMsg + '\n\n' + msgs[firstUser].content };
-        } else {
-          msgs.unshift({ role: 'user', content: skillMsg });
-        }
+        msgs.unshift({ role: 'user', content: injectText });
       }
     }
   }
@@ -361,6 +419,15 @@ export async function chat(historyMessages, options) {
       });
       await requestPromise;
     } catch (err) {
+      // First request failed while the skill was injected as a "system" message:
+      // fall back to user injection for this model and retry once (some
+      // Ollama/qwen3 models return EOF on an independent system message).
+      if (step === 0 && skillUsedSystem && skillSystemCache.get(modelKey) !== false) {
+        skillSystemCache.set(modelKey, false);
+        persistSkillDisabled();
+        console.warn(`[skill] system injection failed for "${modelKey}", retrying as user:`, err);
+        return chat(historyMessages, options);
+      }
       // A transport/stream error (e.g. Ollama "ResponseError: EOF"). Show an
       // error and stop gracefully instead of throwing an uncaught promise.
       if (err.name !== 'AbortError') {
@@ -383,6 +450,28 @@ export async function chat(historyMessages, options) {
         if (typeof fargs === 'string') {
           try { fargs = JSON.parse(fargs); } catch (e) { fargs = {}; }
         }
+
+        // Auto mode: the model may call use_skill(name) to adopt a Skill. When
+        // it does, swap the offered tools to that Skill's tools and feed the
+        // Skill's instructions back so the model can continue using them.
+        if (autoSkills && fname === 'use_skill') {
+          const wanted = String(fargs?.name || '').trim();
+          const matched = autoSkills.find(s => String(s.name).toLowerCase() === wanted.toLowerCase());
+          if (matched) {
+            nativeTools = buildNativeTools(matched);
+            results.push({
+              tool_name: 'use_skill',
+              content: `Skill activated: ${matched.name}.\nInstructions: ${matched.prompt || ''}\nYou may now use its tools.`
+            });
+          } else {
+            results.push({
+              tool_name: 'use_skill',
+              content: `Unknown Skill "${wanted}". Available: ${autoSkills.map(s => s.name).join(', ')}.`
+            });
+          }
+          continue;
+        }
+
         replaceElementContent(msgDiv, `🔧 running ${fname}...`);
         const resultText = await runTool(fname, fargs || {}, activeSkill);
         results.push({ tool_name: fname, content: resultText });
@@ -392,13 +481,39 @@ export async function chat(historyMessages, options) {
       continue;
     }
 
-    // Text-protocol path (models without native tools).
-    const calls = activeSkill && !useNativeTools ? parseToolCalls(full) : [];
+    // Text-protocol path (models without native tools). Enabled whenever a Skill
+    // is forced, or in Auto mode (where the model may first call use_skill to
+    // adopt a Skill, then call that Skill's tools).
+    const canTextTools = !useNativeTools && (activeSkill || autoSkills);
+    const calls = canTextTools ? parseToolCalls(full) : [];
     if (calls.length && step < SKILL_TOOL_MAX_ITER) {
       const results = [];
       for (const call of calls) {
         replaceElementContent(msgDiv, `🔧 running ${call.name}...`);
-        const resultText = await executeToolCall(call, activeSkill);
+        let resultText;
+        if (!activeSkill && autoSkills && call.name === 'use_skill') {
+          // Auto text-protocol adoption: swap to the matched Skill and feed its
+          // instructions + tool list back so the model can continue using them.
+          const wanted = String(call.args?.name || '').trim();
+          const matched = autoSkills.find(s => String(s.name).toLowerCase() === wanted.toLowerCase());
+          if (matched) {
+            adoptedSkill = matched;
+            let output = `Skill activated: ${matched.name}.`;
+            if (matched.prompt) output += `\n\nInstructions:\n${matched.prompt}`;
+            const toolsPart = buildToolInstructions(matched);
+            if (toolsPart) output += `\n\n${toolsPart}`;
+            resultText =
+              `<tool_result>\n<tool_name>use_skill</tool_name>\n<success>true</success>\n<output>` +
+              output + `\n</output>\n</tool_result>`;
+          } else {
+            const avail = autoSkills.map(s => s.name).join(', ');
+            resultText =
+              `<tool_result>\n<tool_name>use_skill</tool_name>\n<success>false</success>\n<output>` +
+              `Unknown Skill "${wanted}". Available: ${avail}.\n</output>\n</tool_result>`;
+          }
+        } else {
+          resultText = await executeToolCall(call, activeSkill || adoptedSkill || null);
+        }
         results.push(resultText);
       }
       const toolResultContent = results.join('\n\n');
@@ -482,22 +597,54 @@ export async function loadDefaultActions() {
     return [];
 }
 
+/**
+ * Substitute Claude-style argument placeholders in a Skill prompt.
+ *
+ * Supported placeholders (mirroring the Agent Skills convention):
+ *   - `$ARGUMENTS`      -> the whole argument string (everything after the name)
+ *   - `$ARGUMENTS[N]`   -> the Nth whitespace-separated token (0-based)
+ *   - `$N`              -> shorthand for `$ARGUMENTS[N]` (also 0-based)
+ *
+ * An indexed placeholder with no token at that position is left as literal text
+ * (so prompts that also use `$ARGUMENTS` still receive the full text).
+ *
+ * @param {string} prompt - Skill prompt text.
+ * @param {string|undefined} args - Raw argument string after the skill name.
+ * @returns {string} The prompt with placeholders substituted.
+ */
+export function applySkillArguments(prompt = '', args) {
+  if (typeof prompt !== 'string' || !prompt) return prompt || '';
+  const argText = (args === undefined || args === null) ? '' : String(args).trim();
+  const tokens = argText ? argText.split(/\s+/) : [];
+
+  let out = prompt.replace(/\$ARGUMENTS(?:\[(\d+)\])?/g, (_m, idx) => {
+    if (idx === undefined) return argText;             // $ARGUMENTS -> whole text
+    const n = parseInt(idx, 10);
+    return tokens[n] !== undefined ? tokens[n] : _m;   // absent -> keep literal
+  });
+  out = out.replace(/\$(\d+)\b/g, (_m, num) => {
+    const n = parseInt(num, 10);
+    return tokens[n] !== undefined ? tokens[n] : _m;
+  });
+  return out;
+}
+
 // Default skills used when the user has not configured any.
 export const SKILL_DEFAULTS = [
-  {
-    id: 'calculator',
-    name: browser.i18n.getMessage('skillDefaultCalculator'),
-    description: browser.i18n.getMessage('skillDefaultCalculatorDesc'),
-    prompt: 'You are a helpful assistant. When the user asks you to add numbers or do arithmetic, use the add_numbers tool and explain the result.',
-    tools: [{ name: 'add_numbers', args: { numbers: [1, 2] } }]
-  },
   {
     id: 'general-helper',
     name: browser.i18n.getMessage('skillDefaultGeneralHelper'),
     description: browser.i18n.getMessage('skillDefaultGeneralHelperDesc'),
-    prompt: 'You are a helpful assistant that answers the user\'s questions about the current webpage. The webpage content is provided in the conversation; use it as your main source. If you need the latest page content, call get_page_content. Use other tools (current_time, echo) when they help.',
+    prompt: 'Answer the user\'s questions based on the current webpage. Its content (title, URL, text) is provided in the conversation — use it as the primary source. If that content is missing, or you need the latest page text, first call the get_page_content tool, then answer from its result. Be concise and accurate; refer to the page when it helps.',
     tools: [{ name: 'get_page_content', args: {} }, { name: 'current_time', args: {} }, { name: 'echo', args: {} }],
     usePage: true
+  },
+  {
+    id: 'date-time',
+    name: browser.i18n.getMessage('skillDefaultDateTime') || 'Date & Time',
+    description: browser.i18n.getMessage('skillDefaultDateTimeDesc') || 'Answers questions about the current date, time and weekday.',
+    prompt: 'You are a date & time assistant. Whenever the user asks about the current time, date or weekday, call the current_time tool and answer from its result (mention the weekday when relevant). Do not guess the current time.',
+    tools: [{ name: 'current_time', args: {} }]
   }
 ];
 
@@ -533,6 +680,35 @@ export async function getSkillById(id) {
   return skills.find((s) => String(s.id) === String(id)) || null;
 }
 
+/**
+ * Load the persisted list of models for which system injection is disabled into
+ * the in-memory skillSystemCache. Runs at most once per module load.
+ * @returns {Promise<void>}
+ */
+async function loadSkillSystemCache() {
+  if (_skillCacheLoaded) return;
+  _skillCacheLoaded = true;
+  try {
+    const d = await browser.storage.local.get(DB_KEY.skillSystemDisabled);
+    const arr = d[DB_KEY.skillSystemDisabled];
+    if (Array.isArray(arr)) {
+      skillSystemCache.clear();
+      arr.forEach((k) => skillSystemCache.set(k, false));
+    }
+  } catch (e) {
+    // Ignore: fall back to empty in-memory cache.
+  }
+}
+
+/**
+ * Persist the current "system disabled" model list to storage so the decision
+ * survives page reloads / Service Worker restarts.
+ */
+function persistSkillDisabled() {
+  const arr = Array.from(skillSystemCache.keys());
+  browser.storage.local.set({ [DB_KEY.skillSystemDisabled]: arr });
+}
+
 // Browser storage keys
 export const DB_KEY = {
   base: "base",
@@ -544,7 +720,8 @@ export const DB_KEY = {
   apiConfig: "apiConfig",
   fishIconActive: "fishIconActive",
   pendingInsight: "pendingInsight",
-  skillList: "skillList"
+  skillList: "skillList",
+  skillSystemDisabled: "skillSystemDisabled"
 };
 
 // Initialize theme system for extension pages
