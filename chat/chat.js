@@ -45,6 +45,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
     
+    // User-resizable message input. Height is changed by dragging the handle
+    // that sits above the textarea (see #msgResizeHandle). The textarea height
+    // is clamped between the current (default) height and 2/3 of the current
+    // window height; window resize updates the upper bound live.
+    function setupResizableInput() {
+        if (!msgInput) return;
+        const handle = document.getElementById('msgResizeHandle');
+        const baseHeight = msgInput.offsetHeight || 60; // current (default) height
+        let maxHeight = Math.max(baseHeight, Math.floor(window.innerHeight * 2 / 3));
+        function applyInputLimits() {
+            // "Max height = 2/3 of the current window height", never below the base.
+            maxHeight = Math.max(baseHeight, Math.floor(window.innerHeight * 2 / 3));
+            msgInput.style.minHeight = baseHeight + 'px';
+            msgInput.style.maxHeight = maxHeight + 'px';
+        }
+        applyInputLimits();
+        window.addEventListener('resize', applyInputLimits);
+
+        if (!handle) return;
+        handle.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            const startY = e.clientY;
+            const startH = msgInput.offsetHeight;
+            const onMove = (ev) => {
+                // Grabbing the top edge: pulling it up grows the input,
+                // pushing it down shrinks it.
+                const dy = ev.clientY - startY;
+                const h = Math.max(baseHeight, Math.min(maxHeight, startH - dy));
+                msgInput.style.height = h + 'px';
+            };
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                document.body.style.userSelect = '';
+                document.body.style.cursor = '';
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'ns-resize';
+        });
+    }
+    setupResizableInput();
+
     const ccId = getQueryParam("id");
 
     // State variables

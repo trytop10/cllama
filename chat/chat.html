@@ -78,7 +78,12 @@
     </div>
 
     <div class="input-container">
-      <div style="display: flex;justify-content:space-between; margin-bottom: 5px;">
+
+      <!-- Drag divider between the message list and the composer tools.
+           Pull it up/down to resize the message input vertically. -->
+      <div id="msgResizeHandle" class="msg-resize-handle" aria-hidden="true"><span class="msg-resize-grip"></span></div>
+
+      <div style="display: flex;justify-content:space-between; margin-bottom: 2px;">
 
         <div class="btn-group" role="group">
           <a id="b_clear" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px;">
@@ -133,6 +138,7 @@
       <div class="input-group">
         <textarea id="msgInput" class="form-control i18n"  i18n="placeholder" placeholder="inputMessage" rows="3"></textarea>
       </div>
+
 
       <!-- Function Bar -->
       <div class="function-bar d-flex align-items-center p-2 border border-top-0 rounded-bottom">

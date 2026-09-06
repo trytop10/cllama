@@ -210,7 +210,7 @@ hr {
 }
 
 .input-container {
-    padding: 10px;
+    padding: 2px 0px 0px 0px;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
 }
@@ -225,8 +225,47 @@ hr {
   textarea.form-control {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    resize: none;
+    resize: none; /* Height is adjusted via the handle above, not the corner grip */
+    overflow-y: auto; /* Scroll internally once the text exceeds the height */
   }
+
+  textarea.form-control:focus {
+    box-shadow:none;
+  }
+
+  /* User-resizable message input. min/max heights are applied from JS:
+     min = current (default) height, max = 2/3 of the window height. */
+  #msgInput {
+    box-sizing: border-box;
+  }
+
+  /* Drag handle above the composer tools. The textarea height is changed by
+     clicking this bar and pulling it up or down. Shown as a short centered
+     grabber; the surrounding area stays transparent (invisible hit zone). */
+  .msg-resize-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 8px;
+    cursor: ns-resize;
+    user-select: none;
+    -webkit-user-select: none;
+    margin-bottom: 3px;
+    color: var(--bs-secondary-color);
+    opacity: 0.55;
+  }
+
+  .msg-resize-handle:hover {
+    opacity: 1;
+  }
+
+  .msg-resize-grip {
+    width: 44px;
+    height: 5px;
+    border-radius: 3px;
+    background: currentColor;
+  }
+
   
   .function-bar {
     border-color: #a0acbc;
