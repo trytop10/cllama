@@ -1,4 +1,4 @@
-const browser = typeof chrome !== 'undefined' ? chrome : (typeof browser !== 'undefined' ? browser : null);
+import { browser } from './browser.mjs';
 
 /**
  * ThemeManager handles theme state management and switching functionality

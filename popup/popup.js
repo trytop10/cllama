@@ -1,4 +1,5 @@
-import { i18n, browser, isFirefox } from "../js/cllama.js";
+import { i18n } from "../js/cllama.js";
+import { browser, isFirefox } from "../js/browser.mjs";
 
 document.getElementById('insightify').addEventListener('click',  async (e) => {
   e.preventDefault();

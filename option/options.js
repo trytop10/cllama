@@ -2,13 +2,12 @@ import { defaultSettings, i18n, DB_KEY, loadSkills, saveSkills } from "../js/cll
 import { listTools } from "../js/skill-tools.mjs";
 import { getService } from "../js/client/client.mjs";
 import { balert } from "../js/dialog.mjs";
+import { browser } from '../js/browser.mjs';
 import { exportFile } from "../js/util.js";
 
 let dsList = []; // Data source list
 let mflag = true; // Flag indicating if the model list needs to be refreshed
 let ds = {}; // Current data source settings
-
-const browser = typeof chrome !== 'undefined' ? chrome : browser;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Load language-specific stylesheet for German (longer labels)

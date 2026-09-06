@@ -3,9 +3,7 @@ import { balert, confirm } from '../js/dialog.mjs';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { addClass, hasClass, isMobile, removeClass, replaceElementContent, replaceThinkTags, sendToContentScript } from "../js/util.js";
-
-export const browser = typeof chrome !== 'undefined' ? chrome : browser;
-export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
+import { browser } from '../js/browser.mjs';
 
 document.addEventListener("DOMContentLoaded", () => {
     const summaryList = document.getElementById("summaryList");
@@ -220,17 +218,30 @@ document.addEventListener("DOMContentLoaded", () => {
      * (right-click selection text → Insight → action). Uses the selected text
      * as the analysis content instead of the whole page.
      */
+    let pendingRunning = false;
+
     async function runPendingInsight() {
-        const pending = await new Promise((resolve) => {
-            browser.storage.local.get(DB_KEY.pendingInsight, (data) => {
-                resolve(data[DB_KEY.pendingInsight]);
+        // Guard so DOMContentLoaded and storage.onChanged never process a
+        // pending insight twice (e.g. when the sidebar is (re)opened).
+        if (pendingRunning) return;
+        pendingRunning = true;
+        let pending = null;
+        try {
+            pending = await new Promise((resolve) => {
+                browser.storage.local.get(DB_KEY.pendingInsight, (data) => {
+                    resolve(data[DB_KEY.pendingInsight]);
+                });
             });
-        });
+            // Consume while still holding the lock so a racing consumer
+            // (DOMContentLoaded vs storage.onChanged) can never double-run.
+            if (pending && pending.action) {
+                browser.storage.local.remove(DB_KEY.pendingInsight);
+            }
+        } finally {
+            pendingRunning = false;
+        }
 
         if (!pending || !pending.action) return;
-
-        // Consume the pending item immediately so it won't run again
-        browser.storage.local.remove(DB_KEY.pendingInsight);
 
         const action = pending.action;
         const buttonElement = document.getElementById(`ac_${action.id}`);
@@ -306,4 +317,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadActions();
     i18n();
     runPendingInsight();
+
+    // Pick up a pending right-click insight even when the sidebar is already
+    // open (the page won't reload in that case, so DOMContentLoaded alone is
+    // not enough).
+    browser.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes[DB_KEY.pendingInsight] && changes[DB_KEY.pendingInsight].newValue) {
+            runPendingInsight();
+        }
+    });
 });

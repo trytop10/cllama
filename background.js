@@ -1,7 +1,8 @@
-import { browser, DB_KEY, loadDefaultActions } from './js/cllama.js';
+import { DB_KEY, loadDefaultActions } from './js/cllama.js';
+import { browser, isFirefox } from './js/browser.mjs';
 
 // Determine if the current browser is Firefox
-const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
+
 
 const INSIGHT_MENU_ID = 'cllama-insight';
 const INSIGHT_ACTION_PREFIX = 'cllama-insight-action-';

@@ -1,5 +1,6 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, browser, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments } from '../js/cllama.js';
+import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';

@@ -1,7 +1,8 @@
-import { processInsightForBackground, browser, DB_KEY } from './js/cllama.js';
+import { processInsightForBackground, DB_KEY } from './js/cllama.js';
+import { browser, isFirefox } from './js/browser.mjs';
 import { sendToContentScript } from './js/util.js';
 
-const isFirefox = navigator.userAgent.includes('Firefox');
+
 
 /**
  * Imports actions from an external source.

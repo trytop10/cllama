@@ -1,7 +1,5 @@
+import { browser, isFirefox } from './browser.mjs';
 import { TextProcessor } from "./text-processor.mjs";
-
-const browser = typeof chrome !== 'undefined' ? chrome : browser;
-const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
 
 /**
  * Sends a message to the content script in the active tab

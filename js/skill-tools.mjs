@@ -1,3 +1,5 @@
+import { browser } from './browser.mjs';
+
 /**
  * SKILL & TOOL specifications for cllama chat.
  *
@@ -317,13 +319,12 @@ registerTool({
   description: 'Returns the content of the current webpage (title, url and extracted text) to answer questions about the page.',
   parameters: { type: 'object', properties: {} },
   func: async () => {
-    const browserRef = typeof chrome !== 'undefined' ? chrome : (typeof browser !== 'undefined' ? browser : null);
-    if (!browserRef || !browserRef.tabs) return 'Error: tabs API unavailable';
+    if (!browser || !browser.tabs) return 'Error: tabs API unavailable';
     try {
-      const tabs = await browserRef.tabs.query({ active: true, currentWindow: true });
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
       const tab = tabs && tabs[0];
       if (!tab || tab.id == null) return 'Error: no active tab';
-      const resp = await browserRef.tabs.sendMessage(tab.id, { action: 'getPageInfo' });
+      const resp = await browser.tabs.sendMessage(tab.id, { action: 'getPageInfo' });
       if (resp && resp.content) {
         return `Title: ${resp.title || ''}\nURL: ${resp.url || ''}\n\n${resp.content}`;
       }

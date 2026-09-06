@@ -1,3 +1,5 @@
+import { browser } from './browser.mjs';
+
 /**
  * Custom confirmation dialog using Bootstrap Modal
  * @param {string} message - Message to display
@@ -8,7 +10,6 @@
  * @returns {Promise<boolean>} User's choice (true for confirm, false for cancel)
  */
 export function confirm(message, options = {}) {
-  const browser = typeof chrome !== 'undefined' ? chrome : browser;
   
   return new Promise((resolve) => {
     const config = {

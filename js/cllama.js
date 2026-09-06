@@ -1,3 +1,4 @@
+import { browser } from './browser.mjs';
 import { TextProcessor } from './text-processor.mjs';
 import { ThemeManager } from './theme.mjs';
 import { marked } from './marked.mjs';
@@ -7,8 +8,6 @@ import { getServiceInstance } from './client/client.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags } from './util.js';
 import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 
-export const browser = typeof chrome !== 'undefined' ? chrome : browser;
-export const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
 
 // Default configuration
 

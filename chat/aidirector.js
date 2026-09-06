@@ -1,10 +1,9 @@
 import { i18n, DB_KEY } from '../js/cllama.js';
 import { marked } from '../js/marked.mjs';
+import { browser, isFirefox } from '../js/browser.mjs';
 import { getLanguageCode, htmlEncode, replaceElementContent } from '../js/util.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const browser = typeof chrome !== 'undefined' ? chrome : browser;
-    const isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
 
     const configList = document.getElementById('config-list');
     const addConfigModal = new bootstrap.Modal(document.getElementById('addConfigModal'));

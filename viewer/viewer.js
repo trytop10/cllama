@@ -1,4 +1,6 @@
-const browser = typeof chrome !== 'undefined' ? chrome : browser;
+const browser = (typeof globalThis !== 'undefined' && globalThis.browser && globalThis.browser.storage)
+  ? globalThis.browser
+  : (typeof chrome !== 'undefined' ? chrome : null);
 
 // This script is now only used for Firefox (MV2)
 // Listen for the 'displayHtml' message from the background script.
