@@ -203,6 +203,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * Keep the highlighted item visible by scrolling the picker's own scroll
+     * container so the active row is not hidden above / below the visible area.
+     * The .skill-picker div is the scroll container (overflow-y: auto). Uses
+     * getBoundingClientRect deltas so it works regardless of the offsetParent.
+     * @param {HTMLElement} el - The highlighted .skill-picker-item element.
+     */
+    function scrollActiveSkillIntoView(el) {
+        if (!skillPicker || !el) return;
+        const crect = skillPicker.getBoundingClientRect();
+        const er = el.getBoundingClientRect();
+        let dy = 0;
+        if (er.top < crect.top) {
+            // Item is above the visible area: scroll up to reveal it.
+            dy = er.top - crect.top;
+        } else if (er.bottom > crect.bottom) {
+            // Item is below the visible area: scroll down to reveal it.
+            dy = er.bottom - crect.bottom;
+        }
+        if (dy) skillPicker.scrollTop += dy;
+    }
+
+    /**
      * Highlight the item at the given index.
      */
     function setSkillHighlight(index) {
@@ -214,6 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (i === skillHighlight) el.classList.add('skill-picker-active');
             else el.classList.remove('skill-picker-active');
         });
+        scrollActiveSkillIntoView(items[skillHighlight]);
     }
 
     /**
