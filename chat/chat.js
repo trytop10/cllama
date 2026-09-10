@@ -717,15 +717,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         copyBtn.addEventListener('click', async (e) => {
-            if (copyBtn.getAttribute("data-flag") === "false") return;
             e.stopPropagation();
 
             const msgTimestamp = parseInt(messageDiv.dataset.timestamp, 10);
             const messageRecord = historyMessages.find(record => record.rtime === msgTimestamp);
+            // Always allow copying: fall back to the rendered text when the
+            // message is not in the history (e.g. failed/aborted responses).
+            const textToCopy = messageRecord ? messageRecord.content : (msgTextEl?.innerText || '');
 
-            if (messageRecord) {
+            if (textToCopy) {
                 try {
-                    await navigator.clipboard.writeText(messageRecord.content);
+                    await navigator.clipboard.writeText(textToCopy);
                     const originalTitle = copyBtn.title;
                     copyBtn.src = "/images/check.svg";
                     copyBtn.title = browser.i18n.getMessage("copied");
@@ -741,14 +743,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         deleteBtn.addEventListener('click', async (e) => {
-            if (deleteBtn.getAttribute("data-flag") === "false") return;
             e.stopPropagation();
 
             const confirmed = await confirmDialog(browser.i18n.getMessage("confirmDelete"));
             if (confirmed) {
                 const msgTimestamp = parseInt(messageDiv.dataset.timestamp, 10);
+                const existed = historyMessages.some(msg => msg.rtime === msgTimestamp);
                 historyMessages = historyMessages.filter(msg => msg.rtime !== msgTimestamp);
-                saveCurrentSession();
+                if (existed) saveCurrentSession();
                 messageDiv.remove();
                 updateResendButtonVisibility();
                 updateCollapseExpandButtonsState();
