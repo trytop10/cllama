@@ -25,6 +25,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const skillPicker = document.getElementById("skillPicker");
     const skillBar = document.getElementById("skillBar");
     const skillNameSpan = document.getElementById("skillName");
+    const bSkillSettings = document.getElementById("b_skillSettings");
+
+    if (bSkillSettings) {
+        bSkillSettings.title = browser.i18n.getMessage("expSkills") || 'Skills';
+        // Open the standalone skill management page (breadcrumb links back here).
+        bSkillSettings.addEventListener('click', (e) => {
+            e.preventDefault();
+            const ccId = getQueryParam("id");
+            location.href = ccId ? `./skills.html?id=${ccId}` : './skills.html';
+        });
+    }
     
     if (bFish) {
         bFish.title = browser.i18n.getMessage("fish_title");
@@ -106,7 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let historyMemory = true;
     let activeSkill = null;    // Currently fixed skill (or null)
     let activeSkillArgs = '';  // Argument string captured when "/skill args..." ran
-    let skillDisabled = false; // true => "No Skill (off)" mode: no Skill injection
+    let skillDisabled = true; // true => "No Skill (off)" mode: no Skill injection. This is the default state.
     let skills = [];           // All available skills
     let skillPickerOpen = false;
     let skillHighlight = -1;
@@ -846,12 +857,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.stopPropagation();
             clearActiveSkill();
         });
-        // Clicking the bar (not the ×) opens the picker.
+        // Clicking the bar toggles the picker; clicking again (or losing focus
+        // to somewhere else) closes it.
         skillBar.addEventListener('click', (e) => {
             if (e.target.closest('#clearSkill')) return;
-            openSkillPicker('');
+            if (skillPickerOpen) {
+                closeSkillPicker();
+            } else {
+                openSkillPicker('');
+            }
         });
     }
+
+    // Close the skill picker when the user clicks / presses anywhere outside
+    // of it (the skill bar itself toggles, so it is excluded here).
+    document.addEventListener('mousedown', (e) => {
+        if (!skillPickerOpen) return;
+        if (skillPicker.contains(e.target) || skillBar.contains(e.target)) return;
+        closeSkillPicker();
+    });
 
     sendButton.addEventListener('click', (e) => {
         e.preventDefault();

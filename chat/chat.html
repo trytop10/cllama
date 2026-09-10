@@ -42,6 +42,9 @@
 		<symbol id="svg_settings" viewBox="0 0 512 512">
 		  <path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/>
 		</symbol>
+		<symbol id="svg_gear" viewBox="0 0 16 16">
+		  <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+		</symbol>
 		<symbol id="svg_fish" viewBox="0 0 576 512">
 		  <path d="M180.5 141.5C219.7 108.5 272.6 80 336 80s116.3 28.5 155.5 61.5c39.1 33 66.9 72.4 81 99.8c4.7 9.2 4.7 20.1 0 29.3c-14.1 27.4-41.9 66.8-81 99.8C452.3 403.5 399.4 432 336 432s-116.3-28.5-155.5-61.5c-16.2-13.7-30.5-28.5-42.7-43.1L48.1 379.6c-12.5 7.3-28.4 5.3-38.7-4.9S-3 348.7 4.2 336.1L50 256 4.2 175.9c-7.2-12.6-5-28.4 5.3-38.6s26.1-12.2 38.7-4.9l89.7 52.3c12.2-14.6 26.5-29.4 42.7-43.1zM448 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
 		</symbol>  
@@ -127,11 +130,16 @@
       <!-- Skill picker (shown when typing "/") -->
       <div id="skillPicker" class="skill-picker" style="display: none;"></div>
 
-      <!-- Active skill indicator bar -->
-      <div id="skillBar" class="skill-bar d-none align-items-center p-1 border border-bottom-0 rounded-top">
-        <span class="skill-bar-label">🧩</span>
-        <span id="skillName" class="skill-bar-name"></span>
-        <a href="#" id="clearSkill" class="skill-bar-clear" title="Clear skill">×</a>
+      <!-- Skill toolbar: two columns - left: skill picker bar, right: skill settings -->
+      <div id="skillToolbar" class="d-flex align-items-stretch">
+        <div id="skillBar" class="skill-bar d-none align-items-center p-1 border border-bottom-0 rounded-top flex-grow-1" style="border-top-right-radius: 0px !important;">
+          <span class="skill-bar-label">🧩</span>
+          <span id="skillName" class="skill-bar-name"></span>
+          <a href="#" id="clearSkill" class="skill-bar-clear" title="Clear skill">×</a>
+        </div>
+        <a id="b_skillSettings" class="btn btn-sm" href="#" title="Skills">
+          <svg class="bi theme-icon-active" style="width:1.2em;height:1.2em;vertical-align:-.135em;"><use href="#svg_gear"></use></svg>
+        </a>
       </div>
 
       <!-- Text Input Area -->

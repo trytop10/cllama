@@ -77,7 +77,6 @@
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
           <a class="nav-link active i18n" id="aiserver-tab" data-bs-toggle="tab" href="#nav-aiserver" role="tab" aria-controls="nav-aiserver" aria-selected="true">api_configuration</a>
           <a class="nav-link i18n" id="insight-tab" data-bs-toggle="tab" href="#nav-insight" role="tab" aria-controls="nav-insight" aria-selected="false">Insightify</a>
-          <a class="nav-link i18n" id="skill-tab" data-bs-toggle="tab" href="#nav-skill" role="tab" aria-controls="nav-skill" aria-selected="false">skill</a>
           <a class="nav-link i18n" id="export-tab" data-bs-toggle="tab" href="#nav-export" role="tab" aria-controls="nav-export" aria-selected="false">export</a>
           <a class="nav-link i18n" id="import-tab" data-bs-toggle="tab" href="#nav-import" role="tab" aria-controls="nav-import" aria-selected="false">import</a>
         </div>
@@ -189,53 +188,6 @@
 
           <div class="d-flex justify-content-center mt-4">
             <a class="btn btn-primary w-50 i18n" id="b_save_insight">save</a>
-          </div>
-        </div>
-        <div class="tab-pane opane fade" id="nav-skill" role="tabpanel" aria-labelledby="skill-tab">
-          <div class="alert alert-info small mb-3 i18n">skillHelp</div>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="i18n mb-0">skillList</h5>
-            <button id="b_add_skill" class="btn btn-sm btn-compact btn-primary i18n">addSkill</button>
-          </div>
-          <div id="skillListContainer" class="mb-4"></div>
-        </div>
-
-        <!-- Skill editor modal -->
-        <div class="modal fade" id="skillModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title i18n" id="skillModalTitle">addSkill</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <input type="hidden" id="skillId" value="">
-                <div class="mb-3">
-                  <label for="skillNameInput" class="form-label i18n">skillName</label>
-                  <input type="text" class="form-control" id="skillNameInput" maxlength="100">
-                </div>
-                <div class="mb-3">
-                  <label for="skillDescInput" class="form-label i18n">skillDescription</label>
-                  <input type="text" class="form-control" id="skillDescInput" maxlength="200">
-                </div>
-                <div class="mb-3">
-                  <label for="skillPromptInput" class="form-label i18n">skillPrompt</label>
-                  <textarea class="form-control" id="skillPromptInput" rows="4" maxlength="2000"></textarea>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label i18n">skillTools</label>
-                  <div class="d-flex justify-content-end mb-1">
-                    <button type="button" id="b_add_tool" class="btn btn-sm btn-compact btn-outline-secondary i18n">addTool</button>
-                  </div>
-                  <div id="toolRows"></div>
-                  <div class="text-muted small mt-1 i18n">skillToolsHint</div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary i18n" data-bs-dismiss="modal">close</button>
-                <button type="button" class="btn btn-sm btn-compact btn-primary i18n" id="b_save_skill">save</button>
-              </div>
-            </div>
           </div>
         </div>
         <div class="tab-pane  opane fade" id="nav-export" role="tabpanel" aria-labelledby="nav-export-tab">
