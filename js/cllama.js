@@ -321,7 +321,11 @@ export async function chat(historyMessages, options) {
   //   the text <tool_call> protocol on any other backend (adoptedSkill below).
   const activeSkill = options?.activeSkill || null;
   let adoptedSkill = null; // Skill the model adopts mid-turn in Auto mode
-  const autoSkills = (!activeSkill && Array.isArray(options?.skills) && options.skills.length) ? options.skills : null;
+  // Auto mode skills: exclude skills flagged manualOnly (user-only invocation,
+  // mirroring Claude's disable-model-invocation). They can still be picked via
+  // the "/" picker or inline "/name" command.
+  const autoSkillPool = (!activeSkill && Array.isArray(options?.skills)) ? options.skills.filter(s => !s?.manualOnly) : [];
+  const autoSkills = autoSkillPool.length ? autoSkillPool : null;
   const skillHasTools = activeSkill && Array.isArray(activeSkill.tools) && activeSkill.tools.length;
 
   let useNativeTools = false;

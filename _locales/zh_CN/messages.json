@@ -456,5 +456,11 @@
     },
     "skillDefaultDateTimeDesc": {
         "message": "回答当前日期、时间与星期等日期相关问题。"
+    },
+    "skillManualOnly": {
+        "message": "仅手动调用"
+    },
+    "skillManualOnlyHint": {
+        "message": "Auto 模式下模型不会自动启用该技能；请通过 “/” 选择器或输入 “/名称” 命令手动激活。"
     }
 }

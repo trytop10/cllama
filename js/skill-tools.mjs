@@ -436,6 +436,30 @@ export function stripToolCalls(text) {
 }
 
 /**
+ * Whether a skill tool entry marks a *disallowed* tool (mirroring Claude's
+ * `disallowed-tools`): either the entry itself is blocked, or the name starts
+ * with "!" (string form). Blocked entries hide the tool from the model and
+ * make its invocation fail while the skill is active.
+ * @param {Object|string} entry - Skill tool entry ({ name, args, blocked }) or a plain name string
+ * @returns {boolean}
+ */
+export function isBlockedTool(entry) {
+  if (entry && typeof entry === 'object') return entry.blocked === true || String(entry.name || '').startsWith('!');
+  if (typeof entry === 'string') return entry.startsWith('!');
+  return false;
+}
+
+/**
+ * Extract the plain tool name from a skill tool entry (strips a leading "!").
+ * @param {Object|string} entry - Skill tool entry or plain name string
+ * @returns {string}
+ */
+export function skillToolName(entry) {
+  const raw = entry && typeof entry === 'object' ? entry.name : entry;
+  return String(raw || '').replace(/^!/, '');
+}
+
+/**
  * Build the tool-calling instructions appended to a skill's system prompt.
  * @param {Object} activeSkill - The active skill { name, tools: string[] }
  * @returns {string} Empty string if the skill declares no tools.
@@ -444,6 +468,7 @@ export function buildToolInstructions(activeSkill) {
   const entries = Array.isArray(activeSkill?.tools) ? activeSkill.tools : [];
   const tools = [];
   for (const entry of entries) {
+    if (isBlockedTool(entry)) continue;
     const name = entry && typeof entry === 'object' ? entry.name : entry;
     const args = entry && typeof entry === 'object' ? entry.args : undefined;
     const tool = getTool(name);
@@ -485,6 +510,25 @@ export function buildSkillSystemMessage(activeSkill) {
 }
 
 /**
+ * Split a skill's tool entries into allowed names and blocked names.
+ * Blocked entries (see isBlockedTool) are excluded from the allowed list so a
+ * blocked tool is rejected even when the skill otherwise declares no whitelist.
+ * @param {Object} activeSkill - The active skill (with its tools config)
+ * @returns {{allowed: string[], blocked: string[]}}
+ */
+function splitSkillTools(activeSkill) {
+  const entries = Array.isArray(activeSkill?.tools) ? activeSkill.tools : [];
+  const allowed = [];
+  const blocked = [];
+  for (const entry of entries) {
+    const name = skillToolName(entry);
+    if (!name) continue;
+    (isBlockedTool(entry) ? blocked : allowed).push(name);
+  }
+  return { allowed, blocked };
+}
+
+/**
  * Execute a single parsed tool call against the active skill's allowed tools,
  * merging the skill's configured default args with the model-provided args
  * (model-provided values take precedence).
@@ -494,13 +538,11 @@ export function buildSkillSystemMessage(activeSkill) {
  */
 export async function executeToolCall(call, activeSkill) {
   const tool = toolRegistry.get(call?.name);
-  const allowed = Array.isArray(activeSkill?.tools)
-    ? activeSkill.tools.map(t => (t && typeof t === 'object' ? t.name : t))
-    : [];
+  const { allowed, blocked } = splitSkillTools(activeSkill);
 
   let defaultArgs = {};
   if (Array.isArray(activeSkill?.tools)) {
-    const entry = activeSkill.tools.find(t => (t && typeof t === 'object' ? t.name : t) === call?.name);
+    const entry = activeSkill.tools.find(t => skillToolName(t) === call?.name);
     if (entry && typeof entry === 'object' && entry.args) defaultArgs = entry.args;
   }
 
@@ -508,6 +550,9 @@ export async function executeToolCall(call, activeSkill) {
     `<tool_result>\n<tool_name>${call.name}</tool_name>\n<success>${success}</success>\n<output>${String(output)}</output>\n</tool_result>`;
 
   if (!tool) return wrap(false, `Unknown tool: ${call.name}`);
+  if (blocked.includes(call.name)) {
+    return wrap(false, `Tool "${call.name}" is disallowed by the active skill.`);
+  }
   if (allowed.length && !allowed.includes(call.name)) {
     return wrap(false, `Tool "${call.name}" is not allowed by the active skill.`);
   }
@@ -532,18 +577,19 @@ export async function executeToolCall(call, activeSkill) {
  */
 export async function runTool(name, args, activeSkill) {
   const tool = toolRegistry.get(name);
-  const allowed = Array.isArray(activeSkill?.tools)
-    ? activeSkill.tools.map(t => (t && typeof t === 'object' ? t.name : t))
-    : [];
+  const { allowed, blocked } = splitSkillTools(activeSkill);
 
   if (!tool) return `Unknown tool: ${name}`;
+  if (blocked.includes(name)) {
+    return `Tool "${name}" is disallowed by the active skill.`;
+  }
   if (allowed.length && !allowed.includes(name)) {
     return `Tool "${name}" is not allowed by the active skill.`;
   }
 
   let defaultArgs = {};
   if (Array.isArray(activeSkill?.tools)) {
-    const entry = activeSkill.tools.find(t => (t && typeof t === 'object' ? t.name : t) === name);
+    const entry = activeSkill.tools.find(t => skillToolName(t) === name);
     if (entry && typeof entry === 'object' && entry.args) defaultArgs = entry.args;
   }
 
@@ -564,7 +610,8 @@ export function buildNativeTools(activeSkill) {
   const entries = Array.isArray(activeSkill?.tools) ? activeSkill.tools : [];
   const tools = [];
   for (const entry of entries) {
-    const name = entry && typeof entry === 'object' ? entry.name : entry;
+    if (isBlockedTool(entry)) continue;
+    const name = skillToolName(entry);
     const tool = getTool(name);
     if (!tool) continue;
     tools.push({

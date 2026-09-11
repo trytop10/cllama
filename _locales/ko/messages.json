@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "자동"
+    },
+    "skillManualOnly": {
+        "message": "수동 전용"
+    },
+    "skillManualOnlyHint": {
+        "message": "Auto 모드에서 모델이 이 스킬을 자동으로 활성화하지 않습니다. \"/\" 선택기 또는 \"/이름\" 명령으로 활성화하세요."
     }
 }

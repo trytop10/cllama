@@ -61,8 +61,9 @@ function renderSkillList() {
     <div class="list-group-item d-flex align-items-center py-2" data-index="${index}">
       <div class="flex-grow-1">
         <strong>${s.name}</strong>
+        ${s.manualOnly ? `<span class="badge text-bg-secondary ms-1" title="${browser.i18n.getMessage("skillManualOnlyHint")}">${browser.i18n.getMessage("skillManualOnly")}</span>` : ''}
         <div class="text-muted small">${s.description || ''}</div>
-        ${Array.isArray(s.tools) && s.tools.length ? `<div class="text-muted small">🧰 ${s.tools.map(t => t.name || t).join(', ')}</div>` : ''}
+        ${Array.isArray(s.tools) && s.tools.length ? `<div class="text-muted small">🧰 ${s.tools.filter(t => !t.blocked && !(typeof t === 'string' && t.startsWith('!'))).map(t => t.name || t).join(', ')}${s.tools.some(t => t.blocked || (typeof t === 'string' && t.startsWith('!'))) ? ` <span class="text-danger">🚫 ${s.tools.filter(t => t.blocked || (typeof t === 'string' && t.startsWith('!'))).map(t => (t.name || t).replace(/^!/, '')).join(', ')}</span>` : ''}</div>` : ''}
       </div>
       <div class="btn-group ms-2 flex-shrink-0">
         <button type="button" class="btn btn-sm btn-outline-secondary skill-edit-btn" title="${browser.i18n.getMessage("editSkill")}">✍</button>
@@ -258,7 +259,11 @@ function collectToolsFromForm() {
   syncArgsFromDom();
   return editingTools
     .filter(item => item.name)
-    .map(item => ({ name: item.name, args: item.args || {} }));
+    .map(item => {
+      const entry = { name: item.name, args: item.args || {} };
+      if (item.blocked) entry.blocked = true;
+      return entry;
+    });
 }
 
 /**
@@ -278,9 +283,12 @@ function showSkillForm(skill) {
   document.getElementById('skillDescInput').value = skill ? (skill.description || '') : '';
   document.getElementById('skillPromptInput').value = skill ? (skill.prompt || '') : '';
   editingTools = skill && Array.isArray(skill.tools)
-    ? skill.tools.map(t => ({ name: t.name || '', args: t.args || {} }))
+    ? skill.tools.map(t => ({ name: t.name || '', args: t.args || {}, blocked: t.blocked === true || (typeof t === 'string' && t.startsWith('!')) }))
     : [];
   renderToolRows();
+
+  const manualOnlyInput = document.getElementById('skillManualOnlyInput');
+  if (manualOnlyInput) manualOnlyInput.checked = skill ? skill.manualOnly === true : false;
 
   const title = document.getElementById('skillModalTitle');
   if (title) title.textContent = browser.i18n.getMessage(skill ? 'editSkill' : 'addSkill');
@@ -310,9 +318,13 @@ async function saveSkillFromForm() {
       existing.description = description;
       existing.prompt = prompt;
       existing.tools = tools;
+      existing.manualOnly = document.getElementById('skillManualOnlyInput')?.checked === true;
     }
   } else {
-    skillConfigurations.push({ id: `skill_${Date.now()}`, name, description, prompt, tools });
+    const manualOnly = document.getElementById('skillManualOnlyInput')?.checked === true;
+    const entry = { id: `skill_${Date.now()}`, name, description, prompt, tools };
+    if (manualOnly) entry.manualOnly = true;
+    skillConfigurations.push(entry);
   }
 
   await saveSkills(skillConfigurations);

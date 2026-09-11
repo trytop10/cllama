@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "自動"
+    },
+    "skillManualOnly": {
+        "message": "手動のみ"
+    },
+    "skillManualOnlyHint": {
+        "message": "Auto モードではモデルがこのスキルを自動的に有効化しません。「/」ピッカーまたは「/名前」コマンドで有効化してください。"
     }
 }

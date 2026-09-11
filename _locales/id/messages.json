@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "Otomatis"
+    },
+    "skillManualOnly": {
+        "message": "Hanya manual"
+    },
+    "skillManualOnlyHint": {
+        "message": "Model tidak akan mengaktifkan keterampilan ini secara otomatis dalam mode Auto; aktifkan melalui pemilih \"/\" atau perintah \"/nama\"."
     }
 }

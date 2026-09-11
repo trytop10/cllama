@@ -456,5 +456,11 @@
     },
     "skillDefaultDateTimeDesc": {
         "message": "Answers questions about the current date, time and weekday."
+    },
+    "skillManualOnly": {
+        "message": "Manual only"
+    },
+    "skillManualOnlyHint": {
+        "message": "The model will not auto-activate this Skill in Auto mode; activate it via the \"/\" picker or the inline \"/name\" command."
     }
 }

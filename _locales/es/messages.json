@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "Automático"
+    },
+    "skillManualOnly": {
+        "message": "Solo manual"
+    },
+    "skillManualOnlyHint": {
+        "message": "El modelo no activará esta habilidad automáticamente en modo Auto; actívela con el selector «/» o el comando «/nombre»."
     }
 }

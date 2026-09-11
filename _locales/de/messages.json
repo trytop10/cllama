@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "Automatisch"
+    },
+    "skillManualOnly": {
+        "message": "Nur manuell"
+    },
+    "skillManualOnlyHint": {
+        "message": "Das Modell aktiviert diese Fähigkeit im Automatikmodus nicht selbst; verwenden Sie die \"/\"-Auswahl oder den Befehl \"/name\"."
     }
 }

@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "Tự động"
+    },
+    "skillManualOnly": {
+        "message": "Chỉ thủ công"
+    },
+    "skillManualOnlyHint": {
+        "message": "Mô hình sẽ không tự kích hoạt kỹ năng này ở chế độ Auto; hãy kích hoạt qua bộ chọn \"/\" hoặc lệnh \"/tên\"."
     }
 }

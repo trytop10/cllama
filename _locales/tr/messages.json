@@ -456,5 +456,11 @@
     },
     "skillAutoMode": {
         "message": "Otomatik"
+    },
+    "skillManualOnly": {
+        "message": "Yalnızca manuel"
+    },
+    "skillManualOnlyHint": {
+        "message": "Model bu beceriyi Auto modunda otomatik etkinleştirmeyecek; \"/\" seçicisi veya \"/ad\" komutuyla etkinleştirin."
     }
 }
