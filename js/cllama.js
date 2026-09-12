@@ -6,7 +6,7 @@ import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
 import { getServiceInstance } from './client/client.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags } from './util.js';
-import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
+import { parseToolCalls, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 
 
 // Default configuration
@@ -327,6 +327,13 @@ export async function chat(historyMessages, options) {
   const autoSkillPool = (!activeSkill && Array.isArray(options?.skills)) ? options.skills.filter(s => !s?.manualOnly) : [];
   const autoSkills = autoSkillPool.length ? autoSkillPool : null;
   const skillHasTools = activeSkill && Array.isArray(activeSkill.tools) && activeSkill.tools.length;
+
+  // Make sure MCP tools are registered before any tool list is built. This is
+  // instant when MCP is unused (already-resolved promise) or registration has
+  // already finished; at worst it waits out the short probe timeout once.
+  if (skillHasTools || autoSkills) {
+    try { await getMcpReady(); } catch (e) { /* registration errors are non-fatal */ }
+  }
 
   let useNativeTools = false;
   let nativeTools = [];
@@ -724,7 +731,8 @@ export const DB_KEY = {
   fishIconActive: "fishIconActive",
   pendingInsight: "pendingInsight",
   skillList: "skillList",
-  skillSystemDisabled: "skillSystemDisabled"
+  skillSystemDisabled: "skillSystemDisabled",
+  mcpServers: "mcpServers"
 };
 
 // Initialize theme system for extension pages

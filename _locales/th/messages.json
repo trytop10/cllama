@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "โมเดลจะไม่เปิดใช้ทักษะนี้เองในโหมดอัตโนมัติ ให้เปิดใช้ผ่านตัวเลือก \"/\" หรือคำสั่ง \"/ชื่อ\""
+    },
+    "mcpServers": {
+        "message": "เซิร์ฟเวอร์ MCP"
+    },
+    "addMcpServer": {
+        "message": "เพิ่มเซิร์ฟเวอร์"
+    },
+    "mcpServersHint": {
+        "message": "เซิร์ฟเวอร์ MCP (Model Context Protocol) ผ่าน Streamable HTTP เครื่องมือของเซิร์ฟเวอร์จะถูกลงทะเบียนและเลือกใช้ได้ในรายการเครื่องมือของแต่ละทักษะ เซิร์ฟเวอร์ที่รองรับเฉพาะ stdio ต้องมีเกตเวย์อย่าง supergateway"
+    },
+    "mcpServersEmpty": {
+        "message": "ยังไม่มีเซิร์ฟเวอร์ MCP ที่ตั้งค่าไว้"
+    },
+    "mcpServerName": {
+        "message": "ชื่อ"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "ส่วนหัว HTTP (JSON, ไม่บังคับ)"
+    },
+    "mcpEnabled": {
+        "message": "เปิดใช้งาน"
+    },
+    "mcpTestBtn": {
+        "message": "ทดสอบการเชื่อมต่อ"
+    },
+    "mcpTestOk": {
+        "message": "สำเร็จ: พบเครื่องมือ {count} รายการ"
+    },
+    "mcpTestFail": {
+        "message": "การเชื่อมต่อล้มเหลว"
+    },
+    "mcpDisabled": {
+        "message": "ปิดใช้งาน"
+    },
+    "expMcpServers": {
+        "message": "การตั้งค่าเซิร์ฟเวอร์ MCP"
     }
 }

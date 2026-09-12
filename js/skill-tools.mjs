@@ -39,6 +39,29 @@ export const SKILL_TOOL_MAX_ITER = 6;
 // ------------------- Tool registry -------------------
 const toolRegistry = new Map();
 
+// Resolves when MCP tool registration (initMcpTools) has settled. Chat awaits
+// this before building tool lists so remote tools are present, but it is
+// already-resolved (zero cost) when MCP is unused or registration finished.
+let mcpReady = Promise.resolve();
+
+/**
+ * Replace the MCP readiness promise (called by js/mcp.mjs on init).
+ * @param {Promise} p - Promise that settles when registration is done
+ */
+export function setMcpReady(p) {
+  mcpReady = p;
+}
+
+/**
+ * Promise that resolves once MCP tools have been registered (or immediately
+ * when MCP is not in use).
+ * @returns {Promise<void>}
+ */
+export function getMcpReady() {
+  return mcpReady;
+}
+
+
 /**
  * Register a tool definition.
  * @param {Object} tool - { name, description, parameters, func }

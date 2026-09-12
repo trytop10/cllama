@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Auto 模式下模型不会自动启用该技能；请通过 “/” 选择器或输入 “/名称” 命令手动激活。"
+    },
+    "mcpServers": {
+        "message": "MCP 服务器"
+    },
+    "addMcpServer": {
+        "message": "添加服务器"
+    },
+    "mcpServersHint": {
+        "message": "通过 Streamable HTTP 连接的 MCP（Model Context Protocol）服务器。其工具会自动注册，可在各 Skill 的工具列表中选用。仅支持 stdio 的服务器需借助 supergateway 之类的网关转成 HTTP。"
+    },
+    "mcpServersEmpty": {
+        "message": "尚未配置 MCP 服务器。"
+    },
+    "mcpServerName": {
+        "message": "名称"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "HTTP 请求头（JSON，可选）"
+    },
+    "mcpEnabled": {
+        "message": "启用"
+    },
+    "mcpTestBtn": {
+        "message": "测试连接"
+    },
+    "mcpTestOk": {
+        "message": "连接成功：发现 {count} 个工具。"
+    },
+    "mcpTestFail": {
+        "message": "连接失败"
+    },
+    "mcpDisabled": {
+        "message": "已停用"
+    },
+    "expMcpServers": {
+        "message": "MCP 服务器设置"
     }
 }

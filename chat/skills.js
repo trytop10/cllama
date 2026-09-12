@@ -1,5 +1,6 @@
 import { i18n, loadSkills, saveSkills } from "../js/cllama.js";
 import { listTools } from "../js/skill-tools.mjs";
+import { loadMcpServers, saveMcpServers, listMcpTools, initMcpTools } from "../js/mcp.mjs";
 import { balert } from "../js/dialog.mjs";
 import { browser } from '../js/browser.mjs';
 import { getQueryParam } from "../js/util.js";
@@ -7,6 +8,8 @@ import { getQueryParam } from "../js/util.js";
 let skillConfigurations = [];
 let skillModal = null;
 let editingTools = []; // [{ name, args }] rows being edited in the modal
+let mcpConfigurations = [];
+let mcpModal = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Breadcrumb link back to the chat page (keeps the chat scenario id).
@@ -22,6 +25,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('b_add_tool').addEventListener('click', appendToolRow);
   document.getElementById('b_save_skill').addEventListener('click', saveSkillFromForm);
 
+  // MCP server management events
+  document.getElementById('b_add_mcp').addEventListener('click', showAddMcpForm);
+  document.getElementById('b_save_mcp').addEventListener('click', saveMcpFromForm);
+  document.getElementById('b_test_mcp').addEventListener('click', testMcpFromForm);
+
+  // Render immediately; register MCP tools in the background so a slow or
+  // dead server never delays the page. Tool rows are re-read from listTools()
+  // each time a Skill form opens, so late-registered tools appear there.
+  initMcpTools().catch(e => console.warn('[MCP] init failed:', e));
+  await initMcpList();
   await initSkillList();
   i18n();
 });
@@ -331,4 +344,177 @@ async function saveSkillFromForm() {
   ensureSkillModal().hide();
   renderSkillList();
   balert(browser.i18n.getMessage("saveSuccessMessage"));
+}
+
+// ------------------- MCP server management -------------------
+
+/**
+ * Lazily obtain the MCP editor modal instance.
+ * @returns {Object} Bootstrap modal instance
+ */
+function ensureMcpModal() {
+  if (!mcpModal) {
+    mcpModal = new bootstrap.Modal(document.getElementById('mcpModal'));
+  }
+  return mcpModal;
+}
+
+/**
+ * Load MCP servers and render the list.
+ */
+async function initMcpList() {
+  mcpConfigurations = await loadMcpServers();
+  renderMcpServers();
+}
+
+/**
+ * Render the MCP server list with test / edit / delete buttons.
+ */
+function renderMcpServers() {
+  const container = document.getElementById('mcpServersContainer');
+  if (!container) return;
+
+  if (!mcpConfigurations.length) {
+    container.innerHTML = `<div class="text-muted small i18n">mcpServersEmpty</div>`;
+    return;
+  }
+
+  container.innerHTML = mcpConfigurations.map((s, index) => `
+    <div class="list-group-item d-flex align-items-center py-2" data-mcp-index="${index}">
+      <div class="flex-grow-1">
+        <strong>${s.name}</strong>
+        ${s.enabled === false ? `<span class="badge text-bg-secondary ms-1">${browser.i18n.getMessage("mcpDisabled")}</span>` : ''}
+        <div class="text-muted small">${s.url}</div>
+      </div>
+      <div class="btn-group ms-2 flex-shrink-0">
+        <button type="button" class="btn btn-sm btn-outline-secondary mcp-test-btn" title="${browser.i18n.getMessage("mcpTestBtn")}">🔌</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary mcp-edit-btn" title="${browser.i18n.getMessage("editSkill")}">✍</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary mcp-delete-btn" title="${browser.i18n.getMessage("deleteSkill")}">✘</button>
+      </div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.mcp-test-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const index = parseInt(btn.closest('[data-mcp-index]').dataset.mcpIndex, 10);
+      btn.textContent = '…';
+      try {
+        const tools = await listMcpTools(mcpConfigurations[index]);
+        balert(browser.i18n.getMessage("mcpTestOk").replace('{count}', tools.length));
+      } catch (e) {
+        balert((browser.i18n.getMessage("mcpTestFail") || 'Failed') + ': ' + e.message);
+      }
+      btn.textContent = '🔌';
+    });
+  });
+
+  container.querySelectorAll('.mcp-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = parseInt(btn.closest('[data-mcp-index]').dataset.mcpIndex, 10);
+      showMcpForm(mcpConfigurations[index]);
+    });
+  });
+
+  container.querySelectorAll('.mcp-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const index = parseInt(btn.closest('[data-mcp-index]').dataset.mcpIndex, 10);
+      mcpConfigurations.splice(index, 1);
+      await saveMcpServers(mcpConfigurations);
+      renderMcpServers();
+    });
+  });
+}
+
+/**
+ * Show the MCP form for adding a new server.
+ */
+function showAddMcpForm() {
+  showMcpForm(null);
+}
+
+/**
+ * Show the MCP server editor modal (populated for editing, or empty for adding).
+ * @param {Object|null} server - Server to edit, or null to add
+ */
+function showMcpForm(server) {
+  document.getElementById('mcpServerId').value = server ? server.id : '';
+  document.getElementById('mcpNameInput').value = server ? server.name : '';
+  document.getElementById('mcpUrlInput').value = server ? server.url : '';
+  document.getElementById('mcpHeadersInput').value = server && server.headers
+    ? JSON.stringify(server.headers, null, 2) : '';
+  document.getElementById('mcpEnabledInput').checked = server ? server.enabled !== false : true;
+
+  const title = document.getElementById('mcpModalTitle');
+  if (title) title.textContent = browser.i18n.getMessage(server ? 'editSkill' : 'addMcpServer');
+
+  ensureMcpModal().show();
+}
+
+/**
+ * Read the headers textarea into an object. Empty input yields {}.
+ * @param {string} raw - Raw JSON text
+ * @returns {Object|null} Headers object, or null when the JSON is invalid
+ */
+function parseMcpHeaders(raw) {
+  const v = (raw || '').trim();
+  if (!v) return {};
+  try {
+    const obj = JSON.parse(v);
+    return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Read the MCP editor modal and persist it, then re-register tools.
+ */
+async function saveMcpFromForm() {
+  const id = document.getElementById('mcpServerId').value;
+  const name = document.getElementById('mcpNameInput').value.trim();
+  const url = document.getElementById('mcpUrlInput').value.trim();
+  const headers = parseMcpHeaders(document.getElementById('mcpHeadersInput').value);
+  const enabled = document.getElementById('mcpEnabledInput').checked;
+
+  if (!name || !url || headers === null) {
+    balert(browser.i18n.getMessage("requiredError"));
+    return;
+  }
+
+  if (id) {
+    const existing = mcpConfigurations.find(s => String(s.id) === String(id));
+    if (existing) {
+      existing.name = name;
+      existing.url = url;
+      existing.headers = headers;
+      existing.enabled = enabled;
+    }
+  } else {
+    mcpConfigurations.push({ id: `mcp_${Date.now()}`, name, url, headers, enabled });
+  }
+
+  await saveMcpServers(mcpConfigurations);
+  // Re-register so new/changed servers are usable without a page reload.
+  try { await initMcpTools(); } catch (e) { console.warn('[MCP] re-init failed:', e); }
+  ensureMcpModal().hide();
+  renderMcpServers();
+}
+
+/**
+ * Test the server currently being edited (list its tools).
+ */
+async function testMcpFromForm() {
+  const name = document.getElementById('mcpNameInput').value.trim();
+  const url = document.getElementById('mcpUrlInput').value.trim();
+  const headers = parseMcpHeaders(document.getElementById('mcpHeadersInput').value);
+  if (!url || headers === null) {
+    balert(browser.i18n.getMessage("requiredError"));
+    return;
+  }
+  try {
+    const tools = await listMcpTools({ name: name || 'test', url, headers });
+    balert(browser.i18n.getMessage("mcpTestOk").replace('{count}', tools.length));
+  } catch (e) {
+    balert((browser.i18n.getMessage("mcpTestFail") || 'Failed') + ': ' + e.message);
+  }
 }

@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Model bu beceriyi Auto modunda otomatik etkinleştirmeyecek; \"/\" seçicisi veya \"/ad\" komutuyla etkinleştirin."
+    },
+    "mcpServers": {
+        "message": "MCP Sunucuları"
+    },
+    "addMcpServer": {
+        "message": "Sunucu Ekle"
+    },
+    "mcpServersHint": {
+        "message": "Streamable HTTP üzerinden MCP (Model Context Protocol) sunucuları. Araçları kaydedilir ve her becerinin araç listesinde seçilebilir. Yalnızca-stdio sunucular için supergateway gibi bir ağ geçidi gerekir."
+    },
+    "mcpServersEmpty": {
+        "message": "Yapılandırılmış MCP sunucusu yok."
+    },
+    "mcpServerName": {
+        "message": "Ad"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "HTTP başlıkları (JSON, isteğe bağlı)"
+    },
+    "mcpEnabled": {
+        "message": "Etkin"
+    },
+    "mcpTestBtn": {
+        "message": "Bağlantıyı test et"
+    },
+    "mcpTestOk": {
+        "message": "Tamam: {count} araç bulundu."
+    },
+    "mcpTestFail": {
+        "message": "Bağlantı başarısız"
+    },
+    "mcpDisabled": {
+        "message": "devre dışı"
+    },
+    "expMcpServers": {
+        "message": "MCP sunucu ayarları"
     }
 }

@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Le modèle n’activera pas cette compétence automatiquement en mode Auto ; activez-la via le sélecteur « / » ou la commande « /nom »."
+    },
+    "mcpServers": {
+        "message": "Serveurs MCP"
+    },
+    "addMcpServer": {
+        "message": "Ajouter un serveur"
+    },
+    "mcpServersHint": {
+        "message": "Serveurs MCP (Model Context Protocol) via HTTP en flux. Leurs outils sont enregistrés et peuvent être sélectionnés dans la liste d'outils de chaque compétence. Les serveurs stdio uniquement nécessitent une passerelle comme supergateway."
+    },
+    "mcpServersEmpty": {
+        "message": "Aucun serveur MCP configuré."
+    },
+    "mcpServerName": {
+        "message": "Nom"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "En-têtes HTTP (JSON, facultatif)"
+    },
+    "mcpEnabled": {
+        "message": "Activé"
+    },
+    "mcpTestBtn": {
+        "message": "Tester la connexion"
+    },
+    "mcpTestOk": {
+        "message": "OK : {count} outils trouvés."
+    },
+    "mcpTestFail": {
+        "message": "Échec de connexion"
+    },
+    "mcpDisabled": {
+        "message": "désactivé"
+    },
+    "expMcpServers": {
+        "message": "Paramètres des serveurs MCP"
     }
 }

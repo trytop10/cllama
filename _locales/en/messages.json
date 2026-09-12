@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "The model will not auto-activate this Skill in Auto mode; activate it via the \"/\" picker or the inline \"/name\" command."
+    },
+    "mcpServers": {
+        "message": "MCP Servers"
+    },
+    "addMcpServer": {
+        "message": "Add Server"
+    },
+    "mcpServersHint": {
+        "message": "MCP (Model Context Protocol) servers over Streamable HTTP. Their tools are registered and can be selected in each Skill's tool list. Stdio-only servers need a gateway such as supergateway."
+    },
+    "mcpServersEmpty": {
+        "message": "No MCP servers configured."
+    },
+    "mcpServerName": {
+        "message": "Name"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "HTTP headers (JSON, optional)"
+    },
+    "mcpEnabled": {
+        "message": "Enabled"
+    },
+    "mcpTestBtn": {
+        "message": "Test connection"
+    },
+    "mcpTestOk": {
+        "message": "OK: {count} tools found."
+    },
+    "mcpTestFail": {
+        "message": "Connection failed"
+    },
+    "mcpDisabled": {
+        "message": "disabled"
+    },
+    "expMcpServers": {
+        "message": "MCP server settings"
     }
 }

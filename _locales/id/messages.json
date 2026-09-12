@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Model tidak akan mengaktifkan keterampilan ini secara otomatis dalam mode Auto; aktifkan melalui pemilih \"/\" atau perintah \"/nama\"."
+    },
+    "mcpServers": {
+        "message": "Server MCP"
+    },
+    "addMcpServer": {
+        "message": "Tambah Server"
+    },
+    "mcpServersHint": {
+        "message": "Server MCP (Model Context Protocol) melalui Streamable HTTP. Alat-alatnya didaftarkan dan dapat dipilih dalam daftar alat setiap Skill. Server khusus-stdio memerlukan gateway seperti supergateway."
+    },
+    "mcpServersEmpty": {
+        "message": "Belum ada server MCP yang dikonfigurasi."
+    },
+    "mcpServerName": {
+        "message": "Nama"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "Header HTTP (JSON, opsional)"
+    },
+    "mcpEnabled": {
+        "message": "Aktif"
+    },
+    "mcpTestBtn": {
+        "message": "Uji koneksi"
+    },
+    "mcpTestOk": {
+        "message": "OK: {count} alat ditemukan."
+    },
+    "mcpTestFail": {
+        "message": "Koneksi gagal"
+    },
+    "mcpDisabled": {
+        "message": "nonaktif"
+    },
+    "expMcpServers": {
+        "message": "Pengaturan server MCP"
     }
 }

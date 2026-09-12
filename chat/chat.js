@@ -1,5 +1,6 @@
 import { getService } from '../js/client/client.mjs';
 import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments } from '../js/cllama.js';
+import { initMcpTools } from '../js/mcp.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
@@ -127,9 +128,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
-     * Load the available skills from storage.
+     * Load the available skills from storage (and kick off MCP tool
+     * registration in the background — chat() awaits the readiness promise
+     * only when tools are actually needed, so startup is never blocked).
      */
     async function refreshSkills() {
+        initMcpTools().catch(e => console.warn('[MCP] init failed:', e));
         skills = await loadSkills();
     }
 

@@ -24,6 +24,49 @@
       <button id="b_add_skill" class="btn btn-primary i18n">addSkill</button>
     </div>
     <div id="skillListContainer" class="mb-4"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="i18n mb-0">mcpServers</h5>
+      <button id="b_add_mcp" class="btn btn-sm btn-compact btn-outline-primary i18n">addMcpServer</button>
+    </div>
+    <div id="mcpServersContainer" class="mb-2"></div>
+    <div class="text-muted small mt-1 i18n">mcpServersHint</div>
+  </div>
+
+  <!-- MCP server editor modal -->
+  <div class="modal fade" id="mcpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title i18n" id="mcpModalTitle">addMcpServer</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="mcpServerId" value="">
+          <div class="mb-3">
+            <label for="mcpNameInput" class="form-label i18n">mcpServerName</label>
+            <input type="text" class="form-control" id="mcpNameInput" maxlength="50" placeholder="my-server">
+          </div>
+          <div class="mb-3">
+            <label for="mcpUrlInput" class="form-label i18n">mcpServerUrl</label>
+            <input type="url" class="form-control" id="mcpUrlInput" placeholder="http://127.0.0.1:8000/mcp">
+          </div>
+          <div class="mb-3">
+            <label for="mcpHeadersInput" class="form-label i18n">mcpServerHeaders</label>
+            <textarea class="form-control font-monospace" id="mcpHeadersInput" rows="3" placeholder='{"Authorization": "Bearer ..."}'></textarea>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="mcpEnabledInput" checked>
+            <label class="form-check-label i18n" for="mcpEnabledInput">mcpEnabled</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary me-auto i18n" id="b_test_mcp">mcpTestBtn</button>
+          <button type="button" class="btn btn-secondary i18n" data-bs-dismiss="modal">close</button>
+          <button type="button" class="btn btn-primary i18n" id="b_save_mcp">save</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Skill editor modal -->

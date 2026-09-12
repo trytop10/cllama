@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Mô hình sẽ không tự kích hoạt kỹ năng này ở chế độ Auto; hãy kích hoạt qua bộ chọn \"/\" hoặc lệnh \"/tên\"."
+    },
+    "mcpServers": {
+        "message": "Máy chủ MCP"
+    },
+    "addMcpServer": {
+        "message": "Thêm máy chủ"
+    },
+    "mcpServersHint": {
+        "message": "Máy chủ MCP (Model Context Protocol) qua Streamable HTTP. Công cụ của chúng được đăng ký và có thể chọn trong danh sách công cụ của từng kỹ năng. Máy chủ chỉ-stdio cần gateway như supergateway."
+    },
+    "mcpServersEmpty": {
+        "message": "Chưa cấu hình máy chủ MCP nào."
+    },
+    "mcpServerName": {
+        "message": "Tên"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "Header HTTP (JSON, tùy chọn)"
+    },
+    "mcpEnabled": {
+        "message": "Bật"
+    },
+    "mcpTestBtn": {
+        "message": "Kiểm tra kết nối"
+    },
+    "mcpTestOk": {
+        "message": "OK: tìm thấy {count} công cụ."
+    },
+    "mcpTestFail": {
+        "message": "Kết nối thất bại"
+    },
+    "mcpDisabled": {
+        "message": "đã tắt"
+    },
+    "expMcpServers": {
+        "message": "Cài đặt máy chủ MCP"
     }
 }

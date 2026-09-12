@@ -328,7 +328,7 @@ function bindEventListeners() {
   document.getElementById('b_upload').addEventListener('click', function(e){
 
     // Keys that are allowed to be imported from the JSON file
-    const allowedDataKeys = ["base", "dsList", "actionList", "chatTpaList", "insightList", "urls", "skillList"];
+    const allowedDataKeys = ["base", "dsList", "actionList", "chatTpaList", "insightList", "urls", "skillList", "mcpServers"];
 
     const fileInput = document.getElementById('jsonFile');
     const file = fileInput.files[0];

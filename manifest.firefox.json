@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
   "name": "cllama",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "__MSG_cllamaDescription__",
-  "permissions": ["activeTab", "storage", "contextMenus"],  
+  "permissions": ["activeTab", "storage", "contextMenus", "<all_urls>"],  
   "homepage_url": "https://fxdq.net/cllama/en/index.html",
 
   "browser_action": {

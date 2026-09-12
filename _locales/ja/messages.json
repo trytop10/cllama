@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Auto モードではモデルがこのスキルを自動的に有効化しません。「/」ピッカーまたは「/名前」コマンドで有効化してください。"
+    },
+    "mcpServers": {
+        "message": "MCP サーバー"
+    },
+    "addMcpServer": {
+        "message": "サーバーを追加"
+    },
+    "mcpServersHint": {
+        "message": "Streamable HTTP 経由の MCP（Model Context Protocol）サーバー。そのツールは登録され、各スキルのツール一覧で選択できます。stdio 専用サーバーには supergateway などのゲートウェイが必要です。"
+    },
+    "mcpServersEmpty": {
+        "message": "MCP サーバーが設定されていません。"
+    },
+    "mcpServerName": {
+        "message": "名前"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "HTTP ヘッダー（JSON、任意）"
+    },
+    "mcpEnabled": {
+        "message": "有効"
+    },
+    "mcpTestBtn": {
+        "message": "接続テスト"
+    },
+    "mcpTestOk": {
+        "message": "OK：{count} 個のツールが見つかりました。"
+    },
+    "mcpTestFail": {
+        "message": "接続に失敗しました"
+    },
+    "mcpDisabled": {
+        "message": "無効"
+    },
+    "expMcpServers": {
+        "message": "MCP サーバー設定"
     }
 }

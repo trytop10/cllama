@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "cllama",
     "description": "__MSG_cllamaDescription__",  
-    "version": "3.0.2",
+    "version": "3.1.0",
     "action": {
       "default_popup": "/popup/popup.html",
       "default_title": "__MSG_browserActionTitle__",      
@@ -28,6 +28,7 @@
       "type": "module"
     },
     "permissions": ["sidePanel", "activeTab", "storage", "contextMenus"],
+    "host_permissions": ["<all_urls>"],
     "web_accessible_resources": [
       {
         "resources": [

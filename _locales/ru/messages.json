@@ -462,5 +462,44 @@
     },
     "skillManualOnlyHint": {
         "message": "Модель не будет автоматически активировать этот навык в режиме Auto; активируйте его через выбор «/» или команду «/имя»."
+    },
+    "mcpServers": {
+        "message": "Серверы MCP"
+    },
+    "addMcpServer": {
+        "message": "Добавить сервер"
+    },
+    "mcpServersHint": {
+        "message": "Серверы MCP (Model Context Protocol) через Streamable HTTP. Их инструменты регистрируются и могут быть выбраны в списке инструментов каждого навыка. Для серверов только-stdio нужен шлюз вроде supergateway."
+    },
+    "mcpServersEmpty": {
+        "message": "Серверы MCP не настроены."
+    },
+    "mcpServerName": {
+        "message": "Имя"
+    },
+    "mcpServerUrl": {
+        "message": "URL"
+    },
+    "mcpServerHeaders": {
+        "message": "HTTP-заголовки (JSON, необязательно)"
+    },
+    "mcpEnabled": {
+        "message": "Включён"
+    },
+    "mcpTestBtn": {
+        "message": "Проверить соединение"
+    },
+    "mcpTestOk": {
+        "message": "ОК: найдено инструментов: {count}."
+    },
+    "mcpTestFail": {
+        "message": "Сбой подключения"
+    },
+    "mcpDisabled": {
+        "message": "отключён"
+    },
+    "expMcpServers": {
+        "message": "Настройки серверов MCP"
     }
 }
