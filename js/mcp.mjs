@@ -120,15 +120,36 @@ async function rpc(server, payload, sessionId = null, timeoutMs = MCP_PROBE_TIME
 }
 
 /**
- * Initialize a session with an MCP server and return its tool list.
+ * Cached MCP sessions keyed by server URL: { sessionId, protocolVersion }.
+ * The Streamable HTTP transport requires every request after `initialize` to
+ * carry the `mcp-session-id` header issued by the server during the handshake;
+ * without it stateful servers answer `-32000 Bad session: missing or expired
+ * Mcp-Session-Id`.
+ */
+const mcpSessions = new Map();
+
+/**
+ * Detect a JSON-RPC "bad/missing session" error (code -32000 or a message
+ * mentioning the session id), used to trigger an automatic re-handshake.
+ * @param {Object|null} error - JSON-RPC error object
+ * @returns {boolean}
+ */
+function isSessionError(error) {
+  if (!error) return false;
+  return error.code === -32000 || /session/i.test(error.message || '');
+}
+
+/**
+ * Run the `initialize` handshake with an MCP server, cache the issued session
+ * id and negotiated protocol version, then send `notifications/initialized`.
  * Protocol version negotiation: we offer our newest version; the server either
  * picks one in the initialize response (handshake revisions) or rejects with
  * UnsupportedProtocolVersionError listing versions it supports, in which case
  * we retry with the best mutual version.
  * @param {Object} server - { name, url, headers }
- * @returns {Promise<Array<{name, description, inputSchema}>>}
+ * @returns {Promise<{sessionId: string|null, protocolVersion: string}>}
  */
-export async function listMcpTools(server) {
+async function initializeSession(server) {
   const negotiate = async (version) => {
     const init = await rpc(server, {
       jsonrpc: '2.0', id: 1, method: 'initialize',
@@ -158,25 +179,58 @@ export async function listMcpTools(server) {
   };
 
   const { version, sessionId } = await negotiate(MCP_PROTOCOL_VERSION);
-  // notifications/initialized must be sent before requesting tools.
+  // notifications/initialized must be sent before requesting anything else.
   await rpc(server, { jsonrpc: '2.0', method: 'notifications/initialized' }, sessionId, MCP_PROBE_TIMEOUT_MS, version);
-  const listed = await rpc(server, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, sessionId, MCP_PROBE_TIMEOUT_MS, version);
+  const session = { sessionId, protocolVersion: version };
+  mcpSessions.set(server.url, session);
+  return session;
+}
+
+/**
+ * Initialize a session with an MCP server and return its tool list.
+ * Reuses a cached session when one exists (a fresh handshake would invalidate
+ * it on stateful servers); falls back to `initializeSession()` otherwise.
+ * @param {Object} server - { name, url, headers }
+ * @returns {Promise<Array<{name, description, inputSchema}>>}
+ */
+export async function listMcpTools(server) {
+  const session = mcpSessions.get(server.url) || await initializeSession(server);
+  const listed = await rpc(server, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, session.sessionId, MCP_PROBE_TIMEOUT_MS, session.protocolVersion);
+  // Cached session may have expired server-side; re-handshake once and retry.
+  let retry = null;
+  if (!listed.result && isSessionError(listed.error)) {
+    retry = await initializeSession(server);
+    const again = await rpc(server, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, retry.sessionId, MCP_PROBE_TIMEOUT_MS, retry.protocolVersion);
+    if (!again.error) return Array.isArray(again.result?.tools) ? again.result.tools : [];
+    throw new Error(again.error.message || 'tools/list failed');
+  }
   if (listed.error) throw new Error(listed.error.message || 'tools/list failed');
   return Array.isArray(listed.result?.tools) ? listed.result.tools : [];
 }
 
 /**
- * Invoke a tool on an MCP server.
+ * Invoke a tool on an MCP server. Reuses the session established during tool
+ * listing; if the server reports a missing/expired session (restart, timeout),
+ * a new handshake is performed and the call retried once.
  * @param {Object} server - { url, headers }
  * @param {string} toolName - MCP tool name
  * @param {Object} args - Tool arguments
  * @returns {Promise<string>} Flattened text content of the tool result
  */
 export async function callMcpTool(server, toolName, args) {
-  const res = await rpc(server, {
+  const request = (session) => rpc(server, {
     jsonrpc: '2.0', id: Date.now(), method: 'tools/call',
     params: { name: toolName, arguments: args || {} }
-  }, null, MCP_CALL_TIMEOUT_MS);
+  }, session ? session.sessionId : null, MCP_CALL_TIMEOUT_MS, session ? session.protocolVersion : null);
+
+  let res = await request(mcpSessions.get(server.url));
+  if (!res.result && isSessionError(res.error)) {
+    const session = await initializeSession(server);
+    res = await request(session);
+  }
+  if (res.error && !res.result) {
+    throw new Error(res.error.message || 'tools/call failed');
+  }
   const content = res.result?.content;
   if (res.result?.isError) {
     const errText = Array.isArray(content)
