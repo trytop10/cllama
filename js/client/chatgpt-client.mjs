@@ -70,7 +70,7 @@ export class ChatGPTClient {
     this.activeSessions.set(sessionId, controller);
 
     // Note: 'think' parameter disabled to avoid errors with some providers
-    const think = true;
+    const think = options?.options?.think ?? true;
 
     const requestOptions = {
       model: options.model || this.defaultModel,
@@ -84,6 +84,10 @@ export class ChatGPTClient {
       options.onStart(sessionId);
     }
 
+    // Merge provider-specific extra parameters into the request body
+    const extraBody = this._buildExtraBody(this.endpoint, requestOptions.model, think);
+    const requestBody = { ...requestOptions, ...extraBody };
+
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -92,7 +96,7 @@ export class ChatGPTClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(think ? requestOptions : { think, ...requestOptions }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
 
@@ -256,4 +260,104 @@ export class ChatGPTClient {
     }
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
   }
+
+
+  /**
+   * Builds provider-specific extra body parameters for thinking control
+   * @param {string} baseURL - API endpoint URL
+   * @param {string} modelName - Model name
+   * @param {boolean} thinking - Whether thinking mode is enabled
+   * @returns {object} Extra body parameters
+   * @private
+   */
+  /**
+   * Whether a Zhipu (bigmodel) model supports the `thinking` parameter
+   * (including disabling it). Only a subset of hybrid-reasoning models do;
+   * glm-5 series and other models reject or ignore it (HTTP 400 on disable).
+   * @param {string} model - Lowercased model name
+   * @returns {boolean}
+   * @private
+   */
+  _zhipuSupportsThinkingControl(model) {
+    // glm-4.5 / 4.6 series (including 4.5v, 4.6v, air/flash variants of 4.5+)
+    // and glm-z1 series; plus explicit "-thinking" variants such as
+    // glm-4.1v-thinking. NOT glm-5 series: it does not accept the parameter.
+    if (/^glm-(4\.[5-9]|z1)/.test(model)) return true;
+    return model.includes('-thinking');
+  }
+
+  _buildExtraBody(baseURL, modelName, thinking) {
+    const url = (baseURL || '').toLowerCase();
+    const model = (modelName || '').toLowerCase();
+
+  if (url.includes('deepseek.com') || model.startsWith('deepseek-')) {
+    return { thinking: { type: thinking ? 'enabled' : 'disabled' } };
+  }
+
+  if (url.includes('moonshot') || model.startsWith('kimi-')) {
+    if (model.includes('k3') || model.includes('k2.7-code')) {
+      return {};
+    }
+    return { thinking: { type: thinking ? 'enabled' : 'disabled' } };
+  }
+
+  if (
+    url.includes('dashscope') ||
+    url.includes('aliyun') ||
+    model.startsWith('qwen')
+  ) {
+
+    const isSelfHosted =
+      url.includes('vllm') ||
+      url.includes('localhost') ||
+      url.includes('127.0.0.1') ||
+      url.includes('0.0.0.0') ||
+      url.includes('192.168.');
+
+    if (isSelfHosted) {
+      return { chat_template_kwargs: { enable_thinking: thinking } };
+    }
+    // Cloud DashScope: only qwen3 hybrid-reasoning models accept
+    // `enable_thinking`; sending it to qwen-max/plus/turbo etc. returns 400.
+    if (!model.includes('qwen3')) {
+      return {};
+    }
+    return { enable_thinking: thinking };
+  }
+
+  if (url.includes('zhipu') || url.includes('bigmodel') || model.startsWith('glm-')) {
+    const isSelfHosted =
+      url.includes('vllm') ||
+      url.includes('localhost') ||
+      url.includes('127.0.0.1') ||
+      url.includes('0.0.0.0') ||
+      url.includes('192.168.');
+
+    if (isSelfHosted) {
+      return { chat_template_kwargs: { enable_thinking: thinking } };
+    }
+    // Zhipu cloud: only hybrid-reasoning models (glm-4.5/4.6, glm-z1, and
+    // *-thinking variants) accept the `thinking` parameter; other models
+    // (glm-4-plus, glm-4-flash, glm-4-air...) reject it with 400.
+    if (this._zhipuSupportsThinkingControl(model)) {
+      return { thinking: { type: thinking ? 'enabled' : 'disabled' } };
+    }
+    return {};
+  }
+
+  if (url.includes('api.openai.com')) {
+    if (thinking === false) {
+      return { reasoning_effort: 'none' };
+    }
+    return {}; 
+  }
+
+  if (url.includes('googleapis') || model.startsWith('gemini-')) {
+    if (thinking === false) {
+      return { thinking_budget: 0 };
+    }
+    return {};
+  }
+  return {};
+}
 }
