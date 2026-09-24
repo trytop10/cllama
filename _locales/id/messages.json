@@ -67,13 +67,13 @@
         "message": "Tools"
     },
     "skillToolsHint": {
-        "message": "Setiap alat ditambahkan sebagai satu baris: pilih alat (deskripsi otomatis muncul), isi argumen bawaan opsional sebagai JSON, lalu simpan."
+        "message": "One row per tool: pick it (its description appears automatically), optionally fill default args as JSON, then save. Tools from MCP servers start with mcp_."
     },
     "expSkills": {
         "message": "Skills"
     },
     "skillHelp": {
-        "message": "Keterampilan adalah kemampuan yang dapat digunakan ulang (seperti skill di cc / codex / cline). Sebuah keterampilan menyuntikkan prompt sistem ke dalam obrolan dan dapat mengizinkan model memanggil alat yang dipilih. Di sidebar obrolan, ketik / untuk memilih dan mengaktifkan keterampilan."
+        "message": "Skills are reusable capabilities. Pick one in chat with \"/\" (or let Auto choose). A Skill adds its own instructions to the chat and may use the tools you bind below. MCP tools only run when a Skill allows them."
     },
     "skillPickerEmpty": {
         "message": "Tidak ada keterampilan tersedia. Tambahkan di Pengaturan."
@@ -470,7 +470,7 @@
         "message": "Tambah Server"
     },
     "mcpServersHint": {
-        "message": "Server MCP (Model Context Protocol) melalui Streamable HTTP. Alat-alatnya didaftarkan dan dapat dipilih dalam daftar alat setiap Skill. Server khusus-stdio memerlukan gateway seperti supergateway."
+        "message": "MCP (Model Context Protocol) servers over Streamable HTTP. Their tools are registered as mcp_* tools, but a Skill must allow them before the model can call one: edit a Skill and add the mcp_* tools it needs (Auto mode can only use tools a Skill allows). Stdio-only servers need a gateway such as supergateway."
     },
     "mcpServersEmpty": {
         "message": "Belum ada server MCP yang dikonfigurasi."
@@ -501,5 +501,224 @@
     },
     "expMcpServers": {
         "message": "Pengaturan server MCP"
+    },
+    "tool_save_skill": {
+        "message": "Simpan Skill"
+    },
+    "tool_save_skill_desc": {
+        "message": "Membuat atau menimpa Skill agar pengguna dapat mengaktifkannya di chat dengan /nama."
+    },
+    "tool_list_tools": {
+        "message": "Daftar Alat"
+    },
+    "tool_list_tools_desc": {
+        "message": "Menampilkan alat yang dapat ditautkan ke Skill (nama, deskripsi, parameter)."
+    },
+    "skillStarter": {
+        "message": "Pesan awal"
+    },
+    "skillStarterHint": {
+        "message": "Otomatis diisi ke kolom chat saat Skill ini dipilih (opsional)."
+    },
+    "tool_save_chat_scenario": {
+        "message": "Simpan Skenario Chat"
+    },
+    "tool_save_chat_scenario_desc": {
+        "message": "Membuat atau menimpa skenario chat agar muncul di daftar skenario pada halaman chat."
+    },
+    "tool_save_insight_action": {
+        "message": "Simpan Resep Insight"
+    },
+    "tool_save_insight_action_desc": {
+        "message": "Membuat atau menimpa resep insight agar muncul di bilah samping dan menu klik kanan."
+    },
+    "skillDefaultPageBuilder": {
+        "message": "Pembuat Halaman"
+    },
+    "skillDefaultPageBuilderDesc": {
+        "message": "Meninjau apa yang bisa dihasilkan halaman ini, kamu memilih dengan klik, dan impor hanya setelah kamu konfirmasi."
+    },
+    "pageBuilderStarter": {
+        "message": "Beri tahu dulu apa yang bisa dihasilkan halaman ini: daftar bagian-bagiannya bernomor (judul + satu baris + saran tipe). Saya pilih, kamu keluarkan draf JSON, dan saya klik untuk mengimpor."
+    },
+    "artifactPendingTitle": {
+        "message": "Menunggu konfirmasi"
+    },
+    "artifactImport": {
+        "message": "Impor"
+    },
+    "artifactCancel": {
+        "message": "Batal"
+    },
+    "artifactImportAll": {
+        "message": "Impor semua"
+    },
+    "artifactImported": {
+        "message": "Terimpor"
+    },
+    "artifactCancelled": {
+        "message": "Dibatalkan"
+    },
+    "artifactImportFailed": {
+        "message": "Gagal mengimpor: {error}"
+    },
+    "artifactShowContent": {
+        "message": "Lihat isi"
+    },
+    "artifactTargetSkill": {
+        "message": "Skill"
+    },
+    "artifactTargetScenario": {
+        "message": "Skenario chat"
+    },
+    "artifactTargetRecipe": {
+        "message": "Resep insight"
+    },
+    "tool_propose_artifact": {
+        "message": "Ajukan untuk konfirmasi"
+    },
+    "tool_propose_artifact_desc": {
+        "message": "Menampilkan artefak sebagai kartu konfirmasi di chat; belum ada yang diimpor sampai pengguna menekan Impor."
+    },
+    "choicePendingTitle": {
+        "message": "Pilih yang akan dibuat"
+    },
+    "choiceConfirm": {
+        "message": "Konfirmasi pilihan"
+    },
+    "choiceMultiHint": {
+        "message": "Bisa pilih beberapa, lalu tekan Konfirmasi."
+    },
+    "choiceCancelled": {
+        "message": "Pilihan dibatalkan"
+    },
+    "choiceSelectionMessage": {
+        "message": "Buat item terpilih berikut: {items}"
+    },
+    "tool_ask_user_choice": {
+        "message": "Tanya dengan opsi yang bisa diklik"
+    },
+    "tool_ask_user_choice_desc": {
+        "message": "Menampilkan daftar opsi yang bisa diklik di chat agar pengguna memilih dengan klik, bukan mengetik; belum ada yang dipilih sampai dikonfirmasi."
+    },
+    "modelOverrideNote": {
+        "message": "This message runs on {name}."
+    },
+    "toolStepFailed": {
+        "message": "failed"
+    },
+    "toolStepDenied": {
+        "message": "not confirmed, skipped"
+    },
+    "toolConfirmTitle": {
+        "message": "Confirm running \"{tool}\"?"
+    },
+    "toolConfirmSkill": {
+        "message": "Requested by Skill: {name}"
+    },
+    "toolConfirmAllow": {
+        "message": "Run once"
+    },
+    "toolConfirmAlways": {
+        "message": "Always allow in this chat"
+    },
+    "toolConfirmDeny": {
+        "message": "Deny"
+    },
+    "toolSideEffectWrite": {
+        "message": "This tool writes your data."
+    },
+    "toolSideEffectExternal": {
+        "message": "This tool calls an external service."
+    },
+    "skillService": {
+        "message": "Model (optional)"
+    },
+    "skillServiceHint": {
+        "message": "Run this Skill on a specific data source instead of the current model."
+    },
+    "skillServiceDefault": {
+        "message": "Use the current model"
+    },
+    "skillRuns": {
+        "message": "Skill run history"
+    },
+    "skillRunsEmpty": {
+        "message": "No runs recorded yet."
+    },
+    "clearRuns": {
+        "message": "Clear history"
+    },
+    "skillRunNoSkill": {
+        "message": "No Skill"
+    },
+    "skillRunNoSteps": {
+        "message": "No tool was called."
+    },
+    "artifactImportOverwrite": {
+        "message": "Import (overwrite)"
+    },
+    "artifactRejectedTitle": {
+        "message": "Could not be imported"
+    },
+    "artifactCardGone": {
+        "message": "This card is no longer valid - the drafts were already handled or replaced."
+    },
+    "emptyResponseNotice": {
+        "message": "The model returned no text."
+    },
+    "emptyResponseHint": {
+        "message": "This endpoint sent an empty answer. Try again, or switch to another model."
+    },
+    "emptyResponseToolHint": {
+        "message": "It answered with a tool call that could not be carried out. Try again, or switch to another model."
+    },
+    "skillRunManual": {
+        "message": "Manual"
+    },
+    "skillRunPage": {
+        "message": "Page"
+    },
+    "skillRunCardStale": {
+        "message": "stale card"
+    },
+    "skillRunParsedDrafts": {
+        "message": "parsed {count} draft(s) from the answer"
+    },
+    "skillRunFilterAll": {
+        "message": "All"
+    },
+    "skillRunFilterModel": {
+        "message": "Model tools"
+    },
+    "skillRunFilterUser": {
+        "message": "My actions"
+    },
+    "skillRunFilterPage": {
+        "message": "Page events"
+    },
+    "skillRunFilterOk": {
+        "message": "Succeeded"
+    },
+    "skillRunFilterFailed": {
+        "message": "Failed"
+    },
+    "skillRunFilterAllSkills": {
+        "message": "All Skills"
+    },
+    "skillRunFilterSearch": {
+        "message": "Search tool, Skill or error…"
+    },
+    "skillRunFilterReset": {
+        "message": "Reset"
+    },
+    "skillRunFilterCount": {
+        "message": "{shown} / {total}"
+    },
+    "skillRunsNoMatch": {
+        "message": "No record matches the filter."
+    },
+    "storageUsage": {
+        "message": "Local storage used: {size}"
     }
 }

@@ -197,6 +197,300 @@ hr {
     font-weight: bold;
     margin-left: 30px;
     border-radius: 0.9rem;
+    /* Anchor for the close button and keep the text clear of it. */
+    position: relative;
+    padding-right: 2rem;
+}
+
+/* The sample is a normal, copyable hint: make sure its text can always be
+   selected with the mouse, whatever the surrounding theme sets. */
+.sample-message,
+.sample-message .message-info {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+/* Close button of the sample first message (top-right). Unlike the per-message
+   copy/delete buttons it stays visible, because the sample is a one-off hint. */
+.sample-message-close {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: 0.85rem;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0.15rem 0.3rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.sample-message-close:hover {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+}
+
+/* ------------------- Artifact confirmation cards ------------------- */
+/* Drafts compiled from a page (propose_artifact). Nothing is imported until the
+   user clicks Import here, so these buttons are the real gate. */
+.artifact-card {
+    display: block;
+    max-width: 100%;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.8rem;
+    background-color: var(--bs-body-bg);
+    padding: 0.6rem 0.8rem;
+    user-select: text;
+}
+
+.artifact-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.artifact-card-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+}
+
+.artifact-item {
+    border-top: 1px solid var(--bs-border-color-translucent);
+    padding: 0.5rem 0;
+}
+
+.artifact-item:first-of-type {
+    border-top: none;
+}
+
+.artifact-item-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.artifact-badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.6rem;
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+}
+
+.artifact-item-name {
+    font-size: 0.95rem;
+}
+
+.artifact-item-summary {
+    font-size: 0.82rem;
+    color: var(--bs-secondary-color);
+    margin-top: 0.15rem;
+}
+
+.artifact-item-json {
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+}
+
+.artifact-item-json summary {
+    cursor: pointer;
+}
+
+.artifact-item-json pre {
+    max-height: 220px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: var(--bs-tertiary-bg);
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.4rem;
+    margin: 0.3rem 0 0 0;
+}
+
+.artifact-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+}
+
+/* Drafts that failed validation: shown with their reason (never dropped
+   silently, so a refused import is always explainable). */
+.artifact-rejected-title {
+    margin-top: 0.6rem;
+    color: var(--bs-danger);
+}
+
+.artifact-item-rejected {
+    border-color: var(--bs-danger-border-subtle, var(--bs-border-color));
+}
+
+.artifact-item-reason {
+    color: var(--bs-danger);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ------------------- Tool steps & confirmation (tool governance) ------------------- */
+.tool-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.35rem;
+}
+
+.tool-step {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+    word-break: break-word;
+}
+
+.tool-step-failed {
+    color: var(--bs-danger);
+    background-color: var(--bs-danger-bg-subtle, transparent);
+    cursor: pointer;
+}
+
+.tool-step-error {
+    display: block;
+    font-family: var(--bs-font-monospace);
+    font-size: 0.72rem;
+    white-space: pre-wrap;
+    opacity: 0.9;
+}
+
+.tool-confirm-card {
+    display: block;
+    max-width: 100%;
+    border: 1px solid var(--bs-warning-border-subtle, var(--bs-border-color));
+    border-radius: 0.8rem;
+    background-color: var(--bs-body-bg);
+    padding: 0.6rem 0.8rem;
+}
+
+.tool-confirm-kind,
+.tool-confirm-from {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    margin-top: 0.2rem;
+}
+
+.tool-confirm-args {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.74rem;
+    word-break: break-all;
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.35rem;
+}
+
+.artifact-note {
+    margin-bottom: 0.6rem;
+}
+
+.artifact-note-text {
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+    padding: 0.2rem 0.4rem;
+}
+
+.artifact-note-warn .artifact-note-text {
+    color: var(--bs-danger);
+}
+
+/* ------------------- Clickable option list (ask_user_choice) ------------------- */
+.choice-card {
+    display: block;
+    max-width: 100%;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.8rem;
+    background-color: var(--bs-body-bg);
+    padding: 0.6rem 0.8rem;
+}
+
+.choice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.choice-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.choice-header-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.choice-hint {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    margin: 0.2rem 0 0.4rem 0;
+}
+
+.choice-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    margin-top: 0.25rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.choice-item:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.choice-item-selected {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-primary-border-subtle, var(--bs-border-color));
+}
+
+.choice-item-check {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.choice-item-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.choice-item-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.choice-item-title {
+    font-size: 0.92rem;
+}
+
+.choice-item-detail {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
 }
 
 .message-info {
@@ -467,6 +761,12 @@ code.language-markdown {
 
 .skill-bar {
     cursor: pointer;
+}
+
+/* No Skills configured: keep the bar's box (so the settings gear on its right
+   stays in place and the toolbar keeps its height) but show nothing. */
+.skill-bar-empty {
+    visibility: hidden;
 }
 
 .skill-bar-clear {

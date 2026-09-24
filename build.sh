@@ -14,6 +14,8 @@ EXCLUDES=(
     "--exclude=cllama.sh"
     "--exclude=.git*"
     "--exclude=doc/"
+    # Local self-check scripts (node tools/*.test.mjs) — never shipped.
+    "--exclude=tools/"
 )
 
 # Modes

@@ -67,13 +67,13 @@
         "message": "Tools"
     },
     "skillToolsHint": {
-        "message": "각 도구는 한 줄로 추가됩니다. 도구를 선택(설명 자동 표시)하고, 선택 사항인 기본 인수를 JSON으로 입력한 후 저장하세요."
+        "message": "One row per tool: pick it (its description appears automatically), optionally fill default args as JSON, then save. Tools from MCP servers start with mcp_."
     },
     "expSkills": {
         "message": "Skills"
     },
     "skillHelp": {
-        "message": "스킬은 재사용 가능한 능력입니다(cc / codex / cline의 스킬과 유사). 스킬은 채팅에 시스템 프롬프트를 주입하고 선택한 도구를 모델이 호출하도록 허용합니다. 채팅 사이드바에서 /를 입력하면 스킬을 선택하고 활성화할 수 있습니다."
+        "message": "Skills are reusable capabilities. Pick one in chat with \"/\" (or let Auto choose). A Skill adds its own instructions to the chat and may use the tools you bind below. MCP tools only run when a Skill allows them."
     },
     "skillPickerEmpty": {
         "message": "사용 가능한 스킬이 없습니다. 설정에서 추가하세요."
@@ -470,7 +470,7 @@
         "message": "서버 추가"
     },
     "mcpServersHint": {
-        "message": "Streamable HTTP 기반 MCP(Model Context Protocol) 서버입니다. 도구가 등록되어 각 스킬의 도구 목록에서 선택할 수 있습니다. stdio 전용 서버는 supergateway 같은 게이트웨이가 필요합니다."
+        "message": "MCP (Model Context Protocol) servers over Streamable HTTP. Their tools are registered as mcp_* tools, but a Skill must allow them before the model can call one: edit a Skill and add the mcp_* tools it needs (Auto mode can only use tools a Skill allows). Stdio-only servers need a gateway such as supergateway."
     },
     "mcpServersEmpty": {
         "message": "구성된 MCP 서버가 없습니다."
@@ -501,5 +501,224 @@
     },
     "expMcpServers": {
         "message": "MCP 서버 설정"
+    },
+    "tool_save_skill": {
+        "message": "스킬 저장"
+    },
+    "tool_save_skill_desc": {
+        "message": "스킬을 생성하거나 덮어써서 채팅에서 /이름 으로 활성화할 수 있게 합니다."
+    },
+    "tool_list_tools": {
+        "message": "도구 목록"
+    },
+    "tool_list_tools_desc": {
+        "message": "스킬에 연결할 수 있는 도구(이름, 설명, 매개변수)를 나열합니다."
+    },
+    "skillStarter": {
+        "message": "시작 메시지"
+    },
+    "skillStarterHint": {
+        "message": "이 스킬을 선택하면 채팅 입력창에 자동으로 채워집니다(비워 둘 수 있음)."
+    },
+    "tool_save_chat_scenario": {
+        "message": "채팅 시나리오 저장"
+    },
+    "tool_save_chat_scenario_desc": {
+        "message": "채팅 시나리오를 생성하거나 덮어써서 채팅 페이지의 시나리오 목록에 표시합니다."
+    },
+    "tool_save_insight_action": {
+        "message": "인사이트 레시피 저장"
+    },
+    "tool_save_insight_action_desc": {
+        "message": "인사이트 레시피를 생성하거나 덮어써서 사이드바와 오른쪽 클릭 메뉴에 표시합니다."
+    },
+    "skillDefaultPageBuilder": {
+        "message": "페이지 생성기"
+    },
+    "skillDefaultPageBuilderDesc": {
+        "message": "현재 페이지에서 무엇을 만들 수 있는지 분류해 보여주고, 클릭으로 고르며 확인 후에만 가져옵니다."
+    },
+    "pageBuilderStarter": {
+        "message": "먼저 이 페이지에서 무엇을 만들 수 있는지 알려줘: 요소를 번호 목록으로 정리(제목 + 한 줄 + 추천 유형). 내가 고르면 JSON 초안을 출력하고, 내가 클릭해서 가져올게."
+    },
+    "artifactPendingTitle": {
+        "message": "확인 대기 중"
+    },
+    "artifactImport": {
+        "message": "가져오기"
+    },
+    "artifactCancel": {
+        "message": "취소"
+    },
+    "artifactImportAll": {
+        "message": "모두 가져오기"
+    },
+    "artifactImported": {
+        "message": "가져옴"
+    },
+    "artifactCancelled": {
+        "message": "취소됨"
+    },
+    "artifactImportFailed": {
+        "message": "가져오기 실패: {error}"
+    },
+    "artifactShowContent": {
+        "message": "내용 보기"
+    },
+    "artifactTargetSkill": {
+        "message": "스킬"
+    },
+    "artifactTargetScenario": {
+        "message": "채팅 시나리오"
+    },
+    "artifactTargetRecipe": {
+        "message": "인사이트 레시피"
+    },
+    "tool_propose_artifact": {
+        "message": "확인용 제안"
+    },
+    "tool_propose_artifact_desc": {
+        "message": "생성한 결과물을 확인 카드로 채팅에 표시합니다. 사용자가 가져오기를 누르기 전에는 아무것도 저장되지 않습니다."
+    },
+    "choicePendingTitle": {
+        "message": "무엇을 만들지 선택"
+    },
+    "choiceConfirm": {
+        "message": "선택 확인"
+    },
+    "choiceMultiHint": {
+        "message": "여러 개 선택할 수 있으며, 선택 후 확인을 누르세요."
+    },
+    "choiceCancelled": {
+        "message": "선택이 취소되었습니다"
+    },
+    "choiceSelectionMessage": {
+        "message": "다음 선택 항목을 만들어 주세요: {items}"
+    },
+    "tool_ask_user_choice": {
+        "message": "클릭 가능한 선택지로 묻기"
+    },
+    "tool_ask_user_choice_desc": {
+        "message": "채팅에 클릭 가능한 선택지 목록을 표시해 번호를 입력하지 않고 클릭으로 고를 수 있게 합니다. 확인하기 전에는 아무것도 선택되지 않습니다."
+    },
+    "modelOverrideNote": {
+        "message": "This message runs on {name}."
+    },
+    "toolStepFailed": {
+        "message": "failed"
+    },
+    "toolStepDenied": {
+        "message": "not confirmed, skipped"
+    },
+    "toolConfirmTitle": {
+        "message": "Confirm running \"{tool}\"?"
+    },
+    "toolConfirmSkill": {
+        "message": "Requested by Skill: {name}"
+    },
+    "toolConfirmAllow": {
+        "message": "Run once"
+    },
+    "toolConfirmAlways": {
+        "message": "Always allow in this chat"
+    },
+    "toolConfirmDeny": {
+        "message": "Deny"
+    },
+    "toolSideEffectWrite": {
+        "message": "This tool writes your data."
+    },
+    "toolSideEffectExternal": {
+        "message": "This tool calls an external service."
+    },
+    "skillService": {
+        "message": "Model (optional)"
+    },
+    "skillServiceHint": {
+        "message": "Run this Skill on a specific data source instead of the current model."
+    },
+    "skillServiceDefault": {
+        "message": "Use the current model"
+    },
+    "skillRuns": {
+        "message": "Skill run history"
+    },
+    "skillRunsEmpty": {
+        "message": "No runs recorded yet."
+    },
+    "clearRuns": {
+        "message": "Clear history"
+    },
+    "skillRunNoSkill": {
+        "message": "No Skill"
+    },
+    "skillRunNoSteps": {
+        "message": "No tool was called."
+    },
+    "artifactImportOverwrite": {
+        "message": "Import (overwrite)"
+    },
+    "artifactRejectedTitle": {
+        "message": "Could not be imported"
+    },
+    "artifactCardGone": {
+        "message": "This card is no longer valid - the drafts were already handled or replaced."
+    },
+    "emptyResponseNotice": {
+        "message": "The model returned no text."
+    },
+    "emptyResponseHint": {
+        "message": "This endpoint sent an empty answer. Try again, or switch to another model."
+    },
+    "emptyResponseToolHint": {
+        "message": "It answered with a tool call that could not be carried out. Try again, or switch to another model."
+    },
+    "skillRunManual": {
+        "message": "Manual"
+    },
+    "skillRunPage": {
+        "message": "Page"
+    },
+    "skillRunCardStale": {
+        "message": "stale card"
+    },
+    "skillRunParsedDrafts": {
+        "message": "parsed {count} draft(s) from the answer"
+    },
+    "skillRunFilterAll": {
+        "message": "All"
+    },
+    "skillRunFilterModel": {
+        "message": "Model tools"
+    },
+    "skillRunFilterUser": {
+        "message": "My actions"
+    },
+    "skillRunFilterPage": {
+        "message": "Page events"
+    },
+    "skillRunFilterOk": {
+        "message": "Succeeded"
+    },
+    "skillRunFilterFailed": {
+        "message": "Failed"
+    },
+    "skillRunFilterAllSkills": {
+        "message": "All Skills"
+    },
+    "skillRunFilterSearch": {
+        "message": "Search tool, Skill or error…"
+    },
+    "skillRunFilterReset": {
+        "message": "Reset"
+    },
+    "skillRunFilterCount": {
+        "message": "{shown} / {total}"
+    },
+    "skillRunsNoMatch": {
+        "message": "No record matches the filter."
+    },
+    "storageUsage": {
+        "message": "Local storage used: {size}"
     }
 }

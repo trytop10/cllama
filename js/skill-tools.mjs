@@ -64,13 +64,85 @@ export function getMcpReady() {
 
 /**
  * Register a tool definition.
- * @param {Object} tool - { name, description, parameters, func }
+ * @param {Object} tool - { name, description, parameters, func, sideEffect? }
+ *   sideEffect declares how "dangerous" the tool is, and is defined by the
+ *   tool itself (a Skill whitelist can only restrict, never relax it):
+ *   - 'read'     (default): pure reads / local computation, no confirmation.
+ *   - 'external': calls an outside service (network requests, MCP...).
+ *   - 'write':   writes user data (storage mutations, page modifications).
  */
 export function registerTool(tool) {
   if (!tool || !tool.name || typeof tool.func !== 'function') {
     throw new Error(`Invalid tool definition: ${tool?.name || tool}`);
   }
+  if (!tool.sideEffect) tool.sideEffect = 'read';
+  else if (!['read', 'external', 'write'].includes(tool.sideEffect)) {
+    throw new Error(`Invalid sideEffect for tool ${tool.name}: ${tool.sideEffect}`);
+  }
   toolRegistry.set(tool.name, tool);
+}
+
+/**
+ * Get the declared side-effect level of a tool.
+ * @param {string} name - Tool name
+ * @returns {string} 'read' | 'external' | 'write' ('read' when unknown)
+ */
+export function getToolSideEffect(name) {
+  return toolRegistry.get(name)?.sideEffect || 'read';
+}
+
+// Argument keys that must never appear in previews / audit trails / confirm
+// cards (metadata only — no secrets, no page content).
+const SENSITIVE_ARG_RE = /(api[-_]?key|token|secret|password|authorization|cookie)/i;
+const PREVIEW_MAX = 160;
+
+/**
+ * Build a short, redacted, single-line preview of tool arguments. Sensitive
+ * keys are masked and the value is truncated, so it is safe to show in the UI
+ * and to persist in the audit trail.
+ * @param {Object} args - Tool arguments
+ * @param {number} [max=160] - Max preview length
+ * @returns {string}
+ */
+export function previewToolArgs(args, max = PREVIEW_MAX) {
+  let text;
+  try {
+    text = typeof args === 'string' ? args : JSON.stringify(args ?? {});
+  } catch (e) {
+    text = String(args);
+  }
+  if (text && text !== '{}') {
+    try {
+      const obj = JSON.parse(text);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        for (const k of Object.keys(obj)) {
+          if (SENSITIVE_ARG_RE.test(k)) obj[k] = '***';
+        }
+        // Truncate long string values (e.g. page content passed through)
+        for (const k of Object.keys(obj)) {
+          if (typeof obj[k] === 'string' && obj[k].length > 80) {
+            obj[k] = obj[k].slice(0, 80) + `…(${obj[k].length} chars)`;
+          }
+        }
+        text = JSON.stringify(obj);
+      }
+    } catch (e) { /* not JSON — keep as-is */ }
+  } else {
+    text = '';
+  }
+  if (text && text.length > max) text = text.slice(0, max) + '…';
+  return text || '';
+}
+
+/**
+ * Whether a tool run needs explicit user confirmation. A Skill can restrict
+ * its tool set (whitelist / blocked) but can never downgrade the confirmation
+ * requirement: it is derived from the tool's own sideEffect declaration.
+ * @param {string} name - Tool name
+ * @returns {boolean}
+ */
+export function toolNeedsConfirmation(name) {
+  return getToolSideEffect(name) !== 'read';
 }
 
 /**
@@ -131,6 +203,7 @@ registerTool({
 registerTool({
   name: 'fetch_url',
   i18nKey: 'tool_fetch_url',
+  sideEffect: 'external',
   description: 'Fetches the text content of a URL and returns up to maxLen characters. May fail if the URL is blocked by CORS or extension permissions.',
   parameters: {
     type: 'object',
@@ -341,11 +414,22 @@ registerTool({
   i18nKey: 'tool_get_page_content',
   description: 'Returns the content of the current webpage (title, url and extracted text) to answer questions about the page.',
   parameters: { type: 'object', properties: {} },
-  func: async () => {
+  func: async (args, ctx) => {
     if (!browser || !browser.tabs) return 'Error: tabs API unavailable';
     try {
-      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-      const tab = tabs && tabs[0];
+      // Prefer the page the turn started from (passed through the tool context)
+      // so a background/other-window tab cannot be picked up by accident.
+      let tab = null;
+      if (ctx?.pageUrl) {
+        try {
+          const matches = await browser.tabs.query({ url: ctx.pageUrl });
+          tab = matches && matches[0];
+        } catch (e) { /* url filtering may be unavailable — fall back below */ }
+      }
+      if (!tab) {
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        tab = tabs && tabs[0];
+      }
       if (!tab || tab.id == null) return 'Error: no active tab';
       const resp = await browser.tabs.sendMessage(tab.id, { action: 'getPageInfo' });
       if (resp && resp.content) {
@@ -420,42 +504,127 @@ registerTool({
 const TOOL_CALL_BLOCK_RE = /<tool_call>([\s\S]*?)<\/tool_call>/g;
 
 /**
+ * Parse the inner body of a <tool_call> block, tolerating the shapes weak models
+ * actually produce:
+ *  - `<tool_name>x</tool_name><args>{...}</args>` (documented shape)
+ *  - a JSON body: `{"name":"x","arguments":{...}}` (OpenAI-style), also
+ *    `tool_name`/`toolName`/`function.name` and `args`/`parameters`/`input`
+ *  - args that are not valid JSON are reported via `_parseError` (the call still
+ *    runs with empty args, and the caller can re-prompt the model)
+ * @param {string} body - Block content between <tool_call> and </tool_call>
+ * @returns {{name?: string, args?: Object, _parseError?: string, malformedReason?: string}}
+ */
+function parseToolCallBody(body) {
+  const text = String(body ?? '');
+  const nameMatch = text.match(/<tool_name>([\s\S]*?)<\/tool_name>/);
+  if (nameMatch) {
+    const name = nameMatch[1].trim();
+    if (!name) return { malformedReason: 'the <tool_name> block is empty' };
+    const argsMatch = text.match(/<args>([\s\S]*?)<\/args>/);
+    if (argsMatch && argsMatch[1].trim()) {
+      try {
+        const args = JSON.parse(argsMatch[1].trim());
+        if (args && typeof args === 'object') return { name, args };
+        return { name, args: {}, _parseError: 'the <args> value is not a JSON object' };
+      } catch (e) {
+        return { name, args: {}, _parseError: argsMatch[1].trim().slice(0, 200) };
+      }
+    }
+    return { name, args: {} };
+  }
+
+  // JSON body variants (no <tool_name> tags).
+  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+    return { malformedReason: 'no <tool_name> block and the body is not JSON' };
+  }
+  let obj;
+  try {
+    obj = JSON.parse(trimmed);
+  } catch (e) {
+    return { malformedReason: `the tool call body is not valid JSON (${e.message})` };
+  }
+  if (Array.isArray(obj)) obj = obj[0] || {};
+  const name = String(obj?.name || obj?.tool_name || obj?.toolName || obj?.tool || obj?.function?.name || '').trim();
+  if (!name) return { malformedReason: 'the tool call JSON contains no tool name' };
+  let args = obj?.args ?? obj?.arguments ?? obj?.parameters ?? obj?.input ?? obj?.function?.arguments ?? {};
+  if (typeof args === 'string') {
+    try { args = JSON.parse(args); } catch (e) { args = {}; }
+  }
+  if (!args || typeof args !== 'object' || Array.isArray(args)) args = {};
+  return { name, args };
+}
+
+/**
+ * Extract tool call blocks from a model response, also reporting the blocks that
+ * could NOT be understood. Callers use `malformed` to re-prompt the model and to
+ * tell the user, instead of silently dropping what the model wrote.
+ * @param {string} text - Model response text
+ * @returns {{calls: Array<{name:string, args:Object}>, malformed: Array<{raw:string, reason:string}>}}
+ */
+export function parseToolCallsDetailed(text) {
+  const calls = [];
+  const malformed = [];
+  if (!text) return { calls, malformed };
+  const source = String(text);
+
+  const re = new RegExp(TOOL_CALL_BLOCK_RE);
+  let m;
+  while ((m = re.exec(source))) {
+    const parsed = parseToolCallBody(m[1]);
+    if (parsed && parsed.name) {
+      calls.push({ name: parsed.name, args: parsed.args || {}, ...(parsed._parseError ? { _parseError: parsed._parseError } : {}) });
+    } else {
+      malformed.push({ raw: m[0].slice(0, 600), reason: parsed?.malformedReason || 'unknown tool call shape' });
+    }
+  }
+
+  // The closing tag may be missing (truncated stream, model mistake). Only try
+  // this when no complete block was found, so a normal answer is unaffected.
+  if (!calls.length && !malformed.length && source.includes('<tool_call>')) {
+    const tail = source.slice(source.indexOf('<tool_call>') + '<tool_call>'.length);
+    const body = tail.split('<tool_result>')[0].slice(0, 2000).trim();
+    const parsed = parseToolCallBody(body);
+    if (parsed && parsed.name) {
+      calls.push({ name: parsed.name, args: parsed.args || {}, ...(parsed._parseError ? { _parseError: parsed._parseError } : {}) });
+    } else if (body) {
+      malformed.push({
+        raw: `<tool_call>${body.slice(0, 600)}`,
+        reason: `the tool call is not closed with </tool_call> and could not be parsed (${parsed?.malformedReason || 'unknown shape'})`
+      });
+    }
+  }
+
+  return { calls, malformed };
+}
+
+/**
  * Extract tool call blocks from a model response.
  * @param {string} text - Model response text
  * @returns {Array<{name:string, args:Object}>}
  */
 export function parseToolCalls(text) {
-  if (!text) return [];
-  const calls = [];
-  let m;
-  const re = new RegExp(TOOL_CALL_BLOCK_RE);
-  while ((m = re.exec(text))) {
-    const body = m[1];
-    const nameMatch = body.match(/<tool_name>([\s\S]*?)<\/tool_name>/);
-    if (!nameMatch) continue;
-    const name = nameMatch[1].trim();
-    const argsMatch = body.match(/<args>([\s\S]*?)<\/args>/);
-    let args = {};
-    if (argsMatch) {
-      try {
-        args = JSON.parse(argsMatch[1].trim());
-      } catch (e) {
-        args = { _parseError: argsMatch[1].trim() };
-      }
-    }
-    calls.push({ name, args });
-  }
-  return calls;
+  return parseToolCallsDetailed(text).calls;
 }
 
 /**
- * Remove tool call blocks from text intended for display.
+ * Remove the tool call blocks from text intended for display. Only blocks that
+ * are actually executable are removed: an unrecognized block is left visible so
+ * the user (and the logs) can see what the model really emitted instead of the
+ * call disappearing without a trace.
  * @param {string} text - Raw model response
  * @returns {string} Text safe for display
  */
 export function stripToolCalls(text) {
   if (!text) return '';
-  return text.replace(TOOL_CALL_BLOCK_RE, '').replace(/\n{3,}/g, '\n\n').trim();
+  const re = new RegExp(TOOL_CALL_BLOCK_RE);
+  return String(text)
+    .replace(re, (whole, body) => {
+      const parsed = parseToolCallBody(body);
+      return (parsed && parsed.name) ? '' : whole;
+    })
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 /**
@@ -559,7 +728,7 @@ function splitSkillTools(activeSkill) {
  * @param {Object} activeSkill - The active skill (with its tools config)
  * @returns {Promise<string>} A <tool_result> text block
  */
-export async function executeToolCall(call, activeSkill) {
+export async function executeToolCall(call, activeSkill, ctx = null) {
   const tool = toolRegistry.get(call?.name);
   const { allowed, blocked } = splitSkillTools(activeSkill);
 
@@ -581,10 +750,27 @@ export async function executeToolCall(call, activeSkill) {
   }
 
   const mergedArgs = { ...defaultArgs, ...(call.args || {}) };
+  // Side-effect gate: the tool's own declaration decides; the user must
+  // confirm through the ctx hook before anything runs. A refusal is reported
+  // back explicitly so the model cannot paper over it.
+  if (toolNeedsConfirmation(call.name)) {
+    const ok = typeof ctx?.requestConfirm === 'function'
+      ? await ctx.requestConfirm({ tool: call.name, args: mergedArgs, sideEffect: tool.sideEffect })
+      : true; // No confirmation hook available (e.g. background usage): run as before.
+    if (!ok) {
+      const denial = `Execution of "${call.name}" was denied: the user did not confirm this ${tool.sideEffect} action. Do not retry it, do not claim it succeeded, and tell the user the step was blocked.`;
+      typeof ctx?.onStep === 'function' && ctx.onStep({ tool: call.name, ok: false, denied: true, error: 'user denied confirmation' });
+      return wrap(false, denial);
+    }
+  }
+  const t0 = Date.now();
   try {
-    const out = await tool.func(mergedArgs);
-    return wrap(true, out);
+    const out = await tool.func(mergedArgs, ctx);
+    const failed = /^Error:/i.test(String(out));
+    typeof ctx?.onStep === 'function' && ctx.onStep({ tool: call.name, ok: !failed, ms: Date.now() - t0, args: mergedArgs, error: failed ? String(out) : undefined });
+    return wrap(!failed, out);
   } catch (e) {
+    typeof ctx?.onStep === 'function' && ctx.onStep({ tool: call.name, ok: false, ms: Date.now() - t0, args: mergedArgs, error: e.message });
     return wrap(false, `Error: ${e.message}`);
   }
 }
@@ -598,7 +784,7 @@ export async function executeToolCall(call, activeSkill) {
  * @param {Object} activeSkill - The active skill
  * @returns {Promise<string>} Plain text result
  */
-export async function runTool(name, args, activeSkill) {
+export async function runTool(name, args, activeSkill, ctx = null) {
   const tool = toolRegistry.get(name);
   const { allowed, blocked } = splitSkillTools(activeSkill);
 
@@ -617,9 +803,25 @@ export async function runTool(name, args, activeSkill) {
   }
 
   const mergedArgs = { ...defaultArgs, ...(args || {}) };
+  // Side-effect gate (see executeToolCall) — same rules on the native path.
+  if (toolNeedsConfirmation(name)) {
+    const ok = typeof ctx?.requestConfirm === 'function'
+      ? await ctx.requestConfirm({ tool: name, args: mergedArgs, sideEffect: tool.sideEffect })
+      : true;
+    if (!ok) {
+      const denial = `Execution of "${name}" was denied: the user did not confirm this ${tool.sideEffect} action. Do not retry it, do not claim it succeeded, and tell the user the step was blocked.`;
+      typeof ctx?.onStep === 'function' && ctx.onStep({ tool: name, ok: false, denied: true, error: 'user denied confirmation' });
+      return denial;
+    }
+  }
+  const t0 = Date.now();
   try {
-    return String(await tool.func(mergedArgs));
+    const out = String(await tool.func(mergedArgs, ctx));
+    const failed = /^Error:/i.test(out);
+    typeof ctx?.onStep === 'function' && ctx.onStep({ tool: name, ok: !failed, ms: Date.now() - t0, args: mergedArgs, error: failed ? out : undefined });
+    return out;
   } catch (e) {
+    typeof ctx?.onStep === 'function' && ctx.onStep({ tool: name, ok: false, ms: Date.now() - t0, args: mergedArgs, error: e.message });
     return `Error: ${e.message}`;
   }
 }

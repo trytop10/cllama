@@ -276,6 +276,9 @@ export async function initMcpTools() {
             name: id,
             description: `[MCP:${server.name}] ${t.description || t.name}`,
             parameters: t.inputSchema || { type: 'object', properties: {} },
+            // Remote servers can act outside the browser: always an external
+            // side effect, so the user confirms before it runs.
+            sideEffect: 'external',
             func: async (args) => callMcpTool(server, t.name, args)
           });
         }

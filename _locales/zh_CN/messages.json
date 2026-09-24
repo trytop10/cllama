@@ -67,7 +67,7 @@
         "message": "Tools"
     },
     "skillToolsHint": {
-        "message": "每个工具以一行添加：选择工具（说明会自动显示），如需可填写可选默认参数（JSON 格式），最后保存。"
+        "message": "一个工具一行：选择工具（说明会自动显示），可选填写 JSON 默认参数，然后保存。MCP 服务器提供的工具名以 mcp_ 开头。"
     },
     "addTool": {
         "message": "添加工具"
@@ -85,7 +85,7 @@
         "message": "Skills"
     },
     "skillHelp": {
-        "message": "技能是可复用的能力（类似 cc / codex / cline 中的技能）。技能会向对话注入一条系统提示词，并允许模型调用你在下方选择绑定的工具。在聊天侧边栏输入 “/” 即可选择并激活技能。"
+        "message": "技能是可复用的能力。在聊天里输入“/”选择（或交给自动选择）。技能会把自己的指令加到对话中，并可调用你在下方绑定的工具。MCP 工具只有被技能允许后才会执行。"
     },
     "skillPickerEmpty": {
         "message": "暂无可用技能。请在设置 → 技能中添加。"
@@ -470,7 +470,7 @@
         "message": "添加服务器"
     },
     "mcpServersHint": {
-        "message": "通过 Streamable HTTP 连接的 MCP（Model Context Protocol）服务器。其工具会自动注册，可在各 Skill 的工具列表中选用。仅支持 stdio 的服务器需借助 supergateway 之类的网关转成 HTTP。"
+        "message": "通过 Streamable HTTP 连接的 MCP（Model Context Protocol）服务器。其工具会以 mcp_* 注册，但必须由技能允许才能被调用：编辑某个技能，把它需要的 mcp_* 工具加入该技能的工具列表（自动选择模式也只使用技能允许的工具）。仅支持 stdio 的服务器需借助 supergateway 之类的网关转成 HTTP。"
     },
     "mcpServersEmpty": {
         "message": "尚未配置 MCP 服务器。"
@@ -501,5 +501,224 @@
     },
     "expMcpServers": {
         "message": "MCP 服务器设置"
+    },
+    "tool_save_skill": {
+        "message": "保存 Skill"
+    },
+    "tool_save_skill_desc": {
+        "message": "创建或覆盖一个 Skill，让用户可在聊天中用 /名称 启用。"
+    },
+    "tool_list_tools": {
+        "message": "列出工具"
+    },
+    "tool_list_tools_desc": {
+        "message": "列出可绑定到 Skill 的工具（名称、说明、参数）。"
+    },
+    "skillStarter": {
+        "message": "起始提示词"
+    },
+    "skillStarterHint": {
+        "message": "选择该 Skill 时自动填入聊天输入框的第一条消息（可留空）。"
+    },
+    "tool_save_chat_scenario": {
+        "message": "保存聊天场景"
+    },
+    "tool_save_chat_scenario_desc": {
+        "message": "创建或覆盖一个聊天场景，使其出现在聊天页的场景下拉框中。"
+    },
+    "tool_save_insight_action": {
+        "message": "保存洞察配方"
+    },
+    "tool_save_insight_action_desc": {
+        "message": "创建或覆盖一个洞察配方，使其出现在洞察侧栏按钮与右键“洞察”菜单中。"
+    },
+    "skillDefaultPageBuilder": {
+        "message": "页面提炼器"
+    },
+    "skillDefaultPageBuilderDesc": {
+        "message": "先盘点当前网页里可提炼的内容分类，由你点选目标（Skill／聊天场景／洞察配方），起草后点卡片导入。"
+    },
+    "pageBuilderStarter": {
+        "message": "先告诉我这个页面能提炼出什么：把里面可提炼的内容按编号列出来（标题 + 一句话 + 建议做成什么），我点选后你再输出对应的 JSON 草案，我点导入才写入。"
+    },
+    "artifactPendingTitle": {
+        "message": "待确认导入"
+    },
+    "artifactImport": {
+        "message": "导入"
+    },
+    "artifactCancel": {
+        "message": "取消"
+    },
+    "artifactImportAll": {
+        "message": "全部导入"
+    },
+    "artifactImported": {
+        "message": "已导入"
+    },
+    "artifactCancelled": {
+        "message": "已取消"
+    },
+    "artifactImportFailed": {
+        "message": "导入失败：{error}"
+    },
+    "artifactShowContent": {
+        "message": "查看内容"
+    },
+    "artifactTargetSkill": {
+        "message": "Skill"
+    },
+    "artifactTargetScenario": {
+        "message": "聊天场景"
+    },
+    "artifactTargetRecipe": {
+        "message": "洞察配方"
+    },
+    "tool_propose_artifact": {
+        "message": "生成待确认草案"
+    },
+    "tool_propose_artifact_desc": {
+        "message": "把提炼好的产物以确认卡片显示在聊天里；用户点击导入之前不会写入任何内容。"
+    },
+    "choicePendingTitle": {
+        "message": "请选择要提炼的内容"
+    },
+    "choiceConfirm": {
+        "message": "确认选择"
+    },
+    "choiceMultiHint": {
+        "message": "可多选，选好后点“确认选择”。"
+    },
+    "choiceCancelled": {
+        "message": "已取消选择"
+    },
+    "choiceSelectionMessage": {
+        "message": "请提炼以下选中的项：{items}"
+    },
+    "tool_ask_user_choice": {
+        "message": "生成可点击选项"
+    },
+    "tool_ask_user_choice_desc": {
+        "message": "在聊天里生成可点击的选项列表，用户点选即可、无需手打编号；未点“确认选择”前不会选中任何项。"
+    },
+    "modelOverrideNote": {
+        "message": "本条消息使用 {name} 运行。"
+    },
+    "toolStepFailed": {
+        "message": "失败"
+    },
+    "toolStepDenied": {
+        "message": "未确认，已跳过"
+    },
+    "toolConfirmTitle": {
+        "message": "确认执行“{tool}”？"
+    },
+    "toolConfirmSkill": {
+        "message": "请求来自技能：{name}"
+    },
+    "toolConfirmAllow": {
+        "message": "允许一次"
+    },
+    "toolConfirmAlways": {
+        "message": "本会话内总是允许"
+    },
+    "toolConfirmDeny": {
+        "message": "拒绝"
+    },
+    "toolSideEffectWrite": {
+        "message": "该动作会写入你的数据。"
+    },
+    "toolSideEffectExternal": {
+        "message": "该动作会调用外部服务。"
+    },
+    "skillService": {
+        "message": "模型（可选）"
+    },
+    "skillServiceHint": {
+        "message": "让该技能固定使用某个数据源运行，而不是当前模型。"
+    },
+    "skillServiceDefault": {
+        "message": "跟随当前模型"
+    },
+    "skillRuns": {
+        "message": "技能运行记录"
+    },
+    "skillRunsEmpty": {
+        "message": "暂无运行记录。"
+    },
+    "clearRuns": {
+        "message": "清除记录"
+    },
+    "skillRunNoSkill": {
+        "message": "无技能"
+    },
+    "skillRunNoSteps": {
+        "message": "未调用任何动作。"
+    },
+    "artifactImportOverwrite": {
+        "message": "覆盖导入"
+    },
+    "artifactRejectedTitle": {
+        "message": "无法导入的草案"
+    },
+    "artifactCardGone": {
+        "message": "该卡片已失效——草案已被处理或被新的草案替换。"
+    },
+    "emptyResponseNotice": {
+        "message": "模型没有返回任何文本。"
+    },
+    "emptyResponseHint": {
+        "message": "该端点返回了空内容。可以重试，或换个模型。"
+    },
+    "emptyResponseToolHint": {
+        "message": "模型发出了无法执行的工具调用。可以重试，或换个模型。"
+    },
+    "skillRunManual": {
+        "message": "手动"
+    },
+    "skillRunPage": {
+        "message": "页面"
+    },
+    "skillRunCardStale": {
+        "message": "卡片失效"
+    },
+    "skillRunParsedDrafts": {
+        "message": "从回答中解析出 {count} 个草案"
+    },
+    "skillRunFilterAll": {
+        "message": "全部"
+    },
+    "skillRunFilterModel": {
+        "message": "模型调用"
+    },
+    "skillRunFilterUser": {
+        "message": "我的操作"
+    },
+    "skillRunFilterPage": {
+        "message": "页面事件"
+    },
+    "skillRunFilterOk": {
+        "message": "成功"
+    },
+    "skillRunFilterFailed": {
+        "message": "失败"
+    },
+    "skillRunFilterAllSkills": {
+        "message": "全部技能"
+    },
+    "skillRunFilterSearch": {
+        "message": "搜索工具、技能或错误…"
+    },
+    "skillRunFilterReset": {
+        "message": "重置"
+    },
+    "skillRunFilterCount": {
+        "message": "{shown} / {total}"
+    },
+    "skillRunsNoMatch": {
+        "message": "没有符合筛选条件的记录。"
+    },
+    "storageUsage": {
+        "message": "本地存储占用：{size}"
     }
 }

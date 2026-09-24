@@ -67,13 +67,13 @@
         "message": "Tools"
     },
     "skillToolsHint": {
-        "message": "Jedes Werkzeug wird als Zeile hinzugefügt: Werkzeug wählen (Beschreibung erscheint automatisch), optionale Standardparameter als JSON ausfüllen, dann speichern."
+        "message": "One row per tool: pick it (its description appears automatically), optionally fill default args as JSON, then save. Tools from MCP servers start with mcp_."
     },
     "expSkills": {
         "message": "Skills"
     },
     "skillHelp": {
-        "message": "Fähigkeiten sind wiederverwendbare Fähigkeiten (wie in cc / codex / cline). Eine Fähigkeit injiziert eine Systemanweisung in den Chat und kann dem Modell erlauben, die ausgewählten Werkzeuge aufzurufen. Tippen Sie in der Chat-Seitenleiste „/“, um eine Fähigkeit auszuwählen und zu aktivieren."
+        "message": "Skills are reusable capabilities. Pick one in chat with \"/\" (or let Auto choose). A Skill adds its own instructions to the chat and may use the tools you bind below. MCP tools only run when a Skill allows them."
     },
     "skillPickerEmpty": {
         "message": "Keine Fähigkeiten verfügbar. Fügen Sie welche unter Einstellungen hinzu."
@@ -470,7 +470,7 @@
         "message": "Server hinzufügen"
     },
     "mcpServersHint": {
-        "message": "MCP-Server (Model Context Protocol) über Streamable HTTP. Deren Werkzeuge werden registriert und können in der Werkzeugliste jedes Skills ausgewählt werden. Reine-Stdio-Server benötigen ein Gateway wie supergateway."
+        "message": "MCP (Model Context Protocol) servers over Streamable HTTP. Their tools are registered as mcp_* tools, but a Skill must allow them before the model can call one: edit a Skill and add the mcp_* tools it needs (Auto mode can only use tools a Skill allows). Stdio-only servers need a gateway such as supergateway."
     },
     "mcpServersEmpty": {
         "message": "Keine MCP-Server konfiguriert."
@@ -501,5 +501,224 @@
     },
     "expMcpServers": {
         "message": "MCP-Server-Einstellungen"
+    },
+    "tool_save_skill": {
+        "message": "Skill speichern"
+    },
+    "tool_save_skill_desc": {
+        "message": "Erstellt oder überschreibt einen Skill, damit der Nutzer ihn im Chat mit /Name aktivieren kann."
+    },
+    "tool_list_tools": {
+        "message": "Werkzeuge auflisten"
+    },
+    "tool_list_tools_desc": {
+        "message": "Listet die Werkzeuge auf, die einem Skill zugewiesen werden können (Name, Beschreibung, Parameter)."
+    },
+    "skillStarter": {
+        "message": "Startnachricht"
+    },
+    "skillStarterHint": {
+        "message": "Wird beim Auswählen dieses Skills in das Chat-Eingabefeld eingetragen (optional)."
+    },
+    "tool_save_chat_scenario": {
+        "message": "Chat-Szenario speichern"
+    },
+    "tool_save_chat_scenario_desc": {
+        "message": "Erstellt oder überschreibt ein Chat-Szenario, damit es im Szenario-Menü der Chat-Seite erscheint."
+    },
+    "tool_save_insight_action": {
+        "message": "Insight-Rezept speichern"
+    },
+    "tool_save_insight_action_desc": {
+        "message": "Erstellt oder überschreibt ein Insight-Rezept, damit es in der Seitenleiste und im Rechtsklick-Menü erscheint."
+    },
+    "skillDefaultPageBuilder": {
+        "message": "Seiten-Ersteller"
+    },
+    "skillDefaultPageBuilderDesc": {
+        "message": "Prüft, was aus der aktuellen Webseite werden könnte, du wählst per Klick und importiert wird erst nach deiner Bestätigung."
+    },
+    "pageBuilderStarter": {
+        "message": "Sag mir zuerst, was aus dieser Seite werden könnte: liste die einzelnen Teile nummeriert auf (Titel + eine Zeile + vorgeschlagener Typ). Ich wähle aus, du gibst dann den JSON-Entwurf aus - importiert wird per Klick."
+    },
+    "artifactPendingTitle": {
+        "message": "Warten auf deine Bestätigung"
+    },
+    "artifactImport": {
+        "message": "Importieren"
+    },
+    "artifactCancel": {
+        "message": "Abbrechen"
+    },
+    "artifactImportAll": {
+        "message": "Alle importieren"
+    },
+    "artifactImported": {
+        "message": "Importiert"
+    },
+    "artifactCancelled": {
+        "message": "Abgebrochen"
+    },
+    "artifactImportFailed": {
+        "message": "Import fehlgeschlagen: {error}"
+    },
+    "artifactShowContent": {
+        "message": "Inhalt anzeigen"
+    },
+    "artifactTargetSkill": {
+        "message": "Skill"
+    },
+    "artifactTargetScenario": {
+        "message": "Chat-Szenario"
+    },
+    "artifactTargetRecipe": {
+        "message": "Insight-Rezept"
+    },
+    "tool_propose_artifact": {
+        "message": "Zur Bestätigung vorschlagen"
+    },
+    "tool_propose_artifact_desc": {
+        "message": "Zeigt die erstellten Artefakte als Bestätigungskarten im Chat; importiert wird erst nach einem Klick auf Importieren."
+    },
+    "choicePendingTitle": {
+        "message": "Auswählen, was erstellt werden soll"
+    },
+    "choiceConfirm": {
+        "message": "Auswahl bestätigen"
+    },
+    "choiceMultiHint": {
+        "message": "Mehrfachauswahl möglich, danach Auswahl bestätigen."
+    },
+    "choiceCancelled": {
+        "message": "Auswahl abgebrochen"
+    },
+    "choiceSelectionMessage": {
+        "message": "Folgende ausgewählte Elemente erstellen: {items}"
+    },
+    "tool_ask_user_choice": {
+        "message": "Mit klickbaren Optionen fragen"
+    },
+    "tool_ask_user_choice_desc": {
+        "message": "Zeigt im Chat eine klickbare Optionsliste, damit der Nutzer per Klick statt per Eingabe wählt; ausgewählt wird erst nach dem Bestätigen."
+    },
+    "modelOverrideNote": {
+        "message": "This message runs on {name}."
+    },
+    "toolStepFailed": {
+        "message": "failed"
+    },
+    "toolStepDenied": {
+        "message": "not confirmed, skipped"
+    },
+    "toolConfirmTitle": {
+        "message": "Confirm running \"{tool}\"?"
+    },
+    "toolConfirmSkill": {
+        "message": "Requested by Skill: {name}"
+    },
+    "toolConfirmAllow": {
+        "message": "Run once"
+    },
+    "toolConfirmAlways": {
+        "message": "Always allow in this chat"
+    },
+    "toolConfirmDeny": {
+        "message": "Deny"
+    },
+    "toolSideEffectWrite": {
+        "message": "This tool writes your data."
+    },
+    "toolSideEffectExternal": {
+        "message": "This tool calls an external service."
+    },
+    "skillService": {
+        "message": "Model (optional)"
+    },
+    "skillServiceHint": {
+        "message": "Run this Skill on a specific data source instead of the current model."
+    },
+    "skillServiceDefault": {
+        "message": "Use the current model"
+    },
+    "skillRuns": {
+        "message": "Skill run history"
+    },
+    "skillRunsEmpty": {
+        "message": "No runs recorded yet."
+    },
+    "clearRuns": {
+        "message": "Clear history"
+    },
+    "skillRunNoSkill": {
+        "message": "No Skill"
+    },
+    "skillRunNoSteps": {
+        "message": "No tool was called."
+    },
+    "artifactImportOverwrite": {
+        "message": "Import (overwrite)"
+    },
+    "artifactRejectedTitle": {
+        "message": "Could not be imported"
+    },
+    "artifactCardGone": {
+        "message": "This card is no longer valid - the drafts were already handled or replaced."
+    },
+    "emptyResponseNotice": {
+        "message": "The model returned no text."
+    },
+    "emptyResponseHint": {
+        "message": "This endpoint sent an empty answer. Try again, or switch to another model."
+    },
+    "emptyResponseToolHint": {
+        "message": "It answered with a tool call that could not be carried out. Try again, or switch to another model."
+    },
+    "skillRunManual": {
+        "message": "Manual"
+    },
+    "skillRunPage": {
+        "message": "Page"
+    },
+    "skillRunCardStale": {
+        "message": "stale card"
+    },
+    "skillRunParsedDrafts": {
+        "message": "parsed {count} draft(s) from the answer"
+    },
+    "skillRunFilterAll": {
+        "message": "All"
+    },
+    "skillRunFilterModel": {
+        "message": "Model tools"
+    },
+    "skillRunFilterUser": {
+        "message": "My actions"
+    },
+    "skillRunFilterPage": {
+        "message": "Page events"
+    },
+    "skillRunFilterOk": {
+        "message": "Succeeded"
+    },
+    "skillRunFilterFailed": {
+        "message": "Failed"
+    },
+    "skillRunFilterAllSkills": {
+        "message": "All Skills"
+    },
+    "skillRunFilterSearch": {
+        "message": "Search tool, Skill or error…"
+    },
+    "skillRunFilterReset": {
+        "message": "Reset"
+    },
+    "skillRunFilterCount": {
+        "message": "{shown} / {total}"
+    },
+    "skillRunsNoMatch": {
+        "message": "No record matches the filter."
+    },
+    "storageUsage": {
+        "message": "Local storage used: {size}"
     }
 }

@@ -82,6 +82,12 @@ export class GeminiClient {
         }
 
         let fullText = '';
+        // Native function calls: Gemini delivers them as `functionCall` parts
+        // (empty text), so they are collected here and handed to the caller —
+        // ignoring them made such answers look like an empty reply. They are
+        // mapped to the same `{ function: { name, arguments } }` shape the
+        // OpenAI-compatible path uses, so chat() can run both the same way.
+        const toolCalls = [];
         try {
             const stream = await this.apiClient.models.generateContentStream(requestParams);
             for await (const chunk of stream) {
@@ -90,9 +96,32 @@ export class GeminiClient {
                 if (options.onStream) {
                     options.onStream(chunkText, fullText, sessionId);
                 }
+                const parts = chunk.candidates?.[0]?.content?.parts;
+                if (Array.isArray(parts)) {
+                    for (const part of parts) {
+                        const call = part?.functionCall;
+                        if (call?.name) {
+                            toolCalls.push({
+                                id: `call_${toolCalls.length}`,
+                                type: 'function',
+                                function: {
+                                    name: call.name,
+                                    arguments: JSON.stringify(call.args || {})
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            if (!fullText.trim() && !toolCalls.length) {
+                // Nothing usable came back: log the shape so an empty answer is
+                // explainable instead of silent.
+                console.warn('[GeminiClient] empty completion (no text and no functionCall)', {
+                    finishReason: 'unknown'
+                });
             }
             if (options.onComplete) {
-                options.onComplete(fullText, sessionId);
+                options.onComplete(fullText, sessionId, toolCalls);
             }
             return sessionId;
         } catch (error) {

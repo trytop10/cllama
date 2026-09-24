@@ -2,7 +2,7 @@ import { defaultSettings, i18n, DB_KEY } from "../js/cllama.js";
 import { getService } from "../js/client/client.mjs";
 import { balert } from "../js/dialog.mjs";
 import { browser } from '../js/browser.mjs';
-import { exportFile } from "../js/util.js";
+import { exportFile, formatBytes, getStorageUsage } from "../js/util.js";
 
 let dsList = []; // Data source list
 let mflag = true; // Flag indicating if the model list needs to be refreshed
@@ -211,6 +211,26 @@ async function saveInsightSettings() {
 }
 
 /**
+ * Show how much `storage.local` the extension uses in total (settings, insights,
+ * chat history, skills…), under the export controls. Only the used amount is
+ * shown — the browser does not expose its own quota.
+ */
+async function renderStorageUsage() {
+  const el = document.getElementById('storageUsage');
+  if (!el) return;
+  const bytes = await getStorageUsage();
+  if (bytes == null) {
+    el.textContent = '';
+    return;
+  }
+  const tpl = browser.i18n.getMessage('storageUsage') || 'Local storage used: {size}';
+  el.textContent = tpl.replace('{size}', formatBytes(bytes));
+  // Highlight once the data gets large (the manifests request unlimitedStorage, so
+  // this is a "you may want to export/clean up" nudge, not a hard limit).
+  el.classList.toggle('text-danger', bytes > 8 * 1024 * 1024);
+}
+
+/**
  * Exports selected data from browser local storage to a JSON file.
  */
 async function exportData() {
@@ -324,6 +344,12 @@ function bindEventListeners() {
 
   // Event listener for the export data button
   document.getElementById('a_export').addEventListener('click', exportData);
+  // Show how much local data the extension holds (all of it: settings, insights,
+  // chat history, skills…), next to where the user backs that data up.
+  renderStorageUsage();
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') renderStorageUsage();
+  });
   // Event listener for the import data button
   document.getElementById('b_upload').addEventListener('click', function(e){
 

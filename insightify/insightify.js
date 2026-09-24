@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let insightList = [];
     const parser = new DOMParser();
-    const MAX_INSIGHTS = 100; // Maximum number of insights to store
+    const MAX_INSIGHTS = 1000; // Maximum number of insights to store
 
     if (isMobile()) {
         actionList.style.display = "none";
@@ -127,6 +127,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             actionDataList.forEach(item => appendActionButton(item));
         });
+    }
+
+    /**
+     * Re-render the recipe buttons from storage. Keeps the sidebar in sync when a
+     * recipe is created while the panel is open (the model can do that through
+     * the save_insight_action tool used by the "Insight Builder" Skill).
+     */
+    function reloadActions() {
+        if (!actionList) return;
+        actionList.querySelectorAll('.b_action').forEach(btn => btn.remove());
+        loadActions();
     }
 
     /**
@@ -324,6 +335,14 @@ document.addEventListener("DOMContentLoaded", () => {
     browser.storage.onChanged.addListener((changes, area) => {
         if (area === 'local' && changes[DB_KEY.pendingInsight] && changes[DB_KEY.pendingInsight].newValue) {
             runPendingInsight();
+        }
+    });
+
+    // Pick up recipes created while the sidebar is open (e.g. by the model
+    // through the save_insight_action tool) — no reload needed.
+    browser.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes[DB_KEY.actionList]) {
+            reloadActions();
         }
     });
 });

@@ -344,6 +344,41 @@ export function cloneOllamaOptions(options) {
 }
 
 /**
+ * Bytes to a short human-readable size (B / KB / MB / GB).
+ * @param {number} bytes - Size in bytes
+ * @returns {string} e.g. "1.2 MB"
+ */
+export function formatBytes(bytes) {
+  const n = Number(bytes);
+  if (!Number.isFinite(n) || n < 0) return '';
+  if (n < 1024) return `${Math.round(n)} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = n / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
+/**
+ * How much `storage.local` this extension currently uses. Chrome reports it via
+ * `getBytesInUse`; some browsers do not implement it, where null means "unknown"
+ * and callers simply hide the readout.
+ * @returns {Promise<number|null>} Bytes used, or null when unavailable
+ */
+export async function getStorageUsage() {
+  try {
+    const area = browser?.storage?.local;
+    if (!area || typeof area.getBytesInUse !== 'function') return null;
+    const bytes = await area.getBytesInUse(null);
+    return typeof bytes === 'number' ? bytes : null;
+  } catch (e) {
+    return null;
+  }
+}
+/**
  * Formats a timestamp as a readable time string
  * Returns "HH:mm" for today's timestamps, "YYYY-MM-DD HH:mm" for other dates
  * @param {number} timestamp - Timestamp in milliseconds

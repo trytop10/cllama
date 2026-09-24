@@ -8,7 +8,7 @@ document.getElementById('insightify').addEventListener('click',  async (e) => {
 });
 
 document.getElementById('chat').addEventListener('click', async (e) => {
-  e.preventDefault();  
+  e.preventDefault();
   openPage("/chat/chat.html", "chat");
   window.close();
 });
@@ -22,11 +22,12 @@ document.getElementById('settings').addEventListener('click', async (e) => {
 async function openPage(url, title) {
  
   if(isFirefox) {
-    var sidebar = browser.sidebarAction;
+    const sidebar = browser.sidebarAction;
+    const fail = (err) => console.error("[cllama] sidebarAction:", err);
     var thatPanel = browser.runtime.getURL(url);
-    sidebar.open();
-    sidebar.setPanel({ panel: thatPanel });
-    sidebar.setTitle({ title: "cllama-" + browser.i18n.getMessage(title) });
+    sidebar.setPanel({ panel: thatPanel }).catch(fail); 
+    sidebar.setTitle({ title: "cllama-" + browser.i18n.getMessage(title) }).catch(fail);   
+    sidebar.open().catch(fail);    
   } else {
     browser.tabs.query({active: true, currentWindow: true}, (tabs) => {
       browser.sidePanel.setOptions({

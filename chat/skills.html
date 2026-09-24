@@ -26,6 +26,32 @@
     <div id="skillListContainer" class="mb-4"></div>
 
     <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="i18n mb-0">skillRuns</h5>
+      <button id="b_clear_runs" class="btn btn-sm btn-compact btn-outline-danger i18n">clearRuns</button>
+    </div>
+    <!-- Filters: source / status / skill / free text. Kept in view (not hidden
+         behind an "advanced" toggle) because "why did that fail?" is the most
+         common question about this list. -->
+    <div id="skillRunFilters" class="skill-run-filters mb-2">
+      <select class="form-select form-select-sm w-auto" id="runFilterOrigin">
+        <option value="all" class="i18n">skillRunFilterAll</option>
+        <option value="model" class="i18n">skillRunFilterModel</option>
+        <option value="user" class="i18n">skillRunFilterUser</option>
+        <option value="page" class="i18n">skillRunFilterPage</option>
+      </select>
+      <select class="form-select form-select-sm w-auto" id="runFilterStatus">
+        <option value="all" class="i18n">skillRunFilterAll</option>
+        <option value="ok" class="i18n">skillRunFilterOk</option>
+        <option value="failed" class="i18n">skillRunFilterFailed</option>
+      </select>
+      <select class="form-select form-select-sm w-auto" id="runFilterSkill"></select>
+      <input type="search" class="form-control form-control-sm skill-run-search i18n" id="runFilterSearch" i18n="placeholder" placeholder="skillRunFilterSearch">
+      <button type="button" class="btn btn-sm btn-compact btn-outline-secondary i18n" id="b_reset_run_filters">skillRunFilterReset</button>
+      <span class="text-muted small ms-auto" id="runFilterCount"></span>
+    </div>
+    <div id="skillRunsContainer" class="mb-4"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
       <h5 class="i18n mb-0">mcpServers</h5>
       <button id="b_add_mcp" class="btn btn-sm btn-compact btn-outline-primary i18n">addMcpServer</button>
     </div>
@@ -90,6 +116,16 @@
           <div class="mb-3">
             <label for="skillPromptInput" class="form-label i18n">skillPrompt</label>
             <textarea class="form-control" id="skillPromptInput" rows="4" maxlength="2000"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="skillStarterInput" class="form-label i18n">skillStarter</label>
+            <input type="text" class="form-control" id="skillStarterInput" maxlength="500">
+            <div class="text-muted small i18n">skillStarterHint</div>
+          </div>
+          <div class="mb-3">
+            <label for="skillServiceInput" class="form-label i18n">skillService</label>
+            <select class="form-select" id="skillServiceInput"></select>
+            <div class="text-muted small i18n">skillServiceHint</div>
           </div>
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" id="skillManualOnlyInput">

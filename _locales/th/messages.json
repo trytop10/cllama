@@ -67,13 +67,13 @@
         "message": "Tools"
     },
     "skillToolsHint": {
-        "message": "แต่ละเครื่องมือจะถูกเพิ่มเป็นหนึ่งบรรทัด: เลือกเครื่องมือ (คำอธิบายจะแสดงอัตโนมัติ) กรอกอาร์กิวเมนต์เริ่มต้นที่เลือกได้เป็น JSON แล้วบันทึก"
+        "message": "One row per tool: pick it (its description appears automatically), optionally fill default args as JSON, then save. Tools from MCP servers start with mcp_."
     },
     "expSkills": {
         "message": "Skills"
     },
     "skillHelp": {
-        "message": "ทักษะคือความสามารถที่นำกลับมาใช้ใหม่ได้ (เหมือนทักษะใน cc / codex / cline) ทักษะจะฉีดพร้อมท์ของระบบเข้าสู่การแชท และอาจอนุญาตให้โมเดลเรียกใช้เครื่องมือที่เลือกได้ พิมพ์ / ในแถบด้านข้างการแชทเพื่อเลือกและเปิดใช้งานทักษะ"
+        "message": "Skills are reusable capabilities. Pick one in chat with \"/\" (or let Auto choose). A Skill adds its own instructions to the chat and may use the tools you bind below. MCP tools only run when a Skill allows them."
     },
     "skillPickerEmpty": {
         "message": "ไม่มีทักษะที่พร้อมใช้งาน เพิ่มใน การตั้งค่า"
@@ -470,7 +470,7 @@
         "message": "เพิ่มเซิร์ฟเวอร์"
     },
     "mcpServersHint": {
-        "message": "เซิร์ฟเวอร์ MCP (Model Context Protocol) ผ่าน Streamable HTTP เครื่องมือของเซิร์ฟเวอร์จะถูกลงทะเบียนและเลือกใช้ได้ในรายการเครื่องมือของแต่ละทักษะ เซิร์ฟเวอร์ที่รองรับเฉพาะ stdio ต้องมีเกตเวย์อย่าง supergateway"
+        "message": "MCP (Model Context Protocol) servers over Streamable HTTP. Their tools are registered as mcp_* tools, but a Skill must allow them before the model can call one: edit a Skill and add the mcp_* tools it needs (Auto mode can only use tools a Skill allows). Stdio-only servers need a gateway such as supergateway."
     },
     "mcpServersEmpty": {
         "message": "ยังไม่มีเซิร์ฟเวอร์ MCP ที่ตั้งค่าไว้"
@@ -501,5 +501,224 @@
     },
     "expMcpServers": {
         "message": "การตั้งค่าเซิร์ฟเวอร์ MCP"
+    },
+    "tool_save_skill": {
+        "message": "บันทึกสกิล"
+    },
+    "tool_save_skill_desc": {
+        "message": "สร้างหรือเขียนทับสกิล เพื่อให้ผู้ใช้เปิดใช้ในแชทด้วย /ชื่อ"
+    },
+    "tool_list_tools": {
+        "message": "รายการเครื่องมือ"
+    },
+    "tool_list_tools_desc": {
+        "message": "แสดงเครื่องมือที่ผูกกับสกิลได้ (ชื่อ คำอธิบาย พารามิเตอร์)"
+    },
+    "skillStarter": {
+        "message": "ข้อความเริ่มต้น"
+    },
+    "skillStarterHint": {
+        "message": "เติมในช่องแชทอัตโนมัติเมื่อเลือกสกิลนี้ (เว้นว่างได้)"
+    },
+    "tool_save_chat_scenario": {
+        "message": "บันทึกฉากแชท"
+    },
+    "tool_save_chat_scenario_desc": {
+        "message": "สร้างหรือเขียนทับฉากแชทให้ปรากฏในรายการฉากของหน้าแชท"
+    },
+    "tool_save_insight_action": {
+        "message": "บันทึกสูตรวิเคราะห์"
+    },
+    "tool_save_insight_action_desc": {
+        "message": "สร้างหรือเขียนทับสูตรวิเคราะห์ให้ปรากฏในแถบด้านข้างและเมนูคลิกขวา"
+    },
+    "skillDefaultPageBuilder": {
+        "message": "ตัวสร้างหน้าเว็บ"
+    },
+    "skillDefaultPageBuilderDesc": {
+        "message": "สำรวจว่าหน้านี้ทำเป็นอะไรได้บ้าง ให้คุณเลือกด้วยการคลิก และนำเข้าเมื่อคุณยืนยันแล้วเท่านั้น"
+    },
+    "pageBuilderStarter": {
+        "message": "ก่อนอื่นบอกว่าหน้านี้ทำเป็นอะไรได้บ้าง: แยกส่วนต่างๆ เป็นรายการมีหมายเลข (ชื่อ + หนึ่งบรรทัด + ประเภทที่แนะนำ) ฉันจะเลือก แล้วคุณสร้างร่าง JSON ฉันกดนำเข้าเอง"
+    },
+    "artifactPendingTitle": {
+        "message": "รอยืนยันจากคุณ"
+    },
+    "artifactImport": {
+        "message": "นำเข้า"
+    },
+    "artifactCancel": {
+        "message": "ยกเลิก"
+    },
+    "artifactImportAll": {
+        "message": "นำเข้าทั้งหมด"
+    },
+    "artifactImported": {
+        "message": "นำเข้าแล้ว"
+    },
+    "artifactCancelled": {
+        "message": "ยกเลิกแล้ว"
+    },
+    "artifactImportFailed": {
+        "message": "นำเข้าไม่สำเร็จ: {error}"
+    },
+    "artifactShowContent": {
+        "message": "ดูเนื้อหา"
+    },
+    "artifactTargetSkill": {
+        "message": "สกิล"
+    },
+    "artifactTargetScenario": {
+        "message": "ฉากแชท"
+    },
+    "artifactTargetRecipe": {
+        "message": "สูตรวิเคราะห์"
+    },
+    "tool_propose_artifact": {
+        "message": "เสนอเพื่อยืนยัน"
+    },
+    "tool_propose_artifact_desc": {
+        "message": "แสดงผลลัพธ์ที่สร้างไว้เป็นการ์ดยืนยันในแชท จะยังไม่บันทึกจนกว่าผู้ใช้จะกดนำเข้า"
+    },
+    "choicePendingTitle": {
+        "message": "เลือกว่าจะสร้างอะไร"
+    },
+    "choiceConfirm": {
+        "message": "ยืนยันการเลือก"
+    },
+    "choiceMultiHint": {
+        "message": "เลือกได้หลายรายการ แล้วกดยืนยัน"
+    },
+    "choiceCancelled": {
+        "message": "ยกเลิกการเลือกแล้ว"
+    },
+    "choiceSelectionMessage": {
+        "message": "สร้างรายการที่เลือกต่อไปนี้: {items}"
+    },
+    "tool_ask_user_choice": {
+        "message": "ถามด้วยตัวเลือกที่คลิกได้"
+    },
+    "tool_ask_user_choice_desc": {
+        "message": "แสดงรายการตัวเลือกที่คลิกได้ในแชท ให้ผู้ใช้เลือกด้วยการคลิกแทนการพิมพ์เลข จะยังไม่เลือกอะไรจนกว่าจะยืนยัน"
+    },
+    "modelOverrideNote": {
+        "message": "This message runs on {name}."
+    },
+    "toolStepFailed": {
+        "message": "failed"
+    },
+    "toolStepDenied": {
+        "message": "not confirmed, skipped"
+    },
+    "toolConfirmTitle": {
+        "message": "Confirm running \"{tool}\"?"
+    },
+    "toolConfirmSkill": {
+        "message": "Requested by Skill: {name}"
+    },
+    "toolConfirmAllow": {
+        "message": "Run once"
+    },
+    "toolConfirmAlways": {
+        "message": "Always allow in this chat"
+    },
+    "toolConfirmDeny": {
+        "message": "Deny"
+    },
+    "toolSideEffectWrite": {
+        "message": "This tool writes your data."
+    },
+    "toolSideEffectExternal": {
+        "message": "This tool calls an external service."
+    },
+    "skillService": {
+        "message": "Model (optional)"
+    },
+    "skillServiceHint": {
+        "message": "Run this Skill on a specific data source instead of the current model."
+    },
+    "skillServiceDefault": {
+        "message": "Use the current model"
+    },
+    "skillRuns": {
+        "message": "Skill run history"
+    },
+    "skillRunsEmpty": {
+        "message": "No runs recorded yet."
+    },
+    "clearRuns": {
+        "message": "Clear history"
+    },
+    "skillRunNoSkill": {
+        "message": "No Skill"
+    },
+    "skillRunNoSteps": {
+        "message": "No tool was called."
+    },
+    "artifactImportOverwrite": {
+        "message": "Import (overwrite)"
+    },
+    "artifactRejectedTitle": {
+        "message": "Could not be imported"
+    },
+    "artifactCardGone": {
+        "message": "This card is no longer valid - the drafts were already handled or replaced."
+    },
+    "emptyResponseNotice": {
+        "message": "The model returned no text."
+    },
+    "emptyResponseHint": {
+        "message": "This endpoint sent an empty answer. Try again, or switch to another model."
+    },
+    "emptyResponseToolHint": {
+        "message": "It answered with a tool call that could not be carried out. Try again, or switch to another model."
+    },
+    "skillRunManual": {
+        "message": "Manual"
+    },
+    "skillRunPage": {
+        "message": "Page"
+    },
+    "skillRunCardStale": {
+        "message": "stale card"
+    },
+    "skillRunParsedDrafts": {
+        "message": "parsed {count} draft(s) from the answer"
+    },
+    "skillRunFilterAll": {
+        "message": "All"
+    },
+    "skillRunFilterModel": {
+        "message": "Model tools"
+    },
+    "skillRunFilterUser": {
+        "message": "My actions"
+    },
+    "skillRunFilterPage": {
+        "message": "Page events"
+    },
+    "skillRunFilterOk": {
+        "message": "Succeeded"
+    },
+    "skillRunFilterFailed": {
+        "message": "Failed"
+    },
+    "skillRunFilterAllSkills": {
+        "message": "All Skills"
+    },
+    "skillRunFilterSearch": {
+        "message": "Search tool, Skill or error…"
+    },
+    "skillRunFilterReset": {
+        "message": "Reset"
+    },
+    "skillRunFilterCount": {
+        "message": "{shown} / {total}"
+    },
+    "skillRunsNoMatch": {
+        "message": "No record matches the filter."
+    },
+    "storageUsage": {
+        "message": "Local storage used: {size}"
     }
 }

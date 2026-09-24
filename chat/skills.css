@@ -49,3 +49,61 @@ body {
 .tool-param-row label {
     font-weight: 500;
 }
+
+/* ------------------- Skill run audit trail ------------------- */
+.skill-run {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.skill-run-failed {
+    border-color: var(--bs-danger-border-subtle, var(--bs-danger));
+}
+
+.skill-run-head {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.skill-run-steps {
+    margin: 0.3rem 0 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    word-break: break-word;
+}
+
+.skill-run-step-failed {
+    color: var(--bs-danger);
+}
+
+.skill-run-error {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.72rem;
+    white-space: pre-wrap;
+}
+
+/* Audit records that were not started by the model (a user click on an import
+   card, or the page parsing drafts out of an answer). */
+.skill-run-user {
+    border-left: 3px solid var(--bs-primary-border-subtle, var(--bs-primary));
+}
+
+.skill-run-page {
+    border-left: 3px solid var(--bs-border-color);
+}
+
+/* ------------------- Run-history filters ------------------- */
+.skill-run-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.skill-run-search {
+    flex: 1 1 12rem;
+    min-width: 9rem;
+}

@@ -80,6 +80,13 @@ export class ChatGPTClient {
       stream: true
     };
 
+    // Forward declared tools when the caller offers them (opt-in: chat() only
+    // passes them for services with a supported native function-calling path),
+    // so endpoints that reject the field are never sent it by default.
+    if (Array.isArray(options.tools) && options.tools.length) {
+      requestOptions.tools = options.tools;
+    }
+
     if (typeof options.onStart === 'function') {
       options.onStart(sessionId);
     }
@@ -127,6 +134,12 @@ export class ChatGPTClient {
     let contentText = '';
     let buffer = '';
     let completedNormally = false;
+    // Native function calls, accumulated per index: OpenAI-compatible servers
+    // stream `delta.tool_calls[i].function.arguments` in fragments that must be
+    // concatenated. Dropping them (the previous behaviour) made a model that
+    // answered with a tool call look like an empty reply.
+    const toolCallParts = new Map();
+    let finishReason = null;
 
     try {
       while (true) {
@@ -168,7 +181,9 @@ export class ChatGPTClient {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices[0]?.delta || {};
+            const choice = parsed.choices?.[0] || {};
+            const delta = choice.delta || {};
+            if (choice.finish_reason) finishReason = choice.finish_reason;
 
             // New API: standalone reasoning_content field for thinking
             if (delta.reasoning_content) {
@@ -187,6 +202,22 @@ export class ChatGPTClient {
                 options.onStream(delta.content, full, sessionId);
               }
             }
+
+            // Native function calls (OpenAI tools protocol)
+            if (Array.isArray(delta.tool_calls) && delta.tool_calls.length) {
+              delta.tool_calls.forEach((part, i) => {
+                const idx = typeof part.index === 'number' ? part.index : i;
+                const acc = toolCallParts.get(idx) || {
+                  id: part.id || `call_${idx}`,
+                  type: 'function',
+                  function: { name: '', arguments: '' }
+                };
+                if (part.id) acc.id = part.id;
+                if (part.function?.name) acc.function.name += part.function.name;
+                if (part.function?.arguments) acc.function.arguments += part.function.arguments;
+                toolCallParts.set(idx, acc);
+              });
+            }
           } catch (jsonError) {
             throw new Error(`Error: ${jsonError.message}`);
           }
@@ -203,9 +234,23 @@ export class ChatGPTClient {
 
       completedNormally = true;
       this.activeSessions.delete(sessionId);
+      const fullResponse = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentText;
+      const toolCalls = [...toolCallParts.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([, call]) => call)
+        .filter((call) => call.function.name);
+      if (!contentText.trim() && !toolCalls.length) {
+        // Nothing usable came back: log enough to tell apart "the model only
+        // thought", "it hit the token limit" and "the server sent an unknown
+        // shape", instead of leaving an empty bubble with no explanation.
+        console.warn('[ChatGPTClient] empty completion', {
+          finishReason,
+          sawReasoning: Boolean(thinkingText.trim()),
+          sawToolCallDeltas: toolCallParts.size > 0
+        });
+      }
       if (typeof options.onComplete === 'function') {
-        const fullResponse = (thinkingText ? '<think>' + thinkingText + '</think>' : '') + contentText;
-        options.onComplete(fullResponse, sessionId);
+        options.onComplete(fullResponse, sessionId, toolCalls);
       }
     } catch (error) {
       this.activeSessions.delete(sessionId);

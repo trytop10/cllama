@@ -3,7 +3,7 @@
   "name": "cllama",
   "version": "3.1.0",
   "description": "__MSG_cllamaDescription__",
-  "permissions": ["storage", "tabs", "<all_urls>"],   
+  "permissions": ["storage", "unlimitedStorage", "tabs", "<all_urls>"],   
   "homepage_url": "https://fxdq.net/cllama/en/index.html",
 
   "background": {
