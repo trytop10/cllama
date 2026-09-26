@@ -49,9 +49,10 @@ const { previewToolArgs, toolNeedsConfirmation, getToolSideEffect, registerTool,
   await import('../js/skill-tools.mjs');
 const { mergeDefaultSkills, SKILL_DEFAULTS, startSkillRun, recordRunStep, finishSkillRun, loadSkillRuns, clearSkillRuns, DB_KEY,
         collectArtifactDrafts, collectArtifactDraftsDetailed, extractBareJsonObjects, guessArtifactTarget, setPendingArtifact,
-        loadPendingArtifact, removePendingDraft, applyArtifact, recordUserAction, recordPageEvent, filterSkillRuns } =
+        loadPendingArtifact, removePendingDraft, applyArtifact, recordUserAction, recordPageEvent, filterSkillRuns, parseChoiceOptions,
+        setPendingChoice, loadPendingChoice, clearPendingChoice } =
   await import('../js/cllama.js');
-const { formatBytes } = await import('../js/util.js');
+const { formatBytes, withUiLanguageDirective, UI_LANGUAGE_MARKER } = await import('../js/util.js');
 
 // Audit-trail cap, mirrored here so the test can assert it.
 const MAX_SKILL_RUNS = 50;
@@ -249,6 +250,119 @@ check('legacy data without version fields still loads', () => {
   const legacy = [{ id: 'general-helper', name: 'n', description: 'd', prompt: 'p', tools: [] }];
   const merged = mergeDefaultSkills(legacy, []);
   assert.ok(merged.length >= legacy.length);
+});
+
+// ------------------- conversation builder (chat -> artifact) -------------------
+
+check('conversation-builder may only run on request and never writes by itself', () => {
+  const def = SKILL_DEFAULTS.find((d) => d.id === 'conversation-builder');
+  assert.ok(def, 'conversation-builder must be a built-in Skill');
+  assert.equal(def.manualOnly, true, 'Auto mode must not adopt it on its own');
+  assert.equal(def.uiLanguage, true, 'its output must follow the interface language');
+  assert.ok(def.starter, 'it needs a starter so "/name" prefills the request');
+  assert.ok(!def.usePage, 'it works on the conversation, not on the current webpage');
+
+  const names = def.tools.map((t) => t.name || t).sort();
+  assert.deepEqual(names, ['ask_user_choice', 'list_tools', 'propose_artifact']);
+  assert.ok(!names.some((n) => n.startsWith('save_')),
+    'it must not own a write tool: importing stays a user click on a card');
+  assert.ok(!def.prompt.includes('get_page_content'),
+    'it must not depend on the webpage (that is page-builder\'s job)');
+});
+
+check('conversation-builder accepts "nothing to extract" as a complete answer', () => {
+  const def = SKILL_DEFAULTS.find((d) => d.id === 'conversation-builder');
+  assert.match(def.prompt, /Not suitable/);
+  assert.match(def.prompt, /Output no numbered list and no JSON/);
+  assert.match(def.prompt, /Never invent, embellish or pad/);
+  assert.match(def.prompt, /choose "Not suitable"/);
+  // Learned notes are the Reflect button's job (they need a scenario id).
+  assert.match(def.prompt, /Do not draft learned notes/);
+});
+
+check('withUiLanguageDirective appends the interface language to a prompt', () => {
+  const out = withUiLanguageDirective('You are X.', 'zh-CN');
+  assert.ok(out.startsWith('You are X.'), 'the prompt must be kept, not replaced');
+  assert.ok(out.includes(UI_LANGUAGE_MARKER), 'the marker line is missing');
+  assert.ok(out.includes('zh-CN'), 'the language code is missing');
+  for (const field of ['name', 'description', 'sample', 'starter']) {
+    assert.ok(out.includes(`"${field}"`), `the directive should mention "${field}"`);
+  }
+});
+
+check('withUiLanguageDirective is idempotent', () => {
+  const once = withUiLanguageDirective('p', 'zh-CN');
+  assert.equal(withUiLanguageDirective(once, 'fr'), once);
+});
+
+check('withUiLanguageDirective tolerates an empty prompt or language', () => {
+  assert.equal(withUiLanguageDirective('p', ''), 'p');
+  assert.equal(withUiLanguageDirective('', ''), '');
+  assert.equal(withUiLanguageDirective('', 'en'), withUiLanguageDirective(undefined, 'en'));
+});
+
+check('a "Not suitable" answer produces no cards at all', () => {
+  const answer = 'Not suitable: this is a single question and answer, there is nothing reusable here.';
+  assert.deepEqual(parseChoiceOptions(answer), [], 'no clickable option list');
+  const { drafts, rejected } = collectArtifactDraftsDetailed(answer);
+  assert.equal(drafts.length, 0, 'no import card');
+  assert.equal(rejected.length, 0, 'nothing to report as rejected either');
+});
+
+check('a draft the model emits after picking becomes a card', () => {
+  const answer = 'Here is the draft:\n```json\n{"target":"recipe","name":"摘要","prompt":"Summarise the page."}\n```';
+  const { drafts } = collectArtifactDraftsDetailed(answer);
+  assert.equal(drafts.length, 1);
+  assert.equal(drafts[0].target, 'recipe');
+  assert.equal(drafts[0].name, '摘要');
+});
+
+// ------------------- pending cards belong to one conversation -------------------
+// A list the model displayed in scenario A must never be re-rendered as a question
+// inside scenario B, and answering it in words (instead of clicking) must consume it.
+
+await checkAsync('an option list is stamped with the conversation it was asked in', async () => {
+  await setPendingChoice([{ title: 'One' }, { title: 'Two' }], 'Pick', '5:2');
+  const pending = await loadPendingChoice();
+  assert.equal(pending.sessionKey, '5:2');
+  // Clearing from another conversation must not delete it.
+  await clearPendingChoice('9:1');
+  assert.ok(await loadPendingChoice(), 'a foreign clear must leave the list alone');
+  await clearPendingChoice('5:2');
+  assert.equal(await loadPendingChoice(), null);
+});
+
+await checkAsync('a legacy list without a session key still clears unconditionally', async () => {
+  await setPendingChoice([{ title: 'One' }, { title: 'Two' }]);
+  assert.equal((await loadPendingChoice()).sessionKey, undefined);
+  await clearPendingChoice('9:1');
+  assert.equal(await loadPendingChoice(), null);
+});
+
+await checkAsync('draft cards carry the conversation that produced them', async () => {
+  await setPendingArtifact(
+    [{ target: 'recipe', payload: { name: '摘要', prompt: 'Summarise.' }, name: '摘要' }], [], '5:2');
+  assert.equal((await loadPendingArtifact()).sessionKey, '5:2');
+  await removePendingDraft(0);
+  assert.equal(await loadPendingArtifact(), null);
+});
+
+await checkAsync('ask_user_choice stamps the list from the turn context', async () => {
+  await executeToolCall(
+    { name: 'ask_user_choice', args: { options: [{ title: 'One' }, { title: 'Two' }] } },
+    null,
+    { sessionKey: '3:7', requestConfirm: async () => true, onStep: () => {} });
+  assert.equal((await loadPendingChoice()).sessionKey, '3:7');
+  await clearPendingChoice('3:7');
+});
+
+await checkAsync('propose_artifact stamps the cards from the turn context', async () => {
+  await executeToolCall(
+    { name: 'propose_artifact', args: { target: 'recipe', payload: { name: '摘要', prompt: 'Summarise.' } } },
+    null,
+    { sessionKey: '3:7', requestConfirm: async () => true, onStep: () => {} });
+  assert.equal((await loadPendingArtifact()).sessionKey, '3:7');
+  await removePendingDraft(0);
 });
 
 check('governance storage keys exist in DB_KEY', () => {

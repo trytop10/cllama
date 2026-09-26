@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "First tell me what this page could become: list the separate pieces as a numbered list (title + one line + suggested type). I'll pick, then you output the JSON draft(s) - I'll click to import."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Conversation Builder"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Surveys what this conversation could become as a Skill, chat scenario or insight recipe, and imports only after you confirm."
+    },
+    "conversationBuilderStarter": {
+        "message": "First tell me what this conversation could become: list the reusable pieces as a numbered list (title + one line + suggested type). I'll pick, then you output the JSON draft(s) - I'll click to import."
+    },
     "artifactPendingTitle": {
         "message": "Waiting for your confirmation"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "You"
+    },
+    "reflectTitle": {
+        "message": "Reflection"
+    },
+    "reflectButton": {
+        "message": "Reflect on this chat to learn from it"
+    },
+    "reflectFailed": {
+        "message": "Reflection failed. Try again or switch model."
+    },
+    "artifactTargetMemory": {
+        "message": "Learned note"
+    },
+    "lessonPanelTitle": {
+        "message": "Learned notes"
+    },
+    "lessonsEmpty": {
+        "message": "Nothing learned in this scenario yet."
+    },
+    "lessonsInjectOn": {
+        "message": "Learned notes are used in this scenario"
+    },
+    "lessonsInjectOff": {
+        "message": "Learned notes are stored but not used"
+    },
+    "lessonsClear": {
+        "message": "Clear all"
+    },
+    "lessonsClearConfirm": {
+        "message": "Delete all learned notes of this scenario?"
+    },
+    "lessonsCleared": {
+        "message": "All learned notes deleted."
+    },
+    "lessonRemoved": {
+        "message": "Note deleted: {name}"
+    },
+    "lessonsHint": {
+        "message": "Learned notes are reference only - they never override your instructions."
+    },
+    "reflectNeedMore": {
+        "message": "Need a bit more conversation first - at least {count} messages, including one answer."
+    },
+    "reflectNoScenario": {
+        "message": "Learned notes belong to a chat scenario. Pick a scenario first."
+    },
+    "reflectBusy": {
+        "message": "A turn is still running - reflect once it finishes."
     }
 }

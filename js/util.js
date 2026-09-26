@@ -234,6 +234,63 @@ export function getLanguageCode() {
 }
 
 /**
+ * Marker line of the UI-language directive (see withUiLanguageDirective). Kept
+ * as a constant so the injection stays idempotent.
+ */
+export const UI_LANGUAGE_MARKER = '[Language]';
+
+/**
+ * English display name of a language code ("zh-CN" -> "Chinese (Simplified)").
+ * Falls back to the raw code when Intl.DisplayNames is unavailable or throws.
+ * @param {string} uiLanguage - Language code, e.g. "zh-CN"
+ * @returns {string} Display name, or the code itself
+ */
+function languageDisplayName(uiLanguage) {
+  const code = String(uiLanguage || '').trim();
+  if (!code) return '';
+  try {
+    const names = new Intl.DisplayNames(['en'], { type: 'language' });
+    return names.of(code) || code;
+  } catch (e) {
+    return code;
+  }
+}
+
+/**
+ * Directive appended to a Skill prompt that opted in with `uiLanguage: true`, so
+ * every string the user reads is written in the extension UI language instead of
+ * the language of the conversation, of a quoted page, or of the model's default.
+ * Human-facing strings are the artifact's "name"/"description"/"sample"/"starter"
+ * plus any question or summary line; the artifact's own prompt is written in that
+ * language too.
+ *
+ * Pure (no browser API) so a Node test can exercise it - the caller passes
+ * `browser.i18n.getUILanguage()`. Idempotent: a prompt that already carries the
+ * marker is returned unchanged. An empty language code leaves the prompt as-is.
+ * @param {string} prompt - Skill prompt
+ * @param {string} uiLanguage - UI language code, e.g. "zh-CN"
+ * @returns {string} Prompt with the directive appended (or the prompt itself)
+ */
+export function withUiLanguageDirective(prompt, uiLanguage) {
+  const text = typeof prompt === 'string' ? prompt : '';
+  const code = String(uiLanguage || '').trim();
+  if (!code) return text;
+  if (text.startsWith(UI_LANGUAGE_MARKER) || text.includes(`\n${UI_LANGUAGE_MARKER}`)) return text;
+
+  const name = languageDisplayName(code);
+  const label = name && name !== code ? `"${code}" (${name})` : `"${code}"`;
+  const directive = `${UI_LANGUAGE_MARKER} The user's interface language is ${label}. ` +
+    'Write every string the user will read - artifact "name", "description", "sample", "starter" ' +
+    'and any question or summary line - in that language, and write the artifact\'s own "prompt" in ' +
+    'that language too. Ignore the language of any quoted page, document or earlier message unless ' +
+    'the user explicitly asks for that language. Keep "name" within the existing limits ' +
+    '(insight recipe: at most 12 characters; Skill name: no spaces).';
+
+  return text ? `${text}\n\n${directive}` : directive;
+}
+
+
+/**
  * Opens HTML content in a new browser tab
  * @param {string} htmlString - HTML content to display
  * @param {string} [title='New Page'] - Page title

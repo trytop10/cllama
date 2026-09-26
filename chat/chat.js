@@ -1,5 +1,6 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons } from '../js/cllama.js';
+import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { initMcpTools } from '../js/mcp.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
@@ -66,6 +67,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     const bExport = document.getElementById("b_export");
     if (bExport) {
         bExport.title = browser.i18n.getMessage("exportChat") || 'Export chat';
+    }
+
+    // Scenario learning controls: "Reflect" runs one review turn (see
+    // runReflection), the other button toggles the learned-notes of this scenario.
+    // Both are manual by design — nothing about learning happens on its own, and
+    // both only exist for a real chat scenario (updateLearnControls decides).
+    const bReflect = document.getElementById("b_reflect");
+    if (bReflect) {
+        bReflect.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!hasScenario()) return;
+            const state = reflectReadiness(historyMessages, { busy: !stopFlag });
+            if (!state.ready) {
+                // Greyed out, but a click still explains why instead of doing
+                // nothing (a hard disable would also kill the tooltip).
+                if (!state.busy) appendArtifactNote(reflectNeedMoreText(state), false);
+                return;
+            }
+            runReflection();
+        });
+    }
+    const bLessons = document.getElementById("b_lessons");
+    if (bLessons) {
+        bLessons.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!hasScenario()) return;
+            toggleLessonPanel();
+        });
     }
     
     // User-resizable message input. Height is changed by dragging the handle
@@ -139,6 +168,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // When the current turn started: lets the page tell apart the cards the tools
     // created during this turn from cards left over from earlier turns.
     let turnStartedAt = 0;
+    // The sub-conversation currently on screen. Together with the scenario id it
+    // forms the key that pending cards are stamped with (see sessionKey()), so a
+    // list asked in one chat is never rendered inside another one.
+    // Kept in sync by loadChatHistory() and the "new session" button.
+    let currentSessionId = 0;
     // The assistant bubble of the running turn (tool-step traces are attached to
     // it) and the page the turn was started from (handed to tools via ctx).
     let currentAssistantBlock = null;
@@ -147,9 +181,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Cached data source list, so the "@name" model override can be resolved
     // synchronously while typing/sending.
     let dsListCache = [];
+    // Scenario learning (see js/scenario-learn.mjs): the notes imported for this
+    // scenario and whether they are injected. Always driven by explicit clicks -
+    // nothing here changes on its own.
+    let learnState = { enabled: true, lessons: [], revisions: [], updatedAt: 0 };
+    // Whether the learned-notes panel is expanded (pure UI state).
+    let lessonPanelOpen = false;
+    // True while a reflection turn runs, so its numbered list is turned into
+    // clickable candidates just like a builder Skill's answer would be.
+    let reflectInProgress = false;
+    // The fixed "Skill" that carries the reflection prompt. It declares no tools
+    // and is never offered in the "/" picker: a reflection is a normal turn whose
+    // only output is a proposal.
+    const REFLECT_SKILL = {
+        id: '__reflect__',
+        name: browser.i18n.getMessage('reflectTitle') || 'Reflection',
+        prompt: REFLECT_PROMPT,
+        tools: [],
+        // Learned notes are read by the user, so they follow the interface
+        // language instead of the language the model happens to answer in
+        // (see cllama.js chat() -> withUiLanguageRule).
+        uiLanguage: true
+    };
 
     function generateMsgId(msgId) {
         return `msg_${msgId}`;
+    }
+
+    /**
+     * Identity of the conversation on screen: "<scenarioId>:<sessionId>". Pending
+     * cards (option lists, draft confirmations) are stamped with it, so a list the
+     * model displayed in one scenario/session is never re-rendered as a question
+     * inside another one (it would look like it was asked here).
+     * @returns {string}
+     */
+    function sessionKey() {
+        return `${ccId || '0'}:${currentSessionId}`;
+    }
+
+    /**
+     * Whether a pending card (option list or draft proposal) belongs to the
+     * conversation currently on screen. Cards written before this field existed
+     * carry no stamp and are accepted everywhere.
+     * @param {Object|null} pending - Pending card read from storage
+     * @returns {boolean}
+     */
+    function belongsToThisSession(pending) {
+        return !pending?.sessionKey || pending.sessionKey === sessionKey();
     }
 
     /**
@@ -542,6 +620,28 @@ document.addEventListener("DOMContentLoaded", async () => {
      * Send message: handle user input, add system prompts, call chat API
      */
     async function sendMessage() {
+        // Inline "/evolve" command: run a reflection turn instead of sending a
+        // chat message. Together with the toolbar button this is the only way a
+        // reflection ever starts - nothing is learned automatically.
+        if (/^\/evolve\b/i.test(msgInput.value.trim())) {
+            // Only consume the command when a reflection can actually run. It
+            // shares reflectReadiness() with the button, so the command and the
+            // UI can never disagree about whether a reflection is possible.
+            if (!hasScenario()) {
+                appendArtifactNote(browser.i18n.getMessage('reflectNoScenario')
+                    || 'Learned notes belong to a chat scenario - pick one first.', false);
+                return;
+            }
+            const state = reflectReadiness(historyMessages, { busy: !stopFlag });
+            if (!state.ready) {
+                if (!state.busy) appendArtifactNote(reflectNeedMoreText(state), false);
+                return;
+            }
+            msgInput.value = '';
+            runReflection();
+            return;
+        }
+
         // Inline "/skill [args...]" command: fix that Skill (sticky) and treat
         // everything after its name as the message / $ARGUMENTS. A bare "/skill"
         // with no args just activates the Skill and sends nothing.
@@ -578,6 +678,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const messageContent = rawMessage.trim();
         const rtime = Date.now();
         if (!messageContent) return;
+
+        // Whatever the user sends is the answer to a pending option list (they may
+        // type "#1 #3" or explain their choice in their own words). Drop this
+        // conversation's list now, so it can neither linger on screen nor be
+        // re-rendered later inside another scenario.
+        await clearPendingChoice(sessionKey());
 
         const currModelName = currentModel;
 
@@ -618,13 +724,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             !(msg.role === 'user' && (msg.fileInfo || msg.content.startsWith('<img')))
         );
 
-        // Add system prompt based on chat category
+        // Add system prompt based on chat category, plus the learned notes of this
+        // scenario. Both go into the SAME system message: a second one would risk
+        // the "EOF on an extra system message" failure some models show (see the
+        // Skill injection rules). The notes block is explicitly marked as
+        // reference-only material, since a note is not a vetted instruction.
         const activeChatScenarioId = ccId;
+        let scenarioPrompt = '';
         if (activeChatScenarioId && activeChatScenarioId !== "0" && currentConfigurations.length > 0) {
             const config = currentConfigurations.find(c => String(c.id) === activeChatScenarioId);
             if (config?.prompt) {
-                messagesForAPI.unshift({ role: "system", content: config.prompt });
+                scenarioPrompt = config.prompt;
             }
+        }
+        const lessonsBlock = learnState.enabled
+            ? buildLessonsBlock(learnState.lessons, { maxChars: LESSONS_INJECT_CHARS })
+            : '';
+        const scenarioContent = [scenarioPrompt, lessonsBlock].filter(Boolean).join('\n\n');
+        if (scenarioContent) {
+            messagesForAPI.unshift({ role: "system", content: scenarioContent });
         }
 
         // Inject current webpage content for skills that need it (usePage)
@@ -670,6 +788,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Where this turn runs from and which data source it uses; tools get
             // them through the tool context instead of guessing the active tab.
             sessionId: ccId || '0',
+            // Conversation identity, so tools that show cards (ask_user_choice /
+            // propose_artifact) can stamp them for this chat only.
+            sessionKey: sessionKey(),
             pageUrl: turnPageUrl,
             pageTitle: turnPageTitle,
             dsService: callDsService,
@@ -760,6 +881,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             responseId = null;
         }
         updateResendButtonVisibility();
+        // A turn starting or ending changes whether a reflection is allowed.
+        updateLearnControls();
     }
 
     /**
@@ -967,6 +1090,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 messageDiv.remove();
                 updateResendButtonVisibility();
                 updateCollapseExpandButtonsState();
+                updateLearnControls();
             }
         });
 
@@ -1045,6 +1169,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         messagesContainer.querySelectorAll('.artifact-message').forEach(el => el.remove());
         const pending = await loadPendingArtifact();
         if (!pending) return;
+        // Cards belong to the conversation that produced them: another session
+        // must not show them (a stale "Import" card there would import a draft
+        // the user cannot see the source of). They stay stored for their own chat.
+        if (!belongsToThisSession(pending)) return;
 
         const drafts = pending.drafts || [];
         const rejected = pending.rejected || [];
@@ -1222,8 +1350,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 continue;
             }
             const overwrite = opts.overwrite === true || target.overwrite === true;
+            // A learned note that just landed must be visible right away: open the
+            // notes panel so the user sees where it went (the storage listener
+            // re-renders it once the write is through).
+            if (action === 'import' && target.target === 'memory') lessonPanelOpen = true;
             try {
-                const res = await applyArtifact(target.target, target.payload, { overwrite });
+                // A learned note belongs to the scenario it was proposed in, so the
+                // write target has to travel with the import (see applyArtifact).
+                const res = await applyArtifact(target.target, target.payload, { overwrite, scenarioId: ccId || '0' });
                 if (res.ok) {
                     appendArtifactNote(`${browser.i18n.getMessage('artifactImported') || 'Imported'}: ${res.name} (${artifactTargetLabel(target.target)})`, true);
                     await audit({
@@ -1308,6 +1442,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         messagesContainer.querySelectorAll('.choice-message').forEach(el => el.remove());
         const pending = await loadPendingChoice();
         if (!pending) return;
+        // Same rule as the draft cards: an option list is only shown in the
+        // conversation it was asked in (see sessionKey()).
+        if (!belongsToThisSession(pending)) return;
 
         const wrap = document.createElement('div');
         wrap.className = 'message choice-message';
@@ -1583,7 +1720,307 @@ document.addEventListener("DOMContentLoaded", async () => {
         msgInput.value = lastMsg.content;
         historyMessages = historyMessages.filter(msg => msg.rtime !== lastMsg.rtime);
         if (el) el.remove();
+        updateLearnControls();
         sendMessage();
+    }
+
+    /**
+     * Run one reflection turn over the current conversation: the model reviews the
+     * recent messages and proposes learned notes for this scenario (see
+     * js/scenario-learn.mjs).
+     *
+     * The turn is rendered like a normal answer so the user can read the proposal,
+     * but it is deliberately kept OUT of the conversation and out of storage: it
+     * must not become context for later turns, and only clicking Import on a
+     * resulting card ever writes a note. Nothing here happens on its own — the
+     * button and `/evolve` are the only entry points.
+     */
+    async function runReflection() {
+        // Defence in depth: the button and `/evolve` already checked, but the
+        // reflection must never start on a stale decision (e.g. history cleared
+        // between the check and the call).
+        if (!hasScenario()) return;
+        const state = reflectReadiness(historyMessages, { busy: !stopFlag });
+        if (!state.ready) {
+            if (!state.busy) appendArtifactNote(reflectNeedMoreText(state), false);
+            return;
+        }
+
+        const excerpt = buildReflectExcerpt(historyMessages);
+        if (!excerpt) {
+            appendArtifactNote(reflectNeedMoreText(state), false);
+            return;
+        }
+
+        const rtime = Date.now();
+        const block = appendMessage('', browser.i18n.getMessage('reflectTitle') || 'Reflection', rtime, false);
+        const textDiv = block.querySelector('.message-text');
+        replaceElementContent(textDiv, "<img src='/images/thinking.webp' style='width:52px;height:52px;' />");
+
+        // A throwaway history array: chat() appends its answer to the array it is
+        // given, so passing a fresh one leaves the real conversation untouched.
+        const reflectMessages = [{
+            role: 'user',
+            content: `Reflect on this conversation excerpt and propose what to remember.\n\n${excerpt}`
+        }];
+
+        reflectInProgress = true;
+        turnStartedAt = Date.now();
+        currentAssistantBlock = block;
+        try {
+            const answer = await chat(reflectMessages, {
+                msgDiv: textDiv,
+                messages: messagesContainer,
+                model: currentModel,
+                temperature: apiSettings.temperature,
+                top_p: apiSettings.top_p,
+                think: apiSettings.think,
+                // A fixed pseudo-Skill with no tools: deterministic prompt
+                // injection, no Auto-skill index, no use_skill, no tool calls.
+                activeSkill: REFLECT_SKILL,
+                skills: [],
+                sessionId: ccId || '0',
+                // The proposed notes' cards belong to the chat being reflected on.
+                sessionKey: sessionKey(),
+                pageUrl: turnPageUrl,
+                pageTitle: turnPageTitle,
+                start: () => {
+                    stopFlag = false;
+                    setComponentState(true);
+                },
+                // Nothing is persisted: a reflection is a proposal, not a turn.
+                finish: () => {},
+                stop: () => stopFlag,
+                stopScroll: () => stopScrollFlag
+            });
+
+            // Reuse the existing card pipeline: the numbered candidate list becomes
+            // a clickable list, and the notes the user picks come back as ```json
+            // blocks that render as Import cards.
+            await offerCardsFromText(answer);
+            recordPageEvent({
+                action: 'reflect',
+                ok: true,
+                count: collectArtifactDraftsDetailed(answer || '').drafts.length,
+                sessionId: ccId || '0'
+            }).catch((e) => console.warn('audit write failed:', e));
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                console.error('Reflection failed:', e);
+                appendArtifactNote(browser.i18n.getMessage('reflectFailed')
+                    || 'Reflection failed. Try again or switch model.', false);
+            }
+        } finally {
+            reflectInProgress = false;
+            currentAssistantBlock = null;
+            setComponentState(false);
+        }
+    }
+
+    /**
+     * Whether the page is open on a real chat scenario. "Chat only" (id 0), a
+     * hand-typed id, or a scenario that has since been deleted are all "no
+     * scenario": learned notes belong to a scenario, so the learning controls
+     * must not appear there.
+     * @returns {boolean}
+     */
+    function hasScenario() {
+        if (!ccId || String(ccId) === '0') return false;
+        return currentConfigurations.some(c => String(c.id) === String(ccId));
+    }
+
+    /**
+     * Why a reflection is not possible yet, in the user's language.
+     * @param {Object} state - Result of reflectReadiness()
+     * @returns {string} Message for the chat
+     */
+    function reflectNeedMoreText(state) {
+        const tpl = browser.i18n.getMessage('reflectNeedMore')
+            || 'Need a bit more conversation first (at least {count} messages, including one answer).';
+        return tpl.replace('{count}', String(state?.need?.messages ?? REFLECT_MIN_MESSAGES));
+    }
+
+    /**
+     * Decide what the two learning controls show. Single source of truth for their
+     * visibility and for the Reflect button's greyed-out state:
+     *  - no scenario  -> both buttons are removed from the toolbar entirely;
+     *  - scenario but too little conversation (or a turn in flight) -> Reflect is
+     *    greyed out and a click explains why (see the click handler).
+     * Called on every path that changes `historyMessages` (see the call sites).
+     */
+    function updateLearnControls() {
+        const scenario = hasScenario();
+        for (const el of [bReflect, bLessons]) {
+            if (el) el.style.display = scenario ? '' : 'none';
+        }
+        if (!scenario) {
+            // Nothing may stay open for a scenario the user has left.
+            if (lessonPanelOpen) {
+                lessonPanelOpen = false;
+                renderLessonPanel();
+            }
+            return;
+        }
+
+        if (bReflect) {
+            const state = reflectReadiness(historyMessages, { busy: !stopFlag });
+            bReflect.classList.toggle('reflect-disabled', !state.ready);
+            bReflect.setAttribute('aria-disabled', state.ready ? 'false' : 'true');
+            bReflect.title = state.ready
+                ? (browser.i18n.getMessage('reflectButton') || 'Reflect on this chat')
+                : state.busy
+                    ? (browser.i18n.getMessage('reflectBusy') || 'A turn is running - reflect once it finishes.')
+                    : reflectNeedMoreText(state);
+        }
+        if (bLessons) {
+            const count = learnState.lessons.length;
+            bLessons.title = `${browser.i18n.getMessage('lessonPanelTitle') || 'Learned notes'} (${count})`;
+        }
+    }
+
+    /**
+     * Open or close the learned-notes panel of the current scenario.
+     */
+    function toggleLessonPanel() {
+        lessonPanelOpen = !lessonPanelOpen;
+        renderLessonPanel();
+    }
+
+    /**
+     * Render the learned-notes panel: the injection switch, the notes themselves
+     * (each deletable) and a clear-all button. The panel is informational — every
+     * note in it got there through an explicit Import click.
+     */
+    function renderLessonPanel() {
+        const panel = document.getElementById('lessonPanel');
+        const button = document.getElementById('b_lessons');
+        if (!panel) return;
+
+        // Without a scenario there is no learning feature at all: keep the panel
+        // (and its toggle button) out of the way.
+        if (!hasScenario()) {
+            lessonPanelOpen = false;
+            panel.style.display = 'none';
+            return;
+        }
+
+        const count = learnState.lessons.length;
+        if (button) {
+            button.title = `${browser.i18n.getMessage('lessonPanelTitle') || 'Learned notes'} (${count})`;
+            button.classList.toggle('lesson-button-active', count > 0);
+        }
+
+        if (!lessonPanelOpen) {
+            panel.style.display = 'none';
+            return;
+        }
+        panel.style.display = '';
+        panel.innerHTML = '';
+
+        const header = document.createElement('div');
+        header.className = 'lesson-panel-header';
+
+        const title = document.createElement('span');
+        title.className = 'lesson-panel-title';
+        title.textContent = `${browser.i18n.getMessage('lessonPanelTitle') || 'Learned notes'} (${count})`;
+        header.appendChild(title);
+
+        const actions = document.createElement('div');
+        actions.className = 'lesson-panel-actions';
+
+        const switchLabel = document.createElement('label');
+        switchLabel.className = 'lesson-switch';
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.className = 'form-check-input';
+        box.checked = learnState.enabled;
+        box.addEventListener('change', async () => {
+            await setLearnEnabled(ccId || '0', box.checked);
+        });
+        const switchText = document.createElement('span');
+        switchText.textContent = browser.i18n.getMessage(learnState.enabled ? 'lessonsInjectOn' : 'lessonsInjectOff')
+            || (learnState.enabled ? 'Learned notes are used in this scenario.' : 'Learned notes are stored but not used.');
+        switchLabel.appendChild(box);
+        switchLabel.appendChild(switchText);
+        actions.appendChild(switchLabel);
+
+        if (count) {
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'btn btn-sm btn-outline-secondary lesson-clear-btn';
+            clearBtn.textContent = browser.i18n.getMessage('lessonsClear') || 'Clear all';
+            clearBtn.addEventListener('click', async () => {
+                const ask = browser.i18n.getMessage('lessonsClearConfirm')
+                    || 'Delete all learned notes of this scenario?';
+                if (!window.confirm(ask)) return;
+                const removed = await clearLessons(ccId || '0');
+                if (removed) {
+                    appendArtifactNote(browser.i18n.getMessage('lessonsCleared') || 'All learned notes deleted.', true);
+                }
+            });
+            actions.appendChild(clearBtn);
+        }
+        header.appendChild(actions);
+        panel.appendChild(header);
+
+        if (!count) {
+            const empty = document.createElement('div');
+            empty.className = 'lesson-empty';
+            empty.textContent = browser.i18n.getMessage('lessonsEmpty') || 'Nothing learned in this scenario yet.';
+            panel.appendChild(empty);
+        } else {
+            learnState.lessons.forEach((lesson) => {
+                const item = document.createElement('div');
+                item.className = 'lesson-item';
+
+                const text = document.createElement('span');
+                text.className = 'lesson-text';
+                text.textContent = lesson.text || '';
+                item.appendChild(text);
+
+                const del = document.createElement('a');
+                del.href = '#';
+                del.className = 'lesson-delete';
+                del.title = browser.i18n.getMessage('delete') || 'Delete';
+                del.textContent = '×';
+                del.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const ok = await removeLesson(ccId || '0', lesson.id);
+                    if (ok) {
+                        appendArtifactNote((browser.i18n.getMessage('lessonRemoved') || 'Note deleted: {name}')
+                            .replace('{name}', lesson.name || ''), true);
+                    }
+                });
+                item.appendChild(del);
+                panel.appendChild(item);
+            });
+        }
+
+        const hint = document.createElement('div');
+        hint.className = 'lesson-hint';
+        hint.textContent = browser.i18n.getMessage('lessonsHint')
+            || 'Learned notes are reference only - they never override your instructions.';
+        panel.appendChild(hint);
+    }
+
+    /**
+     * Reload the learned-note state into memory and re-render the panel.
+     */
+    async function refreshLearnState() {
+        learnState = await loadScenarioLearn(ccId || '0');
+        renderLessonPanel();
+        updateLearnControls();
+    }
+
+    /**
+     * React to learned notes changing while this page stays open (this page, or a
+     * chat page in another window on the same scenario).
+     * @param {Object} changes - Storage change payload
+     * @param {string} area - Storage area name
+     */
+    function handleLearnStorageChange(changes, area) {
+        if (area !== 'local' || !changes[DB_KEY.scenarioLearn]) return;
+        refreshLearnState();
     }
 
     /**
@@ -1607,22 +2044,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function offerCardsFromText(text) {
         if (!text) return;
         // A "builder"-like Skill: the page-builder itself, or any Skill that owns
-        // the propose_artifact tool.
-        const isBuilder = activeSkill?.id === 'page-builder' ||
+        // the propose_artifact tool. A reflection turn counts too: its numbered
+        // candidate list is meant to become clickable options.
+        const isBuilder = reflectInProgress ||
+            activeSkill?.id === 'page-builder' ||
             (Array.isArray(activeSkill?.tools) && activeSkill.tools.some(t => (t?.name || t) === 'propose_artifact'));
         const hasChoiceCue = /(请选择|选择哪|哪几项|选好后|回复编号|choose|pick|which (one|ones)|select)/i.test(text);
 
         // Option list (skip when the ask_user_choice tool did it in this turn).
         // Gated on a choice cue so ordinary answers never turn into a list.
         if (isBuilder || hasChoiceCue) {
-            const choice = await loadPendingChoice();
+            const choiceStored = await loadPendingChoice();
+            const choice = belongsToThisSession(choiceStored) ? choiceStored : null;
             if (!(choice && choice.id >= turnStartedAt)) {
                 const options = parseChoiceOptions(text);
                 if (options.length) {
                     // Keep the options of an identical card instead of re-creating it.
                     const same = choice && choice.options.length === options.length &&
                         choice.options.every((o, i) => o.title === options[i].title);
-                    if (!same) await setPendingChoice(options);
+                    if (!same) await setPendingChoice(options, '', sessionKey());
                 }
             }
         }
@@ -1631,7 +2071,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         // NOT gated on the choice cue: whenever the answer carries drafts, the
         // Import cards must appear — that is the whole import path, and dropping
         // them silently is what made "import" look broken.
-        const pending = await loadPendingArtifact();
+        const pendingStored = await loadPendingArtifact();
+        // A card left over from another conversation must not count as "already
+        // shown": this turn's identical draft still has to be written for THIS chat.
+        const pending = belongsToThisSession(pendingStored) ? pendingStored : null;
         if (!(pending && pending.id >= turnStartedAt)) {
             const { drafts, rejected } = collectArtifactDraftsDetailed(text);
             if (drafts.length || rejected.length) {
@@ -1640,7 +2083,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     (pending.drafts || []).every((d, i) => d.name === drafts[i].name && d.target === drafts[i].target) &&
                     (pending.rejected || []).length === rejected.length;
                 if (!same) {
-                    await setPendingArtifact(drafts, rejected);
+                    await setPendingArtifact(drafts, rejected, sessionKey());
                     // A turn whose answer was parsed into cards called no tool at
                     // all (the model just wrote JSON). Record the event, so the
                     // audit trail still shows how the cards came to be.
@@ -1813,6 +2256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             appendMessage(messageContent, 'self', rtime, true, fileInfo);
             historyMessages.push({ role: "user", content: messageContent, rtime, fileInfo });
             saveCurrentSession();
+            updateLearnControls();
         };
         reader.readAsDataURL(file);
     });
@@ -1867,8 +2311,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             await browser.storage.local.set({ [storageKey]: scenarioData });
             messagesContainer.innerText = "";
             historyMessages = [];
+            // The conversation this list belonged to is gone: drop it instead of
+            // leaving an orphaned card stamped with a deleted session.
+            await clearPendingChoice(sessionKey());
             loadChatHistory(currentScenario, scenarioData.currentId);
             updateChatRecordsList(scenarioData.history, scenarioData.currentId);
+            updateLearnControls();
         });
     });
 
@@ -1916,7 +2364,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             historyMessages = [];
             updateChatRecordsList(scenarioData.history, scenarioData.currentId);
             checkAndShowSampleMessage(currentScenario, scenarioData.currentId);
+            currentSessionId = newSessionId;
             renderPendingCards();
+            updateLearnControls();
 
              updateCollapseExpandButtonsState();
         });       
@@ -2023,6 +2473,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (session) {
                 messagesContainer.innerText = "";
+                // From here on the pending cards are rendered for THIS session only.
+                currentSessionId = session.id;
                 historyMessages = session.records ? [...session.records] : [];
 
                 historyMessages.forEach((item) => {
@@ -2046,6 +2498,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 checkAndShowSampleMessage(effectiveScenarioId, sessionId);
                 renderPendingCards();
                 updateResendButtonVisibility();
+                updateLearnControls();
             } else {
                 const fallbackSession = scenarioData.history.find(s => s.id === 0) || scenarioData.history[0];
                 if (fallbackSession) {
@@ -2651,6 +3104,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Side-effect confirmation cards: a tool that writes data or calls an
     // external service waits here until the user answers.
     browser.storage.onChanged.addListener(handleToolConfirmStorageChange);
+    // Learned notes of this scenario: reflect turns only propose them, so this
+    // listener keeps the panel (and the injection state) in sync with storage.
+    browser.storage.onChanged.addListener(handleLearnStorageChange);
     renderPendingCards();
+    refreshLearnState();
     loadFishIconState();
 });

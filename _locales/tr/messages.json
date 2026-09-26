@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "Önce bu sayfadan neler çıkarılabileceğini söyle: parçaları numaralı liste halinde ver (başlık + bir satır + önerilen tür). Ben seçeyim, sen JSON taslağını yaz, ben tıklayarak içe aktarayım."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Sohbet Oluşturucu"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Bu sohbetten Skill, sohbet senaryosu veya Insight tarifi olarak ne çıkarılabileceğini sınıflar ve yalnızca onayladıktan sonra içe aktarır."
+    },
+    "conversationBuilderStarter": {
+        "message": "Önce bu sohbetten neler çıkarılabileceğini söyle: yeniden kullanılabilir parçaları numaralı liste halinde ver (başlık + bir satır + önerilen tür). Ben seçeyim, sen JSON taslağını yaz, ben tıklayarak içe aktarayım."
+    },
     "artifactPendingTitle": {
         "message": "Onayın bekleniyor"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "Siz"
+    },
+    "reflectTitle": {
+        "message": "Değerlendirme"
+    },
+    "reflectButton": {
+        "message": "Öğrenmek için bu sohbeti değerlendir"
+    },
+    "reflectFailed": {
+        "message": "Değerlendirme başarısız. Tekrar dene veya modeli değiştir."
+    },
+    "artifactTargetMemory": {
+        "message": "Öğrenilen not"
+    },
+    "lessonPanelTitle": {
+        "message": "Öğrenilen notlar"
+    },
+    "lessonsEmpty": {
+        "message": "Bu senaryoda henüz bir şey öğrenilmedi."
+    },
+    "lessonsInjectOn": {
+        "message": "Öğrenilen notlar bu senaryoda kullanılıyor"
+    },
+    "lessonsInjectOff": {
+        "message": "Öğrenilen notlar kaydedildi ama kullanılmıyor"
+    },
+    "lessonsClear": {
+        "message": "Tümünü temizle"
+    },
+    "lessonsClearConfirm": {
+        "message": "Bu senaryonun tüm öğrenilen notları silinsin mi?"
+    },
+    "lessonsCleared": {
+        "message": "Tüm öğrenilen notlar silindi."
+    },
+    "lessonRemoved": {
+        "message": "Not silindi: {name}"
+    },
+    "lessonsHint": {
+        "message": "Öğrenilen notlar yalnızca referanstır - talimatlarınızı asla geçersiz kılmaz."
+    },
+    "reflectNeedMore": {
+        "message": "Biraz daha konuşma gerekiyor: en az {count} mesaj ve bir yanıt."
+    },
+    "reflectNoScenario": {
+        "message": "Öğrenilen notlar bir sohbet senaryosuna aittir. Önce bir senaryo seç."
+    },
+    "reflectBusy": {
+        "message": "Hâlâ süren bir yanıt var: bitince değerlendir."
     }
 }

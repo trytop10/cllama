@@ -816,3 +816,98 @@ code.language-markdown {
     fill: var(--bs-body-color);
 }
 
+/* ── Learned notes (scenario learning) ──────────────────────────────────────
+   The panel sits between the composer and its toolbar. It lists the notes the
+   user imported for the current scenario, plus the switch that controls whether
+   they are injected. Nothing in it changes without a click. */
+.lesson-panel {
+    border: 1px solid var(--bs-border-color);
+    border-top: 0;
+    padding: 0.4rem 0.6rem;
+    background: var(--bs-tertiary-bg);
+    font-size: 0.85rem;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.lesson-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.35rem;
+}
+
+.lesson-panel-title {
+    font-weight: 600;
+}
+
+.lesson-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.lesson-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    cursor: pointer;
+    color: var(--bs-secondary-color);
+}
+
+.lesson-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.2rem 0;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.lesson-text {
+    flex: 1 1 auto;
+    user-select: text;
+}
+
+.lesson-delete {
+    flex: 0 0 auto;
+    text-decoration: none;
+    color: var(--bs-secondary-color);
+    padding: 0 0.2rem;
+}
+
+.lesson-delete:hover {
+    color: var(--bs-danger);
+}
+
+.lesson-empty,
+.lesson-hint {
+    color: var(--bs-secondary-color);
+}
+
+.lesson-hint {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+}
+
+/* A scenario that has learned at least one note gets a subtle marker. */
+#b_lessons.lesson-button-active svg {
+    fill: var(--bs-primary);
+}
+
+/* The Reflect button while a reflection is not possible yet (too little
+   conversation, or a turn in flight). It stays clickable on purpose: a click
+   then explains why, which a hard disable (pointer-events: none) would prevent —
+   that also swallows the tooltip in Chrome. */
+#b_reflect.reflect-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+#b_reflect.reflect-disabled svg {
+    fill: var(--bs-secondary-color);
+}
+

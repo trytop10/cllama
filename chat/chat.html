@@ -114,6 +114,16 @@
           <a id="b_export" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px;" title="Export chat">
             <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_download"></use></svg>
           </a>
+          <!-- Scenario learning (manual only): reflect on this chat, and show the
+               notes already learned for this scenario. Hidden by default and
+               revealed by chat.js only for a real chat scenario, so "Chat only"
+               users never see a feature that does not apply to them. -->
+          <a id="b_reflect" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px; display: none;" title="Reflect on this chat">
+            <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_run"></use></svg>
+          </a>
+          <a id="b_lessons" class="btn btn-sm btn-outline-secondary" href="#" style="border: 0px; display: none;" title="Learned notes">
+            <svg class="bi theme-icon-active" style="width:1.3em;height:1.3em;"><use href="#svg_check"></use></svg>
+          </a>
         </div>
 
         <div id="chat_records_container" class="d-flex align-items-center">
@@ -149,6 +159,11 @@
       <div class="input-group">
         <textarea id="msgInput" class="form-control i18n"  i18n="placeholder" placeholder="inputMessage" rows="3"></textarea>
       </div>
+
+      <!-- Learned notes of this scenario: built by the Reflect turn, imported only
+           when the user clicks Import, and rendered here so they can be reviewed,
+           switched off, or deleted one by one. -->
+      <div id="lessonPanel" class="lesson-panel" style="display: none;"></div>
 
 
       <!-- Function Bar -->

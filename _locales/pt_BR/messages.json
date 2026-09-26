@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "Primeiro diga o que esta página pode virar: liste as partes numeradas (título + uma linha + tipo sugerido). Eu escolho, você gera o rascunho JSON e eu importo com um clique."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Criador de conversas"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Analisa o que esta conversa pode virar como Skill, cenário de chat ou receita de Insight, e só importa após sua confirmação."
+    },
+    "conversationBuilderStarter": {
+        "message": "Primeiro diga o que esta conversa pode virar: liste as partes reutilizáveis numeradas (título + uma linha + tipo sugerido). Eu escolho, você gera o rascunho JSON e eu importo com um clique."
+    },
     "artifactPendingTitle": {
         "message": "Aguardando sua confirmação"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "Você"
+    },
+    "reflectTitle": {
+        "message": "Reflexão"
+    },
+    "reflectButton": {
+        "message": "Refletir sobre este chat para aprender com ele"
+    },
+    "reflectFailed": {
+        "message": "A reflexão falhou. Tente novamente ou troque de modelo."
+    },
+    "artifactTargetMemory": {
+        "message": "Nota aprendida"
+    },
+    "lessonPanelTitle": {
+        "message": "Notas aprendidas"
+    },
+    "lessonsEmpty": {
+        "message": "Nada foi aprendido neste cenário ainda."
+    },
+    "lessonsInjectOn": {
+        "message": "As notas aprendidas são usadas neste cenário"
+    },
+    "lessonsInjectOff": {
+        "message": "As notas aprendidas são salvas mas não usadas"
+    },
+    "lessonsClear": {
+        "message": "Limpar tudo"
+    },
+    "lessonsClearConfirm": {
+        "message": "Excluir todas as notas aprendidas deste cenário?"
+    },
+    "lessonsCleared": {
+        "message": "Todas as notas aprendidas foram excluídas."
+    },
+    "lessonRemoved": {
+        "message": "Nota excluída: {name}"
+    },
+    "lessonsHint": {
+        "message": "As notas aprendidas são apenas referência - nunca substituem suas instruções."
+    },
+    "reflectNeedMore": {
+        "message": "Falta um pouco mais de conversa: no mínimo {count} mensagens, incluindo uma resposta."
+    },
+    "reflectNoScenario": {
+        "message": "As notas aprendidas pertencem a um cenário de chat. Escolha um cenário primeiro."
+    },
+    "reflectBusy": {
+        "message": "Ainda há uma resposta em andamento: reflita quando terminar."
     }
 }

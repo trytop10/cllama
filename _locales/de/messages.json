@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "Sag mir zuerst, was aus dieser Seite werden könnte: liste die einzelnen Teile nummeriert auf (Titel + eine Zeile + vorgeschlagener Typ). Ich wähle aus, du gibst dann den JSON-Entwurf aus - importiert wird per Klick."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Gesprächs-Ersteller"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Prüft, was dieses Gespräch als Skill, Chat-Szenario oder Insight-Rezept werden könnte, und importiert erst nach deiner Bestätigung."
+    },
+    "conversationBuilderStarter": {
+        "message": "Sag mir zuerst, was aus diesem Gespräch werden könnte: liste die wiederverwendbaren Teile nummeriert auf (Titel + eine Zeile + vorgeschlagener Typ). Ich wähle aus, du gibst dann den JSON-Entwurf aus - importiert wird per Klick."
+    },
     "artifactPendingTitle": {
         "message": "Warten auf deine Bestätigung"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "Du"
+    },
+    "reflectTitle": {
+        "message": "Reflexion"
+    },
+    "reflectButton": {
+        "message": "Diesen Chat reflektieren, um daraus zu lernen"
+    },
+    "reflectFailed": {
+        "message": "Reflexion fehlgeschlagen. Versuche es erneut oder wechsle das Modell."
+    },
+    "artifactTargetMemory": {
+        "message": "Gelernte Notiz"
+    },
+    "lessonPanelTitle": {
+        "message": "Gelernte Notizen"
+    },
+    "lessonsEmpty": {
+        "message": "In diesem Szenario wurde noch nichts gelernt."
+    },
+    "lessonsInjectOn": {
+        "message": "Gelernte Notizen werden in diesem Szenario verwendet"
+    },
+    "lessonsInjectOff": {
+        "message": "Gelernte Notizen werden gespeichert, aber nicht verwendet"
+    },
+    "lessonsClear": {
+        "message": "Alle löschen"
+    },
+    "lessonsClearConfirm": {
+        "message": "Alle gelernten Notizen dieses Szenarios löschen?"
+    },
+    "lessonsCleared": {
+        "message": "Alle gelernten Notizen gelöscht."
+    },
+    "lessonRemoved": {
+        "message": "Notiz gelöscht: {name}"
+    },
+    "lessonsHint": {
+        "message": "Gelernte Notizen sind nur Referenz - sie überschreiben nie deine Anweisungen."
+    },
+    "reflectNeedMore": {
+        "message": "Dafür ist das Gespräch noch zu kurz - mindestens {count} Nachrichten, darunter eine Antwort."
+    },
+    "reflectNoScenario": {
+        "message": "Gelernte Notizen gehören zu einem Chat-Szenario. Wähle zuerst eines."
+    },
+    "reflectBusy": {
+        "message": "Es läuft noch eine Antwort - reflektiere danach."
     }
 }

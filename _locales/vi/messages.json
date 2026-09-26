@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "Trước tiên cho tôi biết trang này có thể tạo ra gì: liệt kê các phần theo số thứ tự (tiêu đề + một dòng + loại đề xuất). Tôi chọn, bạn xuất bản nháp JSON, tôi bấm để nhập."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Trình tạo hội thoại"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Phân loại xem hội thoại này có thể tạo ra gì (Skill, kịch bản chat hoặc công thức Insight) và chỉ nhập sau khi bạn xác nhận."
+    },
+    "conversationBuilderStarter": {
+        "message": "Trước tiên cho tôi biết hội thoại này có thể tạo ra gì: liệt kê các phần có thể tái sử dụng theo số thứ tự (tiêu đề + một dòng + loại đề xuất). Tôi chọn, bạn xuất bản nháp JSON, tôi bấm để nhập."
+    },
     "artifactPendingTitle": {
         "message": "Đang chờ bạn xác nhận"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "Bạn"
+    },
+    "reflectTitle": {
+        "message": "Suy ngẫm"
+    },
+    "reflectButton": {
+        "message": "Suy ngẫm cuộc trò chuyện này để học hỏi"
+    },
+    "reflectFailed": {
+        "message": "Suy ngẫm thất bại. Hãy thử lại hoặc đổi mô hình."
+    },
+    "artifactTargetMemory": {
+        "message": "Ghi chú đã học"
+    },
+    "lessonPanelTitle": {
+        "message": "Ghi chú đã học"
+    },
+    "lessonsEmpty": {
+        "message": "Chưa học được gì trong kịch bản này."
+    },
+    "lessonsInjectOn": {
+        "message": "Ghi chú đã học được dùng trong kịch bản này"
+    },
+    "lessonsInjectOff": {
+        "message": "Ghi chú đã học được lưu nhưng không dùng"
+    },
+    "lessonsClear": {
+        "message": "Xóa tất cả"
+    },
+    "lessonsClearConfirm": {
+        "message": "Xóa tất cả ghi chú đã học của kịch bản này?"
+    },
+    "lessonsCleared": {
+        "message": "Đã xóa tất cả ghi chú đã học."
+    },
+    "lessonRemoved": {
+        "message": "Đã xóa ghi chú: {name}"
+    },
+    "lessonsHint": {
+        "message": "Ghi chú đã học chỉ để tham khảo - không bao giờ ghi đè chỉ dẫn của bạn."
+    },
+    "reflectNeedMore": {
+        "message": "Cần thêm một chút hội thoại: tối thiểu {count} tin nhắn, gồm một câu trả lời."
+    },
+    "reflectNoScenario": {
+        "message": "Ghi chú đã học thuộc về một kịch bản trò chuyện. Hãy chọn kịch bản trước."
+    },
+    "reflectBusy": {
+        "message": "Vẫn đang có câu trả lời: hãy suy ngẫm sau khi xong."
     }
 }

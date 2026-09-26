@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "先告诉我这个页面能提炼出什么：把里面可提炼的内容按编号列出来（标题 + 一句话 + 建议做成什么），我点选后你再输出对应的 JSON 草案，我点导入才写入。"
     },
+    "skillDefaultConversationBuilder": {
+        "message": "对话提炼器"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "盘点这段对话能沉淀成什么（Skill／聊天场景／洞察配方），起草后点卡片导入。"
+    },
+    "conversationBuilderStarter": {
+        "message": "先告诉我这段对话能提炼出什么：把里面可复用的内容按编号列出来（标题 + 一句话 + 建议做成什么），我点选后你再输出对应的 JSON 草案，我点导入才写入。"
+    },
     "artifactPendingTitle": {
         "message": "待确认导入"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "我"
+    },
+    "reflectTitle": {
+        "message": "反思"
+    },
+    "reflectButton": {
+        "message": "反思本次对话以从中学习"
+    },
+    "reflectFailed": {
+        "message": "反思失败，请重试或更换模型。"
+    },
+    "artifactTargetMemory": {
+        "message": "经验"
+    },
+    "lessonPanelTitle": {
+        "message": "已学的经验"
+    },
+    "lessonsEmpty": {
+        "message": "该场景还没有学到任何经验。"
+    },
+    "lessonsInjectOn": {
+        "message": "已在本场景中注入经验"
+    },
+    "lessonsInjectOff": {
+        "message": "已保存经验但不注入"
+    },
+    "lessonsClear": {
+        "message": "全部清空"
+    },
+    "lessonsClearConfirm": {
+        "message": "删除本场景的所有经验？"
+    },
+    "lessonsCleared": {
+        "message": "已清空本场景的全部经验。"
+    },
+    "lessonRemoved": {
+        "message": "已删除经验：{name}"
+    },
+    "lessonsHint": {
+        "message": "经验仅供参考，不会覆盖你的指令。"
+    },
+    "reflectNeedMore": {
+        "message": "对话内容还不够，至少需要 {count} 条消息（其中包含一次回答）。"
+    },
+    "reflectNoScenario": {
+        "message": "经验属于某个聊天场景，请先选择一个场景。"
+    },
+    "reflectBusy": {
+        "message": "当前正在回答，请等这一轮结束后再反思。"
     }
 }

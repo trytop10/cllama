@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "Beri tahu dulu apa yang bisa dihasilkan halaman ini: daftar bagian-bagiannya bernomor (judul + satu baris + saran tipe). Saya pilih, kamu keluarkan draf JSON, dan saya klik untuk mengimpor."
     },
+    "skillDefaultConversationBuilder": {
+        "message": "Pembuat Percakapan"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "Meninjau apa yang bisa dihasilkan percakapan ini sebagai Skill, skenario chat, atau resep Insight, dan hanya mengimpor setelah kamu konfirmasi."
+    },
+    "conversationBuilderStarter": {
+        "message": "Beri tahu dulu apa yang bisa dihasilkan percakapan ini: daftar bagian yang bisa dipakai ulang bernomor (judul + satu baris + saran tipe). Saya pilih, kamu keluarkan draf JSON, dan saya klik untuk mengimpor."
+    },
     "artifactPendingTitle": {
         "message": "Menunggu konfirmasi"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "Anda"
+    },
+    "reflectTitle": {
+        "message": "Refleksi"
+    },
+    "reflectButton": {
+        "message": "Renungkan obrolan ini untuk belajar darinya"
+    },
+    "reflectFailed": {
+        "message": "Refleksi gagal. Coba lagi atau ganti model."
+    },
+    "artifactTargetMemory": {
+        "message": "Catatan yang dipelajari"
+    },
+    "lessonPanelTitle": {
+        "message": "Catatan yang dipelajari"
+    },
+    "lessonsEmpty": {
+        "message": "Belum ada yang dipelajari di skenario ini."
+    },
+    "lessonsInjectOn": {
+        "message": "Catatan yang dipelajari dipakai di skenario ini"
+    },
+    "lessonsInjectOff": {
+        "message": "Catatan yang dipelajari disimpan tetapi tidak dipakai"
+    },
+    "lessonsClear": {
+        "message": "Hapus semua"
+    },
+    "lessonsClearConfirm": {
+        "message": "Hapus semua catatan yang dipelajari di skenario ini?"
+    },
+    "lessonsCleared": {
+        "message": "Semua catatan yang dipelajari telah dihapus."
+    },
+    "lessonRemoved": {
+        "message": "Catatan dihapus: {name}"
+    },
+    "lessonsHint": {
+        "message": "Catatan yang dipelajari hanya referensi - tidak pernah menggantikan instruksi Anda."
+    },
+    "reflectNeedMore": {
+        "message": "Perlu sedikit lebih banyak percakapan: minimal {count} pesan, termasuk satu jawaban."
+    },
+    "reflectNoScenario": {
+        "message": "Catatan yang dipelajari milik sebuah skenario obrolan. Pilih skenario dulu."
+    },
+    "reflectBusy": {
+        "message": "Masih ada jawaban yang berjalan: renungkan setelah selesai."
     }
 }

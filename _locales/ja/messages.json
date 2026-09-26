@@ -541,6 +541,15 @@
     "pageBuilderStarter": {
         "message": "まずこのページから何が作れるか教えて：要素を番号付きで列挙（タイトル＋一行＋おすすめの種類）。私が選んだら JSON 草案を出力し、私がクリックして取り込みます。"
     },
+    "skillDefaultConversationBuilder": {
+        "message": "会話ビルダー"
+    },
+    "skillDefaultConversationBuilderDesc": {
+        "message": "この会話が Skill／チャットシナリオ／インサイトレシピとして何になるかを分類し、確認後にだけ取り込みます。"
+    },
+    "conversationBuilderStarter": {
+        "message": "まずこの会話から何が作れるか教えて：再利用できる要素を番号付きで列挙（タイトル＋一行＋おすすめの種類）。私が選んだら JSON 草案を出力し、私がクリックして取り込みます。"
+    },
     "artifactPendingTitle": {
         "message": "確認待ち"
     },
@@ -759,5 +768,53 @@
     },
     "user": {
         "message": "あなた"
+    },
+    "reflectTitle": {
+        "message": "振り返り"
+    },
+    "reflectButton": {
+        "message": "このチャットを振り返って学習する"
+    },
+    "reflectFailed": {
+        "message": "振り返りに失敗しました。再試行するかモデルを変更してください。"
+    },
+    "artifactTargetMemory": {
+        "message": "学習メモ"
+    },
+    "lessonPanelTitle": {
+        "message": "学習したメモ"
+    },
+    "lessonsEmpty": {
+        "message": "このシナリオではまだ何も学習していません。"
+    },
+    "lessonsInjectOn": {
+        "message": "このシナリオでは学習メモを使用します"
+    },
+    "lessonsInjectOff": {
+        "message": "学習メモは保存されますが使用しません"
+    },
+    "lessonsClear": {
+        "message": "すべて削除"
+    },
+    "lessonsClearConfirm": {
+        "message": "このシナリオの学習メモをすべて削除しますか？"
+    },
+    "lessonsCleared": {
+        "message": "学習メモをすべて削除しました。"
+    },
+    "lessonRemoved": {
+        "message": "メモを削除しました: {name}"
+    },
+    "lessonsHint": {
+        "message": "学習メモは参考情報です - 指示を上書きすることはありません。"
+    },
+    "reflectNeedMore": {
+        "message": "まだ会話が足りません。回答をふくめて {count} 件以上必要です。"
+    },
+    "reflectNoScenario": {
+        "message": "学習メモはチャットシナリオに属します。先にシナリオを選んでください。"
+    },
+    "reflectBusy": {
+        "message": "まだ回答中です。このターンが終わってから振り返ってください。"
     }
 }
