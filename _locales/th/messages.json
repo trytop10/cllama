@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "ส่งออกแชท"
+    },
+    "exportChatEmpty": {
+        "message": "ยังไม่มีเนื้อหาให้ส่งออกในเซสชันนี้"
+    },
+    "exportChatMessages": {
+        "message": "จำนวนข้อความ"
+    },
+    "exportChatModel": {
+        "message": "โมเดล"
+    },
+    "exportGeneratedBy": {
+        "message": "ส่งออกโดย cllama"
+    },
+    "tokenInput": {
+        "message": "อินพุต"
+    },
+    "tokenOutput": {
+        "message": "เอาต์พุต"
+    },
+    "tokenTotal": {
+        "message": "รวม"
+    },
+    "tokenCached": {
+        "message": "แคช"
+    },
+    "tokenUnit": {
+        "message": "โทเคน"
+    },
+    "tokenEstimatedHint": {
+        "message": "ตัวเลขที่มี ≈ เป็นค่าประมาณ เนื่องจากบริการไม่ได้ส่งข้อมูลการใช้งานที่แม่นยำ"
+    },
+    "thinking": {
+        "message": "การคิด"
+    },
+    "user": {
+        "message": "คุณ"
     }
 }

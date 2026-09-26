@@ -6,6 +6,7 @@ import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
 import { getServiceInstance } from './client/client.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags } from './util.js';
+import { hasUsage, makeEstimatedUsage, mergeUsage } from './token-usage.mjs';
 import { parseToolCalls, parseToolCallsDetailed, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, listTools, registerTool, getTool, previewToolArgs, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 
 
@@ -112,6 +113,24 @@ export async function getClientService() {
 export async function getRuntimeConfig() {
   await loadConfiguration();
   return runtimeConfig;
+}
+
+/**
+ * Rough input-token estimate for a request payload. Used only when the backend
+ * does not report real usage, so the number is always flagged as estimated.
+ * @param {Array<Object>} messages - Request messages
+ * @returns {number} Estimated token count
+ */
+function estimateMessagesTokens(messages) {
+  if (!Array.isArray(messages)) return 0;
+  let total = 0;
+  for (const m of messages) {
+    const text = typeof m.content === 'string'
+      ? m.content
+      : JSON.stringify(m.parts || m.content || '');
+    total += TextProcessor.estimateTokens(text);
+  }
+  return total;
 }
 
 /**
@@ -478,6 +497,12 @@ export async function chat(historyMessages, options) {
   // Tool-call loop: send a request, and if the model requests tools, execute
   // them and feed the results back until we get a final answer.
   let finalResponse = '';
+  // Token usage for this turn, summed over every request the loop makes: each
+  // round re-sends the conversation, so the sum is the real consumption of the
+  // turn. A local estimate is used when the backend reports nothing.
+  let turnUsage = null;
+  const estimatedInputTokens = estimateMessagesTokens(msgs);
+  let lastEstimateLength = 0;
   // Only re-prompt once for a malformed tool call, so a model that never gets the
   // syntax right cannot loop forever.
   let toolSyntaxRetried = false;
@@ -505,12 +530,23 @@ export async function chat(historyMessages, options) {
           renderWithDebounce(msgDiv, stripToolCalls(text));
           if (!options?.stopScroll())
             messages.scrollTop = messages.scrollHeight;
+          // Live (estimated) output counter: recompute only every ~40 characters
+          // so a long answer does not re-scan the whole text on every chunk.
+          if (typeof options?.onTokenEstimate === 'function' && text.length - lastEstimateLength >= 40) {
+            lastEstimateLength = text.length;
+            options.onTokenEstimate({
+              input: estimatedInputTokens,
+              output: TextProcessor.estimateTokens(text),
+              estimated: true
+            });
+          }
         },
-        onComplete: (text, id, toolCalls) => {
+        onComplete: (text, id, toolCalls, usage) => {
           renderWithDebounce(msgDiv, stripToolCalls(text));
           thinkCollapseExpanded(msgDiv);
           full = text;
           lastToolCalls = toolCalls || null;
+          if (usage) turnUsage = mergeUsage(turnUsage, usage);
         },
         onError: (error, id) => {
           if (error.name !== 'AbortError')
@@ -715,7 +751,15 @@ export async function chat(historyMessages, options) {
     // Never persist a blank assistant turn (it would look like the chat lost the
     // answer); the page shows the notice rendered by onEmptyResponse instead.
     if (String(finalResponse || '').trim()) {
-      historyMessages.push({ role: 'assistant', content: finalResponse, rtime: Date.now() });
+      // Attach this turn's token usage so the chat page can show it under the
+      // answer, persist it with the session and let the HTML export include it.
+      if (!hasUsage(turnUsage)) {
+        turnUsage = makeEstimatedUsage(estimatedInputTokens, TextProcessor.estimateTokens(finalResponse));
+      }
+      const assistantRecord = { role: 'assistant', content: finalResponse, rtime: Date.now() };
+      if (hasUsage(turnUsage)) assistantRecord.usage = turnUsage;
+      historyMessages.push(assistantRecord);
+      if (typeof options?.onUsage === 'function') options.onUsage(turnUsage);
     }
     typeof options?.finish === 'function' && options.finish(historyMessages);
   }

@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "本地存储占用：{size}"
+    },
+    "exportChat": {
+        "message": "导出聊天记录"
+    },
+    "exportChatEmpty": {
+        "message": "当前会话还没有可导出的内容。"
+    },
+    "exportChatMessages": {
+        "message": "消息数"
+    },
+    "exportChatModel": {
+        "message": "模型"
+    },
+    "exportGeneratedBy": {
+        "message": "由 cllama 导出"
+    },
+    "tokenInput": {
+        "message": "输入"
+    },
+    "tokenOutput": {
+        "message": "输出"
+    },
+    "tokenTotal": {
+        "message": "合计"
+    },
+    "tokenCached": {
+        "message": "缓存命中"
+    },
+    "tokenUnit": {
+        "message": "tokens"
+    },
+    "tokenEstimatedHint": {
+        "message": "带 ≈ 的数字为估算值：该服务未返回准确用量。"
+    },
+    "thinking": {
+        "message": "思考过程"
+    },
+    "user": {
+        "message": "我"
     }
 }

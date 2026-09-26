@@ -296,9 +296,11 @@ export function removeThinkTags(str) {
  * @param {string} data - Data to export
  * @param {string} format - File format/extension
  * @param {string} [fileName] - Optional filename (auto-generated if not provided)
+ * @param {string} [mime] - Optional MIME type; defaults to `application/<format>`
+ *   (callers exporting HTML should pass `text/html;charset=utf-8`)
  */
-export function exportFile(data, format, fileName) {
-  const blob = new Blob([data], { type: `application/${format}` });
+export function exportFile(data, format, fileName, mime) {
+  const blob = new Blob([data], { type: mime || `application/${format}` });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   

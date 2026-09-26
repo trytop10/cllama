@@ -3,6 +3,9 @@ import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, l
 import { initMcpTools } from '../js/mcp.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
+import { balert } from '../js/dialog.mjs';
+import { buildChatHtml, buildExportFileName } from '../js/chat-export.mjs';
+import { formatUsage } from '../js/token-usage.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
 
@@ -56,6 +59,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const messages = messagesContainer.querySelectorAll('.message');
             messages.forEach(msg => msg.classList.remove('collapsed-message'));
         });
+    }
+
+    // Export button: title comes from i18n (the HTML only carries an English
+    // fallback for the rare case the message is missing).
+    const bExport = document.getElementById("b_export");
+    if (bExport) {
+        bExport.title = browser.i18n.getMessage("exportChat") || 'Export chat';
     }
     
     // User-resizable message input. Height is changed by dragging the handle
@@ -669,6 +679,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Blank answer (empty text / undelivered tool call): say so instead of
             // leaving an empty bubble.
             onEmptyResponse: (info) => showEmptyResponseNotice(info),
+            // Live token counter under the answer while it streams (estimated,
+            // recomputed by chat() every ~40 characters).
+            onTokenEstimate: (usage) => setTokenUsage(assistantMsgBlock, usage),
+            // Final numbers of the turn (summed over every tool round).
+            onUsage: (usage) => setTokenUsage(assistantMsgBlock, usage),
             start: () => {
                 stopFlag = false;
                 setComponentState(true);
@@ -690,6 +705,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         pdiv.dataset.timestamp = assistantMessageToAdd.rtime;
                         pdiv.querySelector(".copy-message-btn").setAttribute("data-flag", "true");
                         pdiv.querySelector(".delete-message-btn").setAttribute("data-flag", "true");
+                        // Persisted usage (or its local estimate) of this answer.
+                        setTokenUsage(pdiv, assistantMessageToAdd.usage);
                     }
                 }
                 setAllFilesActivation(false);
@@ -746,6 +763,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * Localized labels for the token-usage line / exported document.
+     * @returns {Object} { input, output, total, cached, tokens, ... }
+     */
+    function tokenUsageLabels() {
+        return {
+            input: browser.i18n.getMessage('tokenInput') || 'Input',
+            output: browser.i18n.getMessage('tokenOutput') || 'Output',
+            total: browser.i18n.getMessage('tokenTotal') || 'Total',
+            cached: browser.i18n.getMessage('tokenCached') || 'Cached',
+            tokens: browser.i18n.getMessage('tokenUnit') || 'tokens',
+            user: browser.i18n.getMessage('user') || 'You',
+            assistant: 'Assistant',
+            thinking: browser.i18n.getMessage('thinking') || 'Thinking',
+            messages: browser.i18n.getMessage('exportChatMessages') || 'Messages',
+            modelLabel: browser.i18n.getMessage('exportChatModel') || 'Model',
+            generatedBy: browser.i18n.getMessage('exportGeneratedBy') || 'Exported by cllama'
+        };
+    }
+
+    /**
+     * Markup for the small token line under an answer. Always present (hidden
+     * when empty) for bot messages, so the live counter shown while streaming
+     * has a stable element to update.
+     * @param {Object|null} usage - Normalized usage
+     * @returns {string} HTML
+     */
+    function tokenUsageHtml(usage) {
+        const text = usage ? formatUsage(usage, tokenUsageLabels()) : '';
+        const hint = usage && usage.estimated ? (browser.i18n.getMessage('tokenEstimatedHint') || '') : '';
+        return `<div class="token-usage"${text ? '' : ' hidden'}` +
+            `${hint ? ` title="${escapeHTML(hint)}"` : ''}>${escapeHTML(text)}</div>`;
+    }
+
+    /**
+     * Updates the token line of a message (streaming estimate or final numbers).
+     * @param {HTMLElement} messageDiv - The message element
+     * @param {Object|null} usage - Normalized usage
+     */
+    function setTokenUsage(messageDiv, usage) {
+        const el = messageDiv?.querySelector('.token-usage');
+        if (!el) return;
+        const text = usage ? formatUsage(usage, tokenUsageLabels()) : '';
+        el.textContent = text;
+        if (text) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+
+        const hint = usage && usage.estimated ? (browser.i18n.getMessage('tokenEstimatedHint') || '') : '';
+        if (hint) el.title = hint;
+        else el.removeAttribute('title');
+    }
+
+    /**
      * Append message to chat interface
      */
     function escapeHTML(text) {
@@ -755,7 +824,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    function appendMessage(messageText, sender, timestamp, flag = true, fileInfo = null) {
+    function appendMessage(messageText, sender, timestamp, flag = true, fileInfo = null, usage = null) {
         const isSelf = sender === "self";
         const senderName = isSelf ? "" : sender;
         const senderClass = isSelf ? "user" : "bot";
@@ -787,6 +856,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     ${isSelf ? `<span class="resend-message-btn" style="cursor:pointer;display:none;margin-left:5px;font-size:13px;" title="${browser.i18n.getMessage("resend")}">↺</span>` : ''}
                 </div>
                 <${divpre} class="message-text ${markdownSelf}">${msgText}</${divpre}>
+                ${isSelf ? '' : tokenUsageHtml(usage)}
             </div>
         `;
 
@@ -1852,6 +1922,87 @@ document.addEventListener("DOMContentLoaded", async () => {
         });       
     });
 
+    /**
+     * Inlines the stylesheets the exported document relies on, so a single
+     * exported file keeps its formatting when opened offline. KaTeX's web fonts
+     * cannot be embedded here: formulas still render, only the font falls back.
+     * @returns {Promise<string>} Concatenated CSS
+     */
+    async function loadExportStylesheets() {
+        const files = ['/css/github-markdown-light.css', '/css/katex.css'];
+        const parts = await Promise.all(files.map(async (path) => {
+            try {
+                const res = await fetch(browser.runtime.getURL(path));
+                return res.ok ? await res.text() : '';
+            } catch (e) {
+                console.warn('Failed to inline stylesheet for export:', path, e);
+                return '';
+            }
+        }));
+        return parts.filter(Boolean).join('\n');
+    }
+
+    /**
+     * Name of the session currently open, read from storage (the records list
+     * in the DOM only knows the visible buttons).
+     * @param {string} scenarioId - Scenario id
+     * @returns {Promise<string>} Session name, '' when unknown
+     */
+    function getCurrentSessionName(scenarioId) {
+        const storageKey = `chatHistory_${scenarioId}`;
+        return new Promise((resolve) => {
+            browser.storage.local.get(storageKey, (data) => {
+                const scenarioData = data?.[storageKey];
+                const session = scenarioData?.history?.find(s => s.id === scenarioData.currentId);
+                resolve(session?.name || '');
+            });
+        });
+    }
+
+    /**
+     * Export the current session as one self-contained HTML file: markdown
+     * rendered, styles inlined, attachments embedded as data URLs.
+     */
+    async function exportCurrentSession() {
+        const records = (historyMessages || []).filter(r => String(r?.content || '').trim() || r?.fileInfo);
+        if (!records.length) {
+            balert(browser.i18n.getMessage('exportChatEmpty') || 'Nothing to export.');
+            return;
+        }
+
+        const scenarioId = ccId || '0';
+        const scenarioName = chatCategory?.selectedOptions?.[0]?.textContent?.trim() || '';
+        const sessionName = await getCurrentSessionName(scenarioId);
+        const labels = tokenUsageLabels();
+        const title = [scenarioName, sessionName].filter(Boolean).join(' · ') || document.title;
+
+        const html = buildChatHtml({
+            title,
+            lang: browser.i18n.getUILanguage(),
+            meta: [
+                `${labels.messages || 'Messages'}: ${records.length}`,
+                currentModel ? `${labels.modelLabel || 'Model'}: ${currentModel}` : ''
+            ],
+            records,
+            css: await loadExportStylesheets(),
+            renderMarkdown: (md) => marked.parse(md),
+            labels,
+            options: { includeThinking: true, includeImages: true }
+        });
+
+        exportFile(
+            html,
+            'html',
+            buildExportFileName({ scenario: scenarioName, session: sessionName }),
+            'text/html;charset=utf-8'
+        );
+    }
+
+    document.getElementById("b_export")?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await exportCurrentSession();
+    });
+
     async function loadChatHistory(scenarioId, sessionId) {
         const effectiveScenarioId = scenarioId || "0";
         const storageKey = `chatHistory_${effectiveScenarioId}`;
@@ -1879,7 +2030,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ? item.content 
                         : marked.parse(item.content);
                     const role = item.role === "user" ? "self" : "assistant";
-                    appendMessage(replaceThinkTags(content), item.model || role, item.rtime, true, item.fileInfo);
+                    appendMessage(replaceThinkTags(content), item.model || role, item.rtime, true, item.fileInfo, item.usage || null);
                 });
 
                 copyToClipboard(messagesContainer);

@@ -1,4 +1,5 @@
 import { Ollama } from './ollama.mjs'
+import { normalizeOllamaUsage } from '../token-usage.mjs'
 
 const DEFAULT_MODEL = 'gemma3';
 
@@ -75,6 +76,9 @@ export class OllamaClient {
     let contentBuilder = [];
     let completedNormally = false;
     let toolCalls = [];
+    // Token usage reported by the final stream part (prompt_eval_count /
+    // eval_count); handed to onComplete so the page can show real numbers.
+    let usage = null;
 
     let requestOptions = {
       model,
@@ -140,6 +144,11 @@ export class OllamaClient {
         if (Array.isArray(part.message?.tool_calls) && part.message.tool_calls.length) {
           toolCalls = part.message.tool_calls;
         }
+
+        // Token usage: the final part of the stream carries prompt_eval_count /
+        // eval_count. Intermediate parts may omit them, so keep the last value.
+        const partUsage = normalizeOllamaUsage(part);
+        if (partUsage) usage = partUsage;
       }
 
       if (this.activeSessions.has(sessionId)) {
@@ -151,7 +160,7 @@ export class OllamaClient {
         // back-to-back request (e.g. the multi-round tool-call loop in chat()).
         completedNormally = true;
         if (typeof options.onComplete === 'function') {
-          options.onComplete(fullResponse, sessionId, toolCalls)
+          options.onComplete(fullResponse, sessionId, toolCalls, usage)
         }
         this.activeSessions.delete(sessionId)
       }

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from './gemini.mjs';
+import { normalizeGeminiUsage } from '../token-usage.mjs';
 
 export class GeminiClient {
     constructor(config) {
@@ -88,9 +89,15 @@ export class GeminiClient {
         // mapped to the same `{ function: { name, arguments } }` shape the
         // OpenAI-compatible path uses, so chat() can run both the same way.
         const toolCalls = [];
+        // Token usage: every chunk may carry `usageMetadata` (the last one is
+        // the complete figure, including thinking tokens).
+        let usage = null;
         try {
             const stream = await this.apiClient.models.generateContentStream(requestParams);
             for await (const chunk of stream) {
+                if (chunk.usageMetadata) {
+                    usage = normalizeGeminiUsage(chunk.usageMetadata) || usage;
+                }
                 const chunkText = chunk.text || '';
                 fullText += chunkText;
                 if (options.onStream) {
@@ -121,7 +128,7 @@ export class GeminiClient {
                 });
             }
             if (options.onComplete) {
-                options.onComplete(fullText, sessionId, toolCalls);
+                options.onComplete(fullText, sessionId, toolCalls, usage);
             }
             return sessionId;
         } catch (error) {

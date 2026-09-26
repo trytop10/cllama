@@ -339,6 +339,17 @@ hr {
     word-break: break-word;
 }
 
+/* ------------------- Token usage line under an answer ------------------- */
+.token-usage {
+    font-size: 0.72rem;
+    color: var(--bs-secondary-color);
+    text-align: right;
+    margin-top: 0.25rem;
+    font-variant-numeric: tabular-nums;
+    user-select: text;
+    word-break: break-word;
+}
+
 /* ------------------- Tool steps & confirmation (tool governance) ------------------- */
 .tool-steps {
     display: flex;

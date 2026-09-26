@@ -2,6 +2,8 @@
  * OpenAI ChatGPT API Client
  * Fully compatible with AI Service SDK Standard v1.0
  */
+import { normalizeOpenAIUsage } from '../token-usage.mjs';
+
 export class ChatGPTClient {
   /**
    * Initializes the client with configuration
@@ -87,6 +89,14 @@ export class ChatGPTClient {
       requestOptions.tools = options.tools;
     }
 
+    // OpenAI only reports usage in a streaming response when asked to; most
+    // compatible gateways (DeepSeek, Moonshot, DashScope, Zhipu, ...) send it
+    // unasked. The flag is only added for the official endpoint, because other
+    // servers may reject the unknown field with HTTP 400.
+    if (/api\.openai\.com/i.test(this.endpoint)) {
+      requestOptions.stream_options = { include_usage: true };
+    }
+
     if (typeof options.onStart === 'function') {
       options.onStart(sessionId);
     }
@@ -140,6 +150,10 @@ export class ChatGPTClient {
     // answered with a tool call look like an empty reply.
     const toolCallParts = new Map();
     let finishReason = null;
+    // Token usage: reported by providers in the final chunk(s) of the stream —
+    // either as a normal last chunk, or (with stream_options.include_usage) as
+    // a dedicated chunk whose `choices` array is empty.
+    let usage = null;
 
     try {
       while (true) {
@@ -181,6 +195,9 @@ export class ChatGPTClient {
 
           try {
             const parsed = JSON.parse(jsonStr);
+            if (parsed.usage) {
+              usage = normalizeOpenAIUsage(parsed.usage) || usage;
+            }
             const choice = parsed.choices?.[0] || {};
             const delta = choice.delta || {};
             if (choice.finish_reason) finishReason = choice.finish_reason;
@@ -250,7 +267,7 @@ export class ChatGPTClient {
         });
       }
       if (typeof options.onComplete === 'function') {
-        options.onComplete(fullResponse, sessionId, toolCalls);
+        options.onComplete(fullResponse, sessionId, toolCalls, usage);
       }
     } catch (error) {
       this.activeSessions.delete(sessionId);

@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "Экспорт чата"
+    },
+    "exportChatEmpty": {
+        "message": "В этой сессии пока нечего экспортировать."
+    },
+    "exportChatMessages": {
+        "message": "Сообщений"
+    },
+    "exportChatModel": {
+        "message": "Модель"
+    },
+    "exportGeneratedBy": {
+        "message": "Экспортировано cllama"
+    },
+    "tokenInput": {
+        "message": "Ввод"
+    },
+    "tokenOutput": {
+        "message": "Вывод"
+    },
+    "tokenTotal": {
+        "message": "Всего"
+    },
+    "tokenCached": {
+        "message": "Из кэша"
+    },
+    "tokenUnit": {
+        "message": "токенов"
+    },
+    "tokenEstimatedHint": {
+        "message": "Числа со знаком ≈ — это оценка: сервис не вернул точный расход."
+    },
+    "thinking": {
+        "message": "Размышления"
+    },
+    "user": {
+        "message": "Вы"
     }
 }

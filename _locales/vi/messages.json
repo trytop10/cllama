@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "Xuất hội thoại"
+    },
+    "exportChatEmpty": {
+        "message": "Phiên này chưa có nội dung để xuất."
+    },
+    "exportChatMessages": {
+        "message": "Số tin nhắn"
+    },
+    "exportChatModel": {
+        "message": "Mô hình"
+    },
+    "exportGeneratedBy": {
+        "message": "Được xuất bởi cllama"
+    },
+    "tokenInput": {
+        "message": "Đầu vào"
+    },
+    "tokenOutput": {
+        "message": "Đầu ra"
+    },
+    "tokenTotal": {
+        "message": "Tổng"
+    },
+    "tokenCached": {
+        "message": "Bộ nhớ đệm"
+    },
+    "tokenUnit": {
+        "message": "tokens"
+    },
+    "tokenEstimatedHint": {
+        "message": "Số có dấu ≈ là ước tính: dịch vụ không trả về mức dùng chính xác."
+    },
+    "thinking": {
+        "message": "Suy luận"
+    },
+    "user": {
+        "message": "Bạn"
     }
 }

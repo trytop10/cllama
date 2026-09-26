@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "チャットをエクスポート"
+    },
+    "exportChatEmpty": {
+        "message": "このセッションにはまだエクスポートできる内容がありません。"
+    },
+    "exportChatMessages": {
+        "message": "メッセージ数"
+    },
+    "exportChatModel": {
+        "message": "モデル"
+    },
+    "exportGeneratedBy": {
+        "message": "cllama によるエクスポート"
+    },
+    "tokenInput": {
+        "message": "入力"
+    },
+    "tokenOutput": {
+        "message": "出力"
+    },
+    "tokenTotal": {
+        "message": "合計"
+    },
+    "tokenCached": {
+        "message": "キャッシュ"
+    },
+    "tokenUnit": {
+        "message": "tokens"
+    },
+    "tokenEstimatedHint": {
+        "message": "≈ 付きの数値は推定値です（サービスが正確な使用量を返していません）。"
+    },
+    "thinking": {
+        "message": "思考"
+    },
+    "user": {
+        "message": "あなた"
     }
 }

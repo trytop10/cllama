@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "Sohbeti dışa aktar"
+    },
+    "exportChatEmpty": {
+        "message": "Bu oturumda dışa aktarılacak içerik yok."
+    },
+    "exportChatMessages": {
+        "message": "Mesaj"
+    },
+    "exportChatModel": {
+        "message": "Model"
+    },
+    "exportGeneratedBy": {
+        "message": "cllama ile dışa aktarıldı"
+    },
+    "tokenInput": {
+        "message": "Giriş"
+    },
+    "tokenOutput": {
+        "message": "Çıkış"
+    },
+    "tokenTotal": {
+        "message": "Toplam"
+    },
+    "tokenCached": {
+        "message": "Önbellek"
+    },
+    "tokenUnit": {
+        "message": "token"
+    },
+    "tokenEstimatedHint": {
+        "message": "≈ işaretli sayılar tahminidir; hizmet kesin kullanımı bildirmedi."
+    },
+    "thinking": {
+        "message": "Düşünme"
+    },
+    "user": {
+        "message": "Siz"
     }
 }

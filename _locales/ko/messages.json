@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "챗 내보내기"
+    },
+    "exportChatEmpty": {
+        "message": "이 세션에는 내보낼 내용이 없습니다."
+    },
+    "exportChatMessages": {
+        "message": "메시지 수"
+    },
+    "exportChatModel": {
+        "message": "모델"
+    },
+    "exportGeneratedBy": {
+        "message": "cllama에서 내보냄"
+    },
+    "tokenInput": {
+        "message": "입력"
+    },
+    "tokenOutput": {
+        "message": "출력"
+    },
+    "tokenTotal": {
+        "message": "합계"
+    },
+    "tokenCached": {
+        "message": "캐시됨"
+    },
+    "tokenUnit": {
+        "message": "tokens"
+    },
+    "tokenEstimatedHint": {
+        "message": "≈ 표시된 숫자는 추정치입니다(서비스가 정확한 사용량을 반환하지 않았습니다)."
+    },
+    "thinking": {
+        "message": "사고 과정"
+    },
+    "user": {
+        "message": "나"
     }
 }

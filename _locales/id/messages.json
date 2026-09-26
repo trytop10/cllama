@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "Ekspor obrolan"
+    },
+    "exportChatEmpty": {
+        "message": "Belum ada yang bisa diekspor di sesi ini."
+    },
+    "exportChatMessages": {
+        "message": "Pesan"
+    },
+    "exportChatModel": {
+        "message": "Model"
+    },
+    "exportGeneratedBy": {
+        "message": "Diekspor oleh cllama"
+    },
+    "tokenInput": {
+        "message": "Masukan"
+    },
+    "tokenOutput": {
+        "message": "Keluaran"
+    },
+    "tokenTotal": {
+        "message": "Total"
+    },
+    "tokenCached": {
+        "message": "Cache"
+    },
+    "tokenUnit": {
+        "message": "token"
+    },
+    "tokenEstimatedHint": {
+        "message": "Angka dengan ≈ adalah perkiraan — layanan tidak mengembalikan penggunaan yang tepat."
+    },
+    "thinking": {
+        "message": "Penalaran"
+    },
+    "user": {
+        "message": "Anda"
     }
 }

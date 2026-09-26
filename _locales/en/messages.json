@@ -720,5 +720,44 @@
     },
     "storageUsage": {
         "message": "Local storage used: {size}"
+    },
+    "exportChat": {
+        "message": "Export chat"
+    },
+    "exportChatEmpty": {
+        "message": "Nothing to export in this session yet."
+    },
+    "exportChatMessages": {
+        "message": "Messages"
+    },
+    "exportChatModel": {
+        "message": "Model"
+    },
+    "exportGeneratedBy": {
+        "message": "Exported by cllama"
+    },
+    "tokenInput": {
+        "message": "Input"
+    },
+    "tokenOutput": {
+        "message": "Output"
+    },
+    "tokenTotal": {
+        "message": "Total"
+    },
+    "tokenCached": {
+        "message": "Cached"
+    },
+    "tokenUnit": {
+        "message": "tokens"
+    },
+    "tokenEstimatedHint": {
+        "message": "Numbers marked with ≈ are estimated — the service did not return exact usage."
+    },
+    "thinking": {
+        "message": "Thinking"
+    },
+    "user": {
+        "message": "You"
     }
 }
