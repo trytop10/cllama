@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "Đang suy nghĩ, vui lòng chờ..."
     },
-    "confirmClearChat": {
-        "message": "Bạn có xác nhận xóa lịch sử cuộc trò chuyện này không?"
+    "confirmDeleteChat": {
+        "message": "Xóa cuộc trò chuyện này? Không thể hoàn tác."
     },
     "insightifyPageError1": {
         "message": "Tiêu đề và nội dung trống, không thể tạo thông tin liên quan đến trang."
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Vẫn đang có câu trả lời: hãy suy ngẫm sau khi xong."
+    },
+    "chatSearch": {
+        "message": "Tìm trong lịch sử trò chuyện"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Tìm trong cuộc trò chuyện này…"
+    },
+    "chatSearchPrev": {
+        "message": "Kết quả trước"
+    },
+    "chatSearchNext": {
+        "message": "Kết quả sau"
+    },
+    "chatSearchClose": {
+        "message": "Đóng tìm kiếm"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Không có kết quả"
+    },
+    "chatSearchScopeSession": {
+        "message": "Cuộc trò chuyện này"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Kịch bản này"
+    },
+    "chatSearchScopeAll": {
+        "message": "Tất cả kịch bản"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Hãy đợi câu trả lời hiện tại kết thúc."
+    },
+    "bookmarkAdd": {
+        "message": "Đánh dấu câu trả lời này"
+    },
+    "bookmarkRemove": {
+        "message": "Bỏ đánh dấu"
+    },
+    "bookmarkList": {
+        "message": "Đã đánh dấu"
+    },
+    "bookmarkEmpty": {
+        "message": "Chưa có mục nào. Nhấn ★ trên câu trả lời để lưu vào đây."
+    },
+    "bookmarkJump": {
+        "message": "Đi tới tin nhắn"
+    },
+    "bookmarkGone": {
+        "message": "Cuộc trò chuyện gốc đã bị xóa"
+    },
+    "bookmarkAdded": {
+        "message": "Đã lưu vào mục đánh dấu"
+    },
+    "bookmarkRemoved": {
+        "message": "Đã bỏ đánh dấu"
+    },
+    "bookmarkLimitReached": {
+        "message": "Đã đạt giới hạn đánh dấu - hãy xóa bớt trước."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "Nội dung quá dài nên đã bị cắt"
+    },
+    "newChat": {
+        "message": "Cuộc trò chuyện mới"
+    },
+    "deleteChat": {
+        "message": "Xóa cuộc trò chuyện này"
+    },
+    "uploadFile": {
+        "message": "Đính kèm tệp"
+    },
+    "collapseAll": {
+        "message": "Thu gọn tất cả"
+    },
+    "expandAll": {
+        "message": "Mở rộng tất cả"
+    },
+    "apiSettingsTitle": {
+        "message": "Tham số tạo sinh"
+    },
+    "aboutTitle": {
+        "message": "Giới thiệu"
+    },
+    "aboutHomepage": {
+        "message": "Trang chủ tiện ích"
+    },
+    "aboutSource": {
+        "message": "Mã nguồn"
     }
 }

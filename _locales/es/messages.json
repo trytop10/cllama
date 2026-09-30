@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "Por favor ayúdame a generar una indicación de 'asesor legal'"
     },
-    "confirmClearChat": {
-        "message": "¿Borrar este historial de chat?"
+    "confirmDeleteChat": {
+        "message": "¿Eliminar esta conversación? No se puede deshacer."
     },
     "apiSettingsCreativityLabel": {
         "message": "Creatividad (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Todavía hay una respuesta en curso: reflexiona cuando termine."
+    },
+    "chatSearch": {
+        "message": "Buscar en el historial"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Buscar en este chat…"
+    },
+    "chatSearchPrev": {
+        "message": "Coincidencia anterior"
+    },
+    "chatSearchNext": {
+        "message": "Coincidencia siguiente"
+    },
+    "chatSearchClose": {
+        "message": "Cerrar búsqueda"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Sin coincidencias"
+    },
+    "chatSearchScopeSession": {
+        "message": "Este chat"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Este escenario"
+    },
+    "chatSearchScopeAll": {
+        "message": "Todos los escenarios"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Espera a que termine la respuesta actual."
+    },
+    "bookmarkAdd": {
+        "message": "Guardar esta respuesta"
+    },
+    "bookmarkRemove": {
+        "message": "Quitar de favoritos"
+    },
+    "bookmarkList": {
+        "message": "Favoritos"
+    },
+    "bookmarkEmpty": {
+        "message": "Aún no hay favoritos. Haz clic en la estrella de una respuesta para guardarla aquí."
+    },
+    "bookmarkJump": {
+        "message": "Ir al mensaje"
+    },
+    "bookmarkGone": {
+        "message": "La conversación original se eliminó"
+    },
+    "bookmarkAdded": {
+        "message": "Guardada en favoritos"
+    },
+    "bookmarkRemoved": {
+        "message": "Favorito eliminado"
+    },
+    "bookmarkLimitReached": {
+        "message": "Se alcanzó el límite de favoritos: elimina algunos primero."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "El contenido era demasiado largo y se ha truncado"
+    },
+    "newChat": {
+        "message": "Nuevo chat"
+    },
+    "deleteChat": {
+        "message": "Eliminar este chat"
+    },
+    "uploadFile": {
+        "message": "Adjuntar archivo"
+    },
+    "collapseAll": {
+        "message": "Contraer todo"
+    },
+    "expandAll": {
+        "message": "Expandir todo"
+    },
+    "apiSettingsTitle": {
+        "message": "Parámetros de generación"
+    },
+    "aboutTitle": {
+        "message": "Acerca de"
+    },
+    "aboutHomepage": {
+        "message": "Página del complemento"
+    },
+    "aboutSource": {
+        "message": "Código fuente"
     }
 }

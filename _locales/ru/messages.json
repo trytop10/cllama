@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "Пожалуйста, помогите мне сгенерировать промт для 'юридического консультанта'"
     },
-    "confirmClearChat": {
-        "message": "Очистить историю этого чата?"
+    "confirmDeleteChat": {
+        "message": "Удалить этот диалог? Это действие нельзя отменить."
     },
     "apiSettingsCreativityLabel": {
         "message": "Креативность (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Ещё идёт ответ — сделайте рефлексию после его завершения."
+    },
+    "chatSearch": {
+        "message": "Поиск по истории чата"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Поиск в этом чате…"
+    },
+    "chatSearchPrev": {
+        "message": "Предыдущее совпадение"
+    },
+    "chatSearchNext": {
+        "message": "Следующее совпадение"
+    },
+    "chatSearchClose": {
+        "message": "Закрыть поиск"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Нет совпадений"
+    },
+    "chatSearchScopeSession": {
+        "message": "Этот чат"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Этот сценарий"
+    },
+    "chatSearchScopeAll": {
+        "message": "Все сценарии"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Дождитесь окончания текущего ответа."
+    },
+    "bookmarkAdd": {
+        "message": "Добавить ответ в закладки"
+    },
+    "bookmarkRemove": {
+        "message": "Убрать из закладок"
+    },
+    "bookmarkList": {
+        "message": "Закладки"
+    },
+    "bookmarkEmpty": {
+        "message": "Закладок пока нет. Нажмите ★ в ответе, чтобы сохранить его здесь."
+    },
+    "bookmarkJump": {
+        "message": "Перейти к сообщению"
+    },
+    "bookmarkGone": {
+        "message": "Исходный диалог удалён"
+    },
+    "bookmarkAdded": {
+        "message": "Добавлено в закладки"
+    },
+    "bookmarkRemoved": {
+        "message": "Удалено из закладок"
+    },
+    "bookmarkLimitReached": {
+        "message": "Достигнут лимит закладок - сначала удалите несколько."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "Содержимое было слишком длинным и обрезано"
+    },
+    "newChat": {
+        "message": "Новый чат"
+    },
+    "deleteChat": {
+        "message": "Удалить этот чат"
+    },
+    "uploadFile": {
+        "message": "Прикрепить файл"
+    },
+    "collapseAll": {
+        "message": "Свернуть всё"
+    },
+    "expandAll": {
+        "message": "Развернуть всё"
+    },
+    "apiSettingsTitle": {
+        "message": "Параметры генерации"
+    },
+    "aboutTitle": {
+        "message": "О расширении"
+    },
+    "aboutHomepage": {
+        "message": "Страница расширения"
+    },
+    "aboutSource": {
+        "message": "Исходный код"
     }
 }

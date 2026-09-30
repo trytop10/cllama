@@ -9,6 +9,7 @@ import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, r
 import { hasUsage, makeEstimatedUsage, mergeUsage } from './token-usage.mjs';
 import { parseToolCalls, parseToolCallsDetailed, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, listTools, registerTool, getTool, previewToolArgs, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 import { dedupeLessons, normalizeLesson } from './scenario-learn.mjs';
+import { MAX_BOOKMARKS, addBookmark, bookmarkId, isBookmarked, makeBookmark, normalizeBookmarks, removeBookmark } from './chat-bookmarks.mjs';
 
 
 // Default configuration
@@ -1217,6 +1218,10 @@ export const DB_KEY = {
   // Learned notes per chat scenario (see js/scenario-learn.mjs): a manual,
   // user-confirmed way for a scenario to improve itself over time.
   scenarioLearn: "scenarioLearn",
+  // Bookmarked answers (see js/chat-bookmarks.mjs). Each entry is a snapshot of
+  // the message plus a reference to it, so clearing a session never loses a
+  // favourite.
+  chatBookmarks: "chatBookmarks",
   // Tool-governance keys:
   pendingToolConfirm: "pendingToolConfirm", // side-effect tool awaiting user confirmation
   toolGrants: "toolGrants",                 // "session:tool" pairs allowed without re-asking
@@ -1780,6 +1785,74 @@ export async function clearLessons(scenarioId) {
     updatedAt: Date.now()
   });
   return count;
+}
+
+// ------------------- Bookmarked answers (收藏) -------------------
+// A bookmark is a snapshot of one message plus a reference to it. The pure rules
+// (id, snapshot, validation, list operations, grouping) live in
+// js/chat-bookmarks.mjs; this is only the storage boundary.
+
+/**
+ * Read every bookmark, dropping the entries that cannot be parsed.
+ * @returns {Promise<Array<Object>>} Bookmarks in stored order
+ */
+export async function loadBookmarks() {
+  const data = await browser.storage.local.get(DB_KEY.chatBookmarks);
+  return normalizeBookmarks(data?.[DB_KEY.chatBookmarks]);
+}
+
+/**
+ * Store the list, after re-validating it (a corrupted entry must never reach the
+ * storage write).
+ * @param {Array<Object>} list - Bookmarks to store
+ * @returns {Promise<number>} How many were stored
+ */
+async function saveBookmarks(list) {
+  const clean = normalizeBookmarks(list);
+  await browser.storage.local.set({ [DB_KEY.chatBookmarks]: clean });
+  return clean.length;
+}
+
+/**
+ * Add or remove the bookmark of one message; the single write path used by the
+ * star button. Idempotent: bookmarking twice is a no-op ('exists').
+ * @param {Object} record - History record ({ role, content, rtime, model, fileInfo })
+ * @param {Object} context - { scenarioId, sessionId, scenarioName, sessionName }
+ * @returns {Promise<Object>} { ok, bookmarked, action, count }
+ *   action is one of 'created' | 'removed' | 'exists' | 'atCapacity' | 'invalid'
+ */
+export async function toggleBookmark(record, context = {}) {
+  const list = await loadBookmarks();
+  const id = bookmarkId(context.scenarioId, context.sessionId, record?.rtime);
+  if (!id) return { ok: false, bookmarked: false, action: 'invalid', count: list.length };
+
+  if (isBookmarked(list, id)) {
+    const next = removeBookmark(list, id);
+    await saveBookmarks(next.list);
+    return { ok: true, bookmarked: false, action: 'removed', count: next.list.length };
+  }
+
+  const made = makeBookmark(record, context);
+  if (!made.ok) return { ok: false, bookmarked: false, action: 'invalid', count: list.length };
+
+  const added = addBookmark(list, made.bookmark, { max: MAX_BOOKMARKS });
+  if (added.action === 'atCapacity') {
+    return { ok: false, bookmarked: false, action: 'atCapacity', count: list.length };
+  }
+  await saveBookmarks(added.list);
+  return { ok: true, bookmarked: true, action: added.action, count: added.list.length };
+}
+
+/**
+ * Remove one bookmark (the Delete button of the bookmarks panel).
+ * @param {string} id - Bookmark id
+ * @returns {Promise<Object>} { ok, removed, count }
+ */
+export async function deleteBookmark(id) {
+  const list = await loadBookmarks();
+  const result = removeBookmark(list, id);
+  if (result.removed) await saveBookmarks(result.list);
+  return { ok: result.removed, removed: result.removed, count: result.list.length };
 }
 
 /**

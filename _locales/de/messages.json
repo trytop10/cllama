@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "Bitte generieren Sie eine 'Rechtsberater'-Aufforderung"
     },
-    "confirmClearChat": {
-        "message": "Diesen Chatverlauf wirklich löschen?"
+    "confirmDeleteChat": {
+        "message": "Diesen Chat löschen? Das kann nicht rückgängig gemacht werden."
     },
     "apiSettingsCreativityLabel": {
         "message": "Kreativität (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Es läuft noch eine Antwort - reflektiere danach."
+    },
+    "chatSearch": {
+        "message": "Chatverlauf durchsuchen"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Diesen Chat durchsuchen…"
+    },
+    "chatSearchPrev": {
+        "message": "Vorheriger Treffer"
+    },
+    "chatSearchNext": {
+        "message": "Nächster Treffer"
+    },
+    "chatSearchClose": {
+        "message": "Suche schließen"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Kein Treffer"
+    },
+    "chatSearchScopeSession": {
+        "message": "Dieser Chat"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Dieses Szenario"
+    },
+    "chatSearchScopeAll": {
+        "message": "Alle Szenarien"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Warte, bis die aktuelle Antwort fertig ist."
+    },
+    "bookmarkAdd": {
+        "message": "Diese Antwort als Lesezeichen speichern"
+    },
+    "bookmarkRemove": {
+        "message": "Lesezeichen entfernen"
+    },
+    "bookmarkList": {
+        "message": "Lesezeichen"
+    },
+    "bookmarkEmpty": {
+        "message": "Noch keine Lesezeichen. Klicke auf den Stern einer Antwort, um sie hier zu speichern."
+    },
+    "bookmarkJump": {
+        "message": "Zur Nachricht springen"
+    },
+    "bookmarkGone": {
+        "message": "Der ursprüngliche Chat wurde gelöscht"
+    },
+    "bookmarkAdded": {
+        "message": "Als Lesezeichen gespeichert"
+    },
+    "bookmarkRemoved": {
+        "message": "Lesezeichen entfernt"
+    },
+    "bookmarkLimitReached": {
+        "message": "Lesezeichen-Limit erreicht - entferne zuerst einige."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "Der Inhalt war zu lang und wurde gekürzt"
+    },
+    "newChat": {
+        "message": "Neuer Chat"
+    },
+    "deleteChat": {
+        "message": "Diesen Chat löschen"
+    },
+    "uploadFile": {
+        "message": "Datei anhängen"
+    },
+    "collapseAll": {
+        "message": "Alle einklappen"
+    },
+    "expandAll": {
+        "message": "Alle ausklappen"
+    },
+    "apiSettingsTitle": {
+        "message": "Generierungsparameter"
+    },
+    "aboutTitle": {
+        "message": "Über"
+    },
+    "aboutHomepage": {
+        "message": "Plugin-Startseite"
+    },
+    "aboutSource": {
+        "message": "Quellcode"
     }
 }

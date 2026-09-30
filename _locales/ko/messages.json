@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "생각 중입니다. 잠시 기다려 주십시오..."
     },
-    "confirmClearChat": {
-        "message": "이 대화 기록을 삭제하시겠습니까?"
+    "confirmDeleteChat": {
+        "message": "이 대화를 삭제할까요? 되돌릴 수 없습니다."
     },
     "insightifyPageError1": {
         "message": "제목과 내용이 비어 있어 페이지 관련 정보를 생성할 수 없습니다."
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "아직 답변 중입니다. 이 턴이 끝난 뒤 되돌아보세요."
+    },
+    "chatSearch": {
+        "message": "채팅 기록 검색"
+    },
+    "chatSearchPlaceholder": {
+        "message": "이 채팅에서 검색…"
+    },
+    "chatSearchPrev": {
+        "message": "이전 일치"
+    },
+    "chatSearchNext": {
+        "message": "다음 일치"
+    },
+    "chatSearchClose": {
+        "message": "검색 닫기"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "일치 항목 없음"
+    },
+    "chatSearchScopeSession": {
+        "message": "이 채팅"
+    },
+    "chatSearchScopeScenario": {
+        "message": "이 시나리오"
+    },
+    "chatSearchScopeAll": {
+        "message": "모든 시나리오"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "현재 답변이 끝날 때까지 기다려 주세요."
+    },
+    "bookmarkAdd": {
+        "message": "이 답변을 북마크"
+    },
+    "bookmarkRemove": {
+        "message": "북마크 해제"
+    },
+    "bookmarkList": {
+        "message": "북마크"
+    },
+    "bookmarkEmpty": {
+        "message": "아직 북마크가 없습니다. 답변의 ★를 클릭하면 여기에 저장됩니다."
+    },
+    "bookmarkJump": {
+        "message": "메시지로 이동"
+    },
+    "bookmarkGone": {
+        "message": "원본 대화가 삭제되었습니다"
+    },
+    "bookmarkAdded": {
+        "message": "북마크에 추가했습니다"
+    },
+    "bookmarkRemoved": {
+        "message": "북마크를 해제했습니다"
+    },
+    "bookmarkLimitReached": {
+        "message": "북마크 한도에 도달했습니다. 먼저 일부를 삭제하세요."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "내용이 너무 길어 잘라서 저장했습니다"
+    },
+    "newChat": {
+        "message": "새 채팅"
+    },
+    "deleteChat": {
+        "message": "이 채팅 삭제"
+    },
+    "uploadFile": {
+        "message": "파일 첨부"
+    },
+    "collapseAll": {
+        "message": "모두 접기"
+    },
+    "expandAll": {
+        "message": "모두 펼치기"
+    },
+    "apiSettingsTitle": {
+        "message": "생성 매개변수"
+    },
+    "aboutTitle": {
+        "message": "정보"
+    },
+    "aboutHomepage": {
+        "message": "플러그인 홈페이지"
+    },
+    "aboutSource": {
+        "message": "소스 코드"
     }
 }

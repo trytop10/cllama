@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "思考中，请稍候......"
     },
-    "confirmClearChat": {
-        "message": "您确认删除此会话记录吗？"
+    "confirmDeleteChat": {
+        "message": "删除本对话？此操作无法撤销。"
     },
     "insightifyPageError1": {
         "message": "标题和内容为空，不能生成页面相关信息。"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "当前正在回答，请等这一轮结束后再反思。"
+    },
+    "chatSearch": {
+        "message": "搜索聊天记录"
+    },
+    "chatSearchPlaceholder": {
+        "message": "搜索本对话…"
+    },
+    "chatSearchPrev": {
+        "message": "上一个匹配"
+    },
+    "chatSearchNext": {
+        "message": "下一个匹配"
+    },
+    "chatSearchClose": {
+        "message": "关闭搜索"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "无匹配"
+    },
+    "chatSearchScopeSession": {
+        "message": "本对话"
+    },
+    "chatSearchScopeScenario": {
+        "message": "本场景"
+    },
+    "chatSearchScopeAll": {
+        "message": "全部场景"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "请等待当前回答结束后再跳转。"
+    },
+    "bookmarkAdd": {
+        "message": "收藏这条回答"
+    },
+    "bookmarkRemove": {
+        "message": "取消收藏"
+    },
+    "bookmarkList": {
+        "message": "收藏夹"
+    },
+    "bookmarkEmpty": {
+        "message": "还没有收藏。点回答右上角的 ★ 即可收藏到这里。"
+    },
+    "bookmarkJump": {
+        "message": "跳转到该消息"
+    },
+    "bookmarkGone": {
+        "message": "原对话已删除"
+    },
+    "bookmarkAdded": {
+        "message": "已收藏"
+    },
+    "bookmarkRemoved": {
+        "message": "已取消收藏"
+    },
+    "bookmarkLimitReached": {
+        "message": "收藏已达上限，请先删除一些再添加。"
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "内容过长，已截断保存"
+    },
+    "newChat": {
+        "message": "新建对话"
+    },
+    "deleteChat": {
+        "message": "删除本对话"
+    },
+    "uploadFile": {
+        "message": "添加附件"
+    },
+    "collapseAll": {
+        "message": "全部折叠"
+    },
+    "expandAll": {
+        "message": "全部展开"
+    },
+    "apiSettingsTitle": {
+        "message": "生成参数"
+    },
+    "aboutTitle": {
+        "message": "关于"
+    },
+    "aboutHomepage": {
+        "message": "插件主页"
+    },
+    "aboutSource": {
+        "message": "源代码"
     }
 }

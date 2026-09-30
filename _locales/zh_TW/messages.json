@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "請幫我生成一個'法律顧問'的提示詞"
     },
-    "confirmClearChat": {
-        "message": "確定要删除這段對話記錄？"
+    "confirmDeleteChat": {
+        "message": "刪除本對話？此操作無法復原。"
     },
     "apiSettingsCreativityLabel": {
         "message": "創造力 (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "目前正在回答，請等這一輪結束後再反思。"
+    },
+    "chatSearch": {
+        "message": "搜尋聊天記錄"
+    },
+    "chatSearchPlaceholder": {
+        "message": "搜尋本對話…"
+    },
+    "chatSearchPrev": {
+        "message": "上一個符合項"
+    },
+    "chatSearchNext": {
+        "message": "下一個符合項"
+    },
+    "chatSearchClose": {
+        "message": "關閉搜尋"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "無符合項"
+    },
+    "chatSearchScopeSession": {
+        "message": "本對話"
+    },
+    "chatSearchScopeScenario": {
+        "message": "本情境"
+    },
+    "chatSearchScopeAll": {
+        "message": "全部情境"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "請等待目前回答結束後再跳轉。"
+    },
+    "bookmarkAdd": {
+        "message": "收藏這則回答"
+    },
+    "bookmarkRemove": {
+        "message": "取消收藏"
+    },
+    "bookmarkList": {
+        "message": "收藏夾"
+    },
+    "bookmarkEmpty": {
+        "message": "還沒有收藏。點回答右上角的 ★ 即可收藏到這裡。"
+    },
+    "bookmarkJump": {
+        "message": "跳轉到該訊息"
+    },
+    "bookmarkGone": {
+        "message": "原對話已刪除"
+    },
+    "bookmarkAdded": {
+        "message": "已收藏"
+    },
+    "bookmarkRemoved": {
+        "message": "已取消收藏"
+    },
+    "bookmarkLimitReached": {
+        "message": "收藏已達上限，請先刪除一些再加入。"
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "內容過長，已截斷儲存"
+    },
+    "newChat": {
+        "message": "新增對話"
+    },
+    "deleteChat": {
+        "message": "刪除本對話"
+    },
+    "uploadFile": {
+        "message": "加入附件"
+    },
+    "collapseAll": {
+        "message": "全部摺疊"
+    },
+    "expandAll": {
+        "message": "全部展開"
+    },
+    "apiSettingsTitle": {
+        "message": "生成參數"
+    },
+    "aboutTitle": {
+        "message": "關於"
+    },
+    "aboutHomepage": {
+        "message": "外掛首頁"
+    },
+    "aboutSource": {
+        "message": "原始碼"
     }
 }

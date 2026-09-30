@@ -252,12 +252,15 @@ async function exportData() {
     // Process selected options for export
     selectedOptions.forEach(o => {
       if(o === "chatData"){
-        // If "chatData" is selected, export all chat history entries
+        // If "chatData" is selected, export all chat history entries and the
+        // bookmarked answers (a favourite is a snapshot of its own, so it must
+        // travel with the backup or it would be lost on restore).
         for (const k of Object.keys(data)) {
           if(k.startsWith("chatHistory_")){
             expdata[k] = data[k];
           }
         }
+        expdata[DB_KEY.chatBookmarks] = data[DB_KEY.chatBookmarks] || [];
       } else if(o === "base"){
         // If "base" is selected, export base settings and data source list
         expdata[o] = data[o];
@@ -354,7 +357,7 @@ function bindEventListeners() {
   document.getElementById('b_upload').addEventListener('click', function(e){
 
     // Keys that are allowed to be imported from the JSON file
-    const allowedDataKeys = ["base", "dsList", "actionList", "chatTpaList", "insightList", "urls", "skillList", "mcpServers"];
+    const allowedDataKeys = ["base", "dsList", "actionList", "chatTpaList", "insightList", "urls", "skillList", "mcpServers", DB_KEY.chatBookmarks];
 
     const fileInput = document.getElementById('jsonFile');
     const file = fileInput.files[0];

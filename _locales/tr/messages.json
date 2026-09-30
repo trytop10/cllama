@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "Düşünüyorum, lütfen bekleyin..."
     },
-    "confirmClearChat": {
-        "message": "Bu sohbet geçmişini silmek istediğinizi onaylıyor musunuz?"
+    "confirmDeleteChat": {
+        "message": "Bu sohbet silinsin mi? Bu işlem geri alınamaz."
     },
     "insightifyPageError1": {
         "message": "Başlık ve içerik boş, sayfa ile ilgili bilgi oluşturulamıyor."
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Hâlâ süren bir yanıt var: bitince değerlendir."
+    },
+    "chatSearch": {
+        "message": "Sohbet geçmişinde ara"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Bu sohbette ara…"
+    },
+    "chatSearchPrev": {
+        "message": "Önceki eşleşme"
+    },
+    "chatSearchNext": {
+        "message": "Sonraki eşleşme"
+    },
+    "chatSearchClose": {
+        "message": "Aramayı kapat"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Eşleşme yok"
+    },
+    "chatSearchScopeSession": {
+        "message": "Bu sohbet"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Bu senaryo"
+    },
+    "chatSearchScopeAll": {
+        "message": "Tüm senaryolar"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Geçerli yanıtın bitmesini bekleyin."
+    },
+    "bookmarkAdd": {
+        "message": "Bu yanıtı yer imlerine ekle"
+    },
+    "bookmarkRemove": {
+        "message": "Yer imini kaldır"
+    },
+    "bookmarkList": {
+        "message": "Yer imleri"
+    },
+    "bookmarkEmpty": {
+        "message": "Henüz yer imi yok. Bir yanıtın ★ simgesine tıklayarak buraya kaydedin."
+    },
+    "bookmarkJump": {
+        "message": "Mesaja git"
+    },
+    "bookmarkGone": {
+        "message": "Orijinal sohbet silindi"
+    },
+    "bookmarkAdded": {
+        "message": "Yer imlerine eklendi"
+    },
+    "bookmarkRemoved": {
+        "message": "Yer imi kaldırıldı"
+    },
+    "bookmarkLimitReached": {
+        "message": "Yer imi sınırına ulaşıldı - önce bazılarını silin."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "İçerik çok uzundu ve kısaltıldı"
+    },
+    "newChat": {
+        "message": "Yeni sohbet"
+    },
+    "deleteChat": {
+        "message": "Bu sohbeti sil"
+    },
+    "uploadFile": {
+        "message": "Dosya ekle"
+    },
+    "collapseAll": {
+        "message": "Tümünü daralt"
+    },
+    "expandAll": {
+        "message": "Tümünü genişlet"
+    },
+    "apiSettingsTitle": {
+        "message": "Üretim parametreleri"
+    },
+    "aboutTitle": {
+        "message": "Hakkında"
+    },
+    "aboutHomepage": {
+        "message": "Eklenti ana sayfası"
+    },
+    "aboutSource": {
+        "message": "Kaynak kodu"
     }
 }

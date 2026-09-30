@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "Please help me generate a 'legal advisor' prompt"
     },
-    "confirmClearChat": {
-        "message": "Clear this chat history?"
+    "confirmDeleteChat": {
+        "message": "Delete this conversation? This cannot be undone."
     },
     "apiSettingsCreativityLabel": {
         "message": "Creativity (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "A turn is still running - reflect once it finishes."
+    },
+    "chatSearch": {
+        "message": "Search chat history"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Search this chat…"
+    },
+    "chatSearchPrev": {
+        "message": "Previous match"
+    },
+    "chatSearchNext": {
+        "message": "Next match"
+    },
+    "chatSearchClose": {
+        "message": "Close search"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "No match"
+    },
+    "chatSearchScopeSession": {
+        "message": "This chat"
+    },
+    "chatSearchScopeScenario": {
+        "message": "This scenario"
+    },
+    "chatSearchScopeAll": {
+        "message": "All scenarios"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Wait for the current answer to finish."
+    },
+    "bookmarkAdd": {
+        "message": "Bookmark this answer"
+    },
+    "bookmarkRemove": {
+        "message": "Remove bookmark"
+    },
+    "bookmarkList": {
+        "message": "Bookmarks"
+    },
+    "bookmarkEmpty": {
+        "message": "No bookmarks yet. Click the star on an answer to save it here."
+    },
+    "bookmarkJump": {
+        "message": "Go to message"
+    },
+    "bookmarkGone": {
+        "message": "The original conversation was deleted"
+    },
+    "bookmarkAdded": {
+        "message": "Bookmarked"
+    },
+    "bookmarkRemoved": {
+        "message": "Bookmark removed"
+    },
+    "bookmarkLimitReached": {
+        "message": "Bookmark limit reached - remove some before adding more."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "Content was too long and has been truncated"
+    },
+    "newChat": {
+        "message": "New chat"
+    },
+    "deleteChat": {
+        "message": "Delete this chat"
+    },
+    "uploadFile": {
+        "message": "Attach a file"
+    },
+    "collapseAll": {
+        "message": "Collapse all"
+    },
+    "expandAll": {
+        "message": "Expand all"
+    },
+    "apiSettingsTitle": {
+        "message": "Generation parameters"
+    },
+    "aboutTitle": {
+        "message": "About"
+    },
+    "aboutHomepage": {
+        "message": "Plugin homepage"
+    },
+    "aboutSource": {
+        "message": "Source code"
     }
 }

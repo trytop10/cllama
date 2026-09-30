@@ -1,11 +1,13 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
+import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
 import { initMcpTools } from '../js/mcp.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
 import { balert } from '../js/dialog.mjs';
 import { buildChatHtml, buildExportFileName } from '../js/chat-export.mjs';
+import { findMatches, searchHistoryStore } from '../js/chat-search.mjs';
 import { formatUsage } from '../js/token-usage.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
 import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
@@ -31,6 +33,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const skillBar = document.getElementById("skillBar");
     const skillNameSpan = document.getElementById("skillName");
     const bSkillSettings = document.getElementById("b_skillSettings");
+    const bSearch = document.getElementById("b_search");
+    const searchBar = document.getElementById("chatSearch");
+    const searchInput = document.getElementById("searchInput");
+    const searchScope = document.getElementById("searchScope");
+    const searchCount = document.getElementById("searchCount");
+    const searchPrev = document.getElementById("searchPrev");
+    const searchNext = document.getElementById("searchNext");
+    const searchClose = document.getElementById("searchClose");
+    const searchResults = document.getElementById("chatSearchResults");
+    const bBookmarks = document.getElementById("b_bookmarks");
+    const bookmarkPanel = document.getElementById("bookmarkPanel");
+    const scenarioCluster = document.getElementById("scenarioCluster");
 
     if (bSkillSettings) {
         bSkillSettings.title = browser.i18n.getMessage("expSkills") || 'Skills';
@@ -42,10 +56,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
     
-    if (bFish) {
-        bFish.title = browser.i18n.getMessage("fish_title");
-    }
+    // About menu: the anchors keep their href (middle-click and "copy link" work),
+    // but a plain click goes through tabs.create so it behaves the same in the
+    // Chrome side panel and in the Firefox sidebar.
+    document.querySelectorAll('#aboutMenu a[href]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = link.getAttribute('href');
+            try {
+                const opened = browser.tabs.create({ url });
+                if (opened?.catch) opened.catch(err => console.warn('Failed to open the About link:', err));
+            } catch (err) {
+                console.warn('Failed to open the About link:', err);
+            }
+        });
+    });
 
+    // Tooltips of the toolbar icons come from the HTML (`class="i18n"
+    // i18n="title" title="<message key>"`, applied by i18n() at the end of this
+    // handler), so there is exactly one place to look for them.
     if (bCollapseAll) {
         bCollapseAll.addEventListener('click', (e) => {
             e.preventDefault();
@@ -60,13 +89,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             const messages = messagesContainer.querySelectorAll('.message');
             messages.forEach(msg => msg.classList.remove('collapsed-message'));
         });
-    }
-
-    // Export button: title comes from i18n (the HTML only carries an English
-    // fallback for the rare case the message is missing).
-    const bExport = document.getElementById("b_export");
-    if (bExport) {
-        bExport.title = browser.i18n.getMessage("exportChat") || 'Export chat';
     }
 
     // Scenario learning controls: "Reflect" runs one review turn (see
@@ -826,6 +848,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                         pdiv.dataset.timestamp = assistantMessageToAdd.rtime;
                         pdiv.querySelector(".copy-message-btn").setAttribute("data-flag", "true");
                         pdiv.querySelector(".delete-message-btn").setAttribute("data-flag", "true");
+                        // The star only becomes usable now: the placeholder used a
+                        // provisional rtime, so its state has to be recomputed
+                        // against the final one.
+                        const starBtn = pdiv.querySelector(".bookmark-message-btn");
+                        if (starBtn) {
+                            starBtn.setAttribute("data-flag", "true");
+                            refreshBookmarkButton(pdiv);
+                        }
                         // Persisted usage (or its local estimate) of this answer.
                         setTokenUsage(pdiv, assistantMessageToAdd.usage);
                     }
@@ -975,6 +1005,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="message-time">${timeString}</span>
                     ${fileInfo ? `<a href="#" class="activate-message-btn" data-flag="${flag}" style="margin-left: 5px;text-decoration: none;font-size: 10pt;" title="${browser.i18n.getMessage("activate")}">${fileInfo.send ? '☑' : '◻'}</a>` : ''}
                     <img src="/images/copy.svg" class="copy-message-btn" data-flag="${flag}" style="height:13px;" title="${browser.i18n.getMessage("copy")}" />
+                    <button type="button" class="bookmark-message-btn" data-flag="${flag}" title="${browser.i18n.getMessage("bookmarkAdd")}">
+                        <svg viewBox="0 0 576 512" aria-hidden="true"><use href="#svg_star"></use></svg>
+                    </button>
                     <img src="/images/clear.svg" class="delete-message-btn" data-flag="${flag}" style="height:13px;" title="${browser.i18n.getMessage("delete")}"/>
                     ${isSelf ? `<span class="resend-message-btn" style="cursor:pointer;display:none;margin-left:5px;font-size:13px;" title="${browser.i18n.getMessage("resend")}">↺</span>` : ''}
                 </div>
@@ -992,6 +1025,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         attachMessageEventListeners(messageDiv, fileInfo);
+        refreshBookmarkButton(messageDiv);
         messagesContainer.appendChild(messageDiv);
         updateCollapseExpandButtonsState();
 
@@ -1088,11 +1122,43 @@ document.addEventListener("DOMContentLoaded", async () => {
                 historyMessages = historyMessages.filter(msg => msg.rtime !== msgTimestamp);
                 if (existed) saveCurrentSession();
                 messageDiv.remove();
-                updateResendButtonVisibility();
                 updateCollapseExpandButtonsState();
+                updateResendButtonVisibility();
                 updateLearnControls();
+                // Deleting a bubble can remove hits the bar was counting.
+                applySearchAfterRender();
             }
         });
+
+        const bookmarkBtn = messageDiv.querySelector('.bookmark-message-btn');
+        if (bookmarkBtn) {
+            bookmarkBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // A streaming answer is not final yet: its rtime is still the
+                // placeholder value, so the bookmark would never match the stored
+                // record. Same convention as the file-activation button.
+                if (bookmarkBtn.getAttribute('data-flag') === 'false') {
+                    showChatToast(browser.i18n.getMessage('chatSearchBusy') || 'Wait for the answer to finish.');
+                    return;
+                }
+
+                const rtime = parseInt(messageDiv.dataset.timestamp, 10);
+                const record = historyMessages.find(item => item.rtime === rtime) || {
+                    role: messageDiv.classList.contains('user-message') ? 'user' : 'assistant',
+                    content: messageTextFallback(messageDiv),
+                    rtime
+                };
+
+                const result = await toggleBookmark(record, {
+                    scenarioId: ccId || '0',
+                    sessionId: currentSessionId,
+                    scenarioName: currentScenarioName(),
+                    sessionName: currentSessionName()
+                });
+                applyBookmarkResult(messageDiv, result);
+            });
+        }
 
         if (activateBtn) {
             activateBtn.addEventListener('click', async (e) => {
@@ -1850,6 +1916,8 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function updateLearnControls() {
         const scenario = hasScenario();
+        // The cluster carries its own divider, so hiding it hides the divider too.
+        if (scenarioCluster) scenarioCluster.style.display = scenario ? '' : 'none';
         for (const el of [bReflect, bLessons]) {
             if (el) el.style.display = scenario ? '' : 'none';
         }
@@ -2278,7 +2346,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!stopFlag) return;
         e.preventDefault();
 
-        const confirmed = await confirmDialog(browser.i18n.getMessage('confirmClearChat'));
+        const confirmed = await confirmDialog(browser.i18n.getMessage('confirmDeleteChat'));
         if (!confirmed) return;
 
         const currentScenario = ccId || "0";
@@ -2362,11 +2430,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             messagesContainer.innerText = "";
             historyMessages = [];
+            clearSearchHighlights();
             updateChatRecordsList(scenarioData.history, scenarioData.currentId);
             checkAndShowSampleMessage(currentScenario, scenarioData.currentId);
             currentSessionId = newSessionId;
             renderPendingCards();
             updateLearnControls();
+            // The conversation on screen was replaced: refresh the search bar so
+            // it does not keep reporting the hits of the session that was left.
+            applySearchAfterRender();
 
              updateCollapseExpandButtonsState();
         });       
@@ -2453,11 +2525,857 @@ document.addEventListener("DOMContentLoaded", async () => {
         await exportCurrentSession();
     });
 
+    /* ── Chat-history search ──────────────────────────────────────────────────
+       One bar, two scopes. "session" walks the conversation on screen and wraps
+       every match in a <mark> (what you see is what is searched); "scenario" and
+       "all" scan the stored `chatHistory_*` records through js/chat-search.mjs
+       and render a result list whose rows jump to the message. */
+    const SEARCH_RESULT_LIMIT = 200;
+    const SEARCH_DEBOUNCE_MS = 150;
+
+    let searchOpen = false;
+    let searchMarks = [];      // <mark> elements of the session search, in display order
+    let searchHitIndex = -1;   // index of the focused mark
+    let searchTimer = null;    // input debounce
+    let globalHits = [];       // rows of the last scenario/all search
+    // Set when a result (or an ?find= URL) asks for a specific message: the
+    // conversation has to be rendered first, so the request is consumed by
+    // applyPendingSearchJump() at the end of loadChatHistory().
+    let pendingSearchJump = null;
+
+    /** Current query, trimmed; empty means "nothing to search for". */
+    function searchQuery() {
+        return (searchInput?.value || '').trim();
+    }
+
+    function isSessionScope() {
+        return (searchScope?.value || 'session') === 'session';
+    }
+
+    /**
+     * Removes every highlight and merges the text nodes back together, so the
+     * conversation returns to exactly the markup the renderer produced.
+     */
+    function clearSearchHighlights() {
+        searchMarks = [];
+        searchHitIndex = -1;
+        if (!messagesContainer) return;
+        const marks = messagesContainer.querySelectorAll('mark.chat-search-hit');
+        if (!marks.length) return;
+        marks.forEach(mark => {
+            const parent = mark.parentNode;
+            if (parent) parent.replaceChild(document.createTextNode(mark.textContent), mark);
+        });
+        messagesContainer.normalize();
+    }
+
+    /**
+     * Wraps every occurrence of the query inside the rendered conversation.
+     * Only bubbles that actually hold message text are searched, so the
+     * confirmation cards and tool-step chips are not treated as content.
+     * @param {string} query - Search query
+     * @returns {Array<HTMLElement>} The marks, in display order
+     */
+    function highlightSession(query) {
+        const marks = [];
+        if (!query) return marks;
+
+        messagesContainer.querySelectorAll('.message').forEach(messageEl => {
+            const textEl = messageEl.querySelector('.message-text');
+            if (!textEl) return;
+            // Snapshot the text nodes first: replacing them while walking would
+            // confuse the TreeWalker.
+            const walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            let node = walker.nextNode();
+            while (node) {
+                if (!node.parentNode?.closest('mark.chat-search-hit')) nodes.push(node);
+                node = walker.nextNode();
+            }
+
+            nodes.forEach(textNode => {
+                const text = textNode.nodeValue || '';
+                const matches = findMatches(text, query);
+                if (!matches.length) return;
+
+                const frag = document.createDocumentFragment();
+                let cursor = 0;
+                matches.forEach(m => {
+                    if (m.start > cursor) frag.appendChild(document.createTextNode(text.slice(cursor, m.start)));
+                    const mark = document.createElement('mark');
+                    mark.className = 'chat-search-hit';
+                    mark.textContent = text.slice(m.start, m.end);
+                    frag.appendChild(mark);
+                    marks.push(mark);
+                    cursor = m.end;
+                });
+                if (cursor < text.length) frag.appendChild(document.createTextNode(text.slice(cursor)));
+                textNode.parentNode.replaceChild(frag, textNode);
+            });
+        });
+
+        return marks;
+    }
+
+    /**
+     * Makes a hit visible: a collapsed bubble expands, and a match inside a
+     * folded thinking block opens that block (the same two mechanisms the
+     * collapse/expand toolbar buttons drive).
+     * @param {HTMLElement} mark - Match element
+     */
+    function revealMatch(mark) {
+        const messageEl = mark?.closest('.message');
+        if (messageEl) messageEl.classList.remove('collapsed-message');
+
+        const foldable = mark?.closest('.think-foldable-content');
+        if (!foldable) return;
+        const wrapper = foldable.querySelector('.think-content-wrapper');
+        if (wrapper?.classList.contains('think-collapsed')) {
+            wrapper.classList.remove('think-collapsed');
+            foldable.classList.add('think-expanded');
+        }
+    }
+
+    /** Updates the "3/12" readout (or the "no match" note) in the bar. */
+    function updateSearchCount() {
+        if (!searchCount) return;
+        if (!searchQuery()) {
+            searchCount.textContent = '';
+            return;
+        }
+        if (!isSessionScope()) {
+            const tpl = browser.i18n.getMessage('chatSearchResultsCount') || '{count}';
+            searchCount.textContent = tpl.replace('{count}', String(globalHits.length));
+            return;
+        }
+        if (!searchMarks.length) {
+            searchCount.textContent = browser.i18n.getMessage('chatSearchNoMatch') || 'No match';
+            return;
+        }
+        const tpl = browser.i18n.getMessage('chatSearchCount') || '{index}/{total}';
+        searchCount.textContent = tpl
+            .replace('{index}', String(searchHitIndex + 1))
+            .replace('{total}', String(searchMarks.length));
+    }
+
+    /** The prev/next buttons only make sense for the in-session highlights. */
+    function updateSearchNav() {
+        const enabled = isSessionScope() && searchMarks.length > 0;
+        if (searchPrev) searchPrev.disabled = !enabled;
+        if (searchNext) searchNext.disabled = !enabled;
+    }
+
+    /**
+     * Focuses one of the session highlights (wrapping around), opening whatever
+     * hides it and scrolling it into view.
+     * @param {number} index - Target index
+     */
+    function focusSearchHit(index) {
+        if (!searchMarks.length) {
+            searchHitIndex = -1;
+            updateSearchCount();
+            return;
+        }
+        const count = searchMarks.length;
+        const clamped = ((index % count) + count) % count;
+        searchMarks.forEach(mark => mark.classList.remove('chat-search-current'));
+        const mark = searchMarks[clamped];
+        revealMatch(mark);
+        mark.classList.add('chat-search-current');
+        searchHitIndex = clamped;
+        mark.scrollIntoView({ block: 'center' });
+        updateSearchCount();
+    }
+
+    /** Moves the focus by one hit (+1 next, -1 previous), wrapping around. */
+    function gotoSearchHit(delta) {
+        if (!isSessionScope() || !searchMarks.length) return;
+        const from = searchHitIndex < 0 ? (delta > 0 ? -1 : 0) : searchHitIndex;
+        focusSearchHit(from + delta);
+    }
+
+    function hideSearchResults() {
+        if (!searchResults) return;
+        searchResults.style.display = 'none';
+        searchResults.innerHTML = '';
+    }
+
+    /** Scope "session": highlight everything currently rendered. */
+    function runSessionSearch() {
+        const query = searchQuery();
+        clearSearchHighlights();
+        globalHits = [];
+        hideSearchResults();
+        searchMarks = highlightSession(query);
+        updateSearchNav();
+        if (query && searchMarks.length) focusSearchHit(0);
+        else updateSearchCount();
+    }
+
+    /** Display name of a scenario; scenario "0" is the plain "Chat" one. */
+    function scenarioLabel(hit) {
+        if (hit.scenarioName) return hit.scenarioName;
+        if (String(hit.scenarioId) === '0') return browser.i18n.getMessage('defaultChatName') || '00';
+        return `#${hit.scenarioId}`;
+    }
+
+    function scenarioNamesMap() {
+        const map = {};
+        (currentConfigurations || []).forEach(config => {
+            if (config?.id != null) map[String(config.id)] = config.name || '';
+        });
+        return map;
+    }
+
+    /**
+     * Scope "scenario"/"all": scan the stored conversations. The whole
+     * `storage.local` snapshot is read once per search (the input is debounced),
+     * which keeps the deep history searchable without an index to maintain.
+     */
+    async function runGlobalSearch() {
+        const query = searchQuery();
+        clearSearchHighlights();
+        globalHits = [];
+        if (!query) {
+            hideSearchResults();
+            updateSearchCount();
+            updateSearchNav();
+            return;
+        }
+
+        const store = await new Promise((resolve) => {
+            try {
+                browser.storage.local.get(null, (data) => resolve(data || {}));
+            } catch (e) {
+                console.warn('Failed to read storage for the chat search:', e);
+                resolve({});
+            }
+        });
+        // A newer keystroke may have replaced the query while storage was read.
+        if (searchQuery() !== query || isSessionScope()) return;
+
+        globalHits = searchHistoryStore(store, query, {
+            scenarioNames: scenarioNamesMap(),
+            scenarioId: searchScope.value === 'scenario' ? (ccId || '0') : null,
+            limit: SEARCH_RESULT_LIMIT
+        });
+        renderSearchResults();
+        updateSearchCount();
+        updateSearchNav();
+    }
+
+    function renderSearchResults() {
+        if (!searchResults) return;
+        searchResults.innerHTML = '';
+
+        if (!globalHits.length) {
+            const empty = document.createElement('div');
+            empty.className = 'chat-search-empty';
+            empty.textContent = browser.i18n.getMessage('chatSearchNoMatch') || 'No match';
+            searchResults.appendChild(empty);
+            searchResults.style.display = 'block';
+            return;
+        }
+
+        globalHits.forEach(hit => searchResults.appendChild(createSearchResultRow(hit)));
+        searchResults.style.display = 'block';
+    }
+
+    /**
+     * One clickable result row: where the hit lives, who said it, when, and the
+     * excerpt with the match marked.
+     * @param {Object} hit - Hit returned by searchHistoryStore()
+     * @returns {HTMLElement} Row button
+     */
+    function createSearchResultRow(hit) {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'chat-search-item';
+
+        const meta = document.createElement('div');
+        meta.className = 'chat-search-item-meta';
+        const role = document.createElement('span');
+        role.className = 'chat-search-item-role';
+        role.textContent = hit.role === 'user'
+            ? (browser.i18n.getMessage('user') || 'You')
+            : (browser.i18n.getMessage('assistant') || 'Assistant');
+
+        const time = Number.isFinite(hit.rtime) ? formatTimestamp(hit.rtime) : '';
+        [scenarioLabel(hit), hit.sessionName, role, time].filter(Boolean).forEach((part, i) => {
+            if (i) {
+                const sep = document.createElement('span');
+                sep.textContent = '·';
+                meta.appendChild(sep);
+            }
+            if (part instanceof HTMLElement) meta.appendChild(part);
+            else {
+                const span = document.createElement('span');
+                span.textContent = part;
+                meta.appendChild(span);
+            }
+        });
+        row.appendChild(meta);
+
+        const snippet = document.createElement('div');
+        snippet.className = 'chat-search-snippet';
+        const { text = '', hitStart = -1, hitEnd = -1 } = hit.snippet || {};
+        if (hitStart >= 0 && hitEnd > hitStart) {
+            snippet.innerHTML = escapeHTML(text.slice(0, hitStart))
+                + `<mark class="chat-search-hit">${escapeHTML(text.slice(hitStart, hitEnd))}</mark>`
+                + escapeHTML(text.slice(hitEnd));
+        } else {
+            snippet.textContent = text;
+        }
+        row.appendChild(snippet);
+
+        row.addEventListener('click', () => jumpToSearchHit(hit));
+        return row;
+    }
+
+
+    /**
+     * Opens the message a result points at.
+     * @param {Object} hit - Hit returned by searchHistoryStore()
+     */
+    function jumpToSearchHit(hit) {
+        if (!stopFlag) {
+            // A turn is streaming: re-rendering the conversation now would drop
+            // the answer being written.
+            balert(browser.i18n.getMessage('chatSearchBusy') || 'Wait for the answer to finish.');
+            return;
+        }
+        const targetScenario = String(hit.scenarioId);
+        const query = searchQuery();
+        if (targetScenario === (ccId || '0')) {
+            pendingSearchJump = { rtime: hit.rtime, query };
+            loadChatHistory(targetScenario, hit.sessionId);
+        } else {
+            location.href = `./chat.html?id=${encodeURIComponent(targetScenario)}`
+                + `&session=${encodeURIComponent(String(hit.sessionId))}`
+                + `&find=${encodeURIComponent(query)}`;
+        }
+    }
+
+    /**
+     * Focuses the first highlight inside the message that was rendered from the
+     * record with the given timestamp.
+     * @param {number} rtime - Record timestamp (messageDiv.dataset.timestamp)
+     */
+    function focusSearchMessage(rtime) {
+        const messageEl = messagesContainer.querySelector(`.message[data-timestamp="${rtime}"]`);
+        const mark = messageEl?.querySelector('mark.chat-search-hit');
+        if (!mark) return;
+        const index = searchMarks.indexOf(mark);
+        if (index >= 0) focusSearchHit(index);
+        else mark.scrollIntoView({ block: 'center' });
+    }
+
+    /**
+     * Consumes a jump requested before the conversation was (re-)rendered: opens
+     * the bar with the query, then focuses the target message. Called after every
+     * render, so it also covers a jump that spans sessions.
+     */
+    function applyPendingSearchJump() {
+        const jump = pendingSearchJump;
+        pendingSearchJump = null;
+
+        if (!jump) {
+            applySearchAfterRender();
+            return;
+        }
+        if (jump.query) {
+            if (searchInput) searchInput.value = jump.query;
+            if (searchScope) searchScope.value = 'session';
+            openSearchUI(jump.query);
+        }
+        if (Number.isFinite(jump.rtime)) focusSearchMessage(jump.rtime);
+    }
+
+    /** Re-applies the search to freshly rendered messages. */
+    function applySearchAfterRender() {
+        if (!searchOpen) return;
+        if (isSessionScope()) runSessionSearch();
+        else runGlobalSearch();
+    }
+
+    /** Shows the bar and runs the search for its current query. */
+    function openSearchUI(prefill) {
+        if (!searchBar) return;
+        closeBookmarkPanel(); // only one of the two panels is open at a time
+        if (typeof prefill === 'string' && prefill && searchInput && prefill !== searchInput.value) {
+            searchInput.value = prefill;
+        }
+        searchBar.style.display = 'flex';
+        searchOpen = true;
+        searchInput?.focus();
+        searchInput?.select?.();
+        runSearch();
+    }
+
+    /** Hides the bar and restores the conversation markup. */
+    function closeSearch() {
+        if (!searchOpen) return;
+        searchOpen = false;
+        clearTimeout(searchTimer);
+        searchTimer = null;
+        clearSearchHighlights();
+        globalHits = [];
+        hideSearchResults();
+        if (searchCount) searchCount.textContent = '';
+        if (searchBar) searchBar.style.display = 'none';
+    }
+
+    /** Runs the search matching the selected scope. */
+    function runSearch() {
+        if (!searchOpen) return;
+        if (isSessionScope()) runSessionSearch();
+        else runGlobalSearch();
+    }
+
+    /**
+     * Wires the search bar, its toolbar button and the shortcuts. Also picks up
+     * an `?find=` parameter, which is how a result clicked in another scenario
+     * hands the query over to this freshly opened page.
+     */
+    function setupSearch() {
+        if (bSearch) {
+            bSearch.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (searchOpen) closeSearch();
+                else openSearchUI();
+            });
+        }
+        if (!searchBar) return;
+
+        if (searchPrev) searchPrev.title = browser.i18n.getMessage('chatSearchPrev') || 'Previous match';
+        if (searchNext) searchNext.title = browser.i18n.getMessage('chatSearchNext') || 'Next match';
+        if (searchClose) {
+            searchClose.title = browser.i18n.getMessage('chatSearchClose') || 'Close search';
+            searchClose.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeSearch();
+            });
+        }
+        searchPrev?.addEventListener('click', (e) => { e.preventDefault(); gotoSearchHit(-1); });
+        searchNext?.addEventListener('click', (e) => { e.preventDefault(); gotoSearchHit(1); });
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS);
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                gotoSearchHit(e.shiftKey ? -1 : 1);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeSearch();
+            }
+        });
+        searchScope.addEventListener('change', runSearch);
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'f' || e.key === 'F')) {
+                // The composer owns Enter; nobody else uses Ctrl/Cmd+F, so it is
+                // safe to claim it for the in-chat search.
+                e.preventDefault();
+                openSearchUI();
+            } else if (e.key === 'Escape' && searchOpen && document.activeElement !== searchInput) {
+                closeSearch();
+            }
+        });
+
+        const initialFind = getQueryParam('find');
+        if (initialFind) pendingSearchJump = { rtime: null, query: initialFind };
+    }
+
+    setupSearch();
+
+
+
+    /* ── Bookmarks (收藏) ─────────────────────────────────────────────────────
+       Every star saves a snapshot of one answer into DB_KEY.chatBookmarks, so a
+       bookmark survives clearing its session. The snapshot rules live in
+       js/chat-bookmarks.mjs, the storage boundary in js/cllama.js; this part owns
+       the star buttons, the panel and the jump. */
+    let bookmarkIds = new Set();   // ids of the saved bookmarks, for the star state
+    let bookmarkPanelOpen = false;
+    // Set when a bookmark asks for a specific message (also from the ?goto=
+    // parameter); consumed after the conversation has been rendered, exactly like
+    // the search jump.
+    let pendingGoto = null;
+
+    /** Scenario name of the conversation on screen ('' when unknown). */
+    function currentScenarioName() {
+        return chatCategory?.selectedOptions?.[0]?.textContent?.trim() || '';
+    }
+
+    /** Session name of the conversation on screen, read from the session buttons. */
+    function currentSessionName() {
+        const activeId = String(currentSessionId);
+        const buttons = document.querySelectorAll('#chat_records [data-session-id], #more_records_list [data-session-id]');
+        for (const button of buttons) {
+            if (String(button.dataset.sessionId) === activeId) return button.textContent?.trim() || '';
+        }
+        return '';
+    }
+
+    /** Text of a bubble that has no history record (failed / aborted answer). */
+    function messageTextFallback(messageDiv) {
+        return messageDiv?.querySelector('.message-text')?.innerText || '';
+    }
+
+    /**
+     * Short-lived inline notice. Starring an answer is a frequent, low-stakes
+     * action, so it must not open a modal the user has to dismiss.
+     * @param {string} text - Message (empty strings are ignored)
+     */
+    function showChatToast(text) {
+        if (!text) return;
+        const toast = document.createElement('div');
+        toast.className = 'chat-toast';
+        toast.textContent = text;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 1600);
+    }
+
+    /**
+     * Paints a star: filled + warning colour when the message is saved, a thin
+     * outline otherwise (one symbol, two states — see #svg_star).
+     * @param {HTMLElement} btn - The star button
+     * @param {boolean} active - Whether the message is bookmarked
+     */
+    function setBookmarkButtonState(btn, active) {
+        if (!btn) return;
+        btn.classList.toggle('bookmark-active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.title = browser.i18n.getMessage(active ? 'bookmarkRemove' : 'bookmarkAdd') || '';
+    }
+
+    /**
+     * Recomputes the star of one bubble. Always called when a bubble is created
+     * (the timestamp may be a placeholder then) and again when the turn finishes.
+     * @param {HTMLElement} messageDiv - The `.message` element
+     */
+    function refreshBookmarkButton(messageDiv) {
+        const btn = messageDiv?.querySelector('.bookmark-message-btn');
+        if (!btn) return;
+        const rtime = parseInt(messageDiv.dataset.timestamp, 10);
+        const id = bookmarkId(ccId || '0', currentSessionId, rtime);
+        setBookmarkButtonState(btn, Boolean(id) && bookmarkIds.has(id));
+    }
+
+    /**
+     * Reflects the outcome of a toggle: the star, the local id set, and the panel
+     * when it is open. A capacity refusal is always surfaced.
+     * @param {HTMLElement} messageDiv - The bubble that was toggled
+     * @param {Object} result - Return value of toggleBookmark()
+     */
+    function applyBookmarkResult(messageDiv, result) {
+        if (!result?.ok) {
+            if (result?.action === 'atCapacity') {
+                balert(browser.i18n.getMessage('bookmarkLimitReached') || '');
+            } else {
+                // 'invalid' means there was nothing to save (an empty record with
+                // no attachment). The star is disabled for streaming answers and
+                // system notices have no star at all, so this is unreachable in
+                // practice — log rather than invent a message for it.
+                console.warn('Bookmark not saved:', result?.action);
+            }
+            return;
+        }
+
+        const rtime = parseInt(messageDiv.dataset.timestamp, 10);
+        const id = bookmarkId(ccId || '0', currentSessionId, rtime);
+        if (id) {
+            if (result.bookmarked) bookmarkIds.add(id);
+            else bookmarkIds.delete(id);
+        }
+        setBookmarkButtonState(messageDiv.querySelector('.bookmark-message-btn'), result.bookmarked);
+        showChatToast(browser.i18n.getMessage(result.bookmarked ? 'bookmarkAdded' : 'bookmarkRemoved') || '');
+        if (bookmarkPanelOpen) renderBookmarkPanel();
+    }
+
+    /** Display name of a scenario a bookmark came from. */
+    function bookmarkScenarioLabel(scenarioId, scenarioName) {
+        if (scenarioName) return scenarioName;
+        if (String(scenarioId) === '0') return browser.i18n.getMessage('defaultChatName') || '00';
+        return `#${scenarioId}`;
+    }
+
+    function bookmarkRoleLabel(role) {
+        return role === 'user'
+            ? (browser.i18n.getMessage('user') || 'You')
+            : (browser.i18n.getMessage('assistant') || 'Assistant');
+    }
+
+    /**
+     * Ids of every message that still exists in storage: `<scenario>:<session>:<rtime>`.
+     * Used to tell a bookmark that can be jumped to from one whose conversation
+     * was deleted (which keeps its snapshot but loses the jump).
+     * @param {Object} store - Full `storage.local` snapshot
+     * @returns {Set<string>} Existing message ids
+     */
+    function collectExistingMessageIds(store) {
+        const ids = new Set();
+        Object.keys(store || {}).forEach(key => {
+            if (!key.startsWith('chatHistory_')) return;
+            const scenarioId = key.slice('chatHistory_'.length);
+            const sessions = Array.isArray(store[key]?.history) ? store[key].history : [];
+            sessions.forEach(session => {
+                (Array.isArray(session?.records) ? session.records : []).forEach(record => {
+                    const id = bookmarkId(scenarioId, session?.id, record?.rtime);
+                    if (id) ids.add(id);
+                });
+            });
+        });
+        return ids;
+    }
+
+    /** Text of a bookmark as shown in the panel (snapshot, or the file name). */
+    function bookmarkDisplayText(item) {
+        const text = bookmarkText(item);
+        if (!text) return '';
+        // The snapshot is markdown; the panel shows it as plain text, collapsed.
+        return text.length > 400 ? `${text.slice(0, 400)}…` : text;
+    }
+
+    /**
+     * Builds one row of the bookmarks panel.
+     * @param {Object} item - Bookmark entry
+     * @param {Set<string>} existing - Ids of messages that still exist
+     * @returns {HTMLElement} Row element
+     */
+    function createBookmarkRow(item, existing) {
+        const row = document.createElement('div');
+        row.className = 'bookmark-item';
+
+        const meta = document.createElement('div');
+        meta.className = 'bookmark-item-meta';
+        const role = document.createElement('span');
+        role.className = 'bookmark-item-role';
+        role.textContent = bookmarkRoleLabel(item.role);
+
+        const time = Number.isFinite(item.rtime) ? formatTimestamp(item.rtime) : '';
+        [item.sessionName, role, time].filter(Boolean).forEach((part, i) => {
+            if (i) {
+                const sep = document.createElement('span');
+                sep.textContent = '·';
+                meta.appendChild(sep);
+            }
+            if (part instanceof HTMLElement) meta.appendChild(part);
+            else {
+                const span = document.createElement('span');
+                span.textContent = part;
+                meta.appendChild(span);
+            }
+        });
+        row.appendChild(meta);
+
+        const text = document.createElement('div');
+        text.className = 'bookmark-item-text';
+        text.textContent = bookmarkDisplayText(item);
+        if (item.truncated) text.title = browser.i18n.getMessage('bookmarkTruncated') || '';
+        row.appendChild(text);
+
+        const actions = document.createElement('div');
+        actions.className = 'bookmark-item-actions';
+
+        if (existing.has(item.id)) {
+            const jump = document.createElement('button');
+            jump.type = 'button';
+            jump.className = 'btn btn-sm btn-outline-secondary';
+            jump.textContent = browser.i18n.getMessage('bookmarkJump') || 'Go to message';
+            jump.addEventListener('click', () => jumpToBookmark(item));
+            actions.appendChild(jump);
+        } else {
+            const gone = document.createElement('span');
+            gone.className = 'bookmark-gone';
+            gone.textContent = browser.i18n.getMessage('bookmarkGone') || '';
+            actions.appendChild(gone);
+        }
+
+        const copy = document.createElement('button');
+        copy.type = 'button';
+        copy.className = 'btn btn-sm btn-outline-secondary';
+        copy.textContent = browser.i18n.getMessage('copy') || 'Copy';
+        copy.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(bookmarkText(item));
+                showChatToast(browser.i18n.getMessage('copied') || '');
+            } catch (err) {
+                showChatToast(browser.i18n.getMessage('replicationFailed') || '');
+            }
+        });
+        actions.appendChild(copy);
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-sm btn-outline-danger';
+        remove.textContent = browser.i18n.getMessage('delete') || 'Delete';
+        remove.addEventListener('click', async () => {
+            await deleteBookmark(item.id);
+            bookmarkIds.delete(item.id);
+            renderBookmarkPanel();
+        });
+        actions.appendChild(remove);
+
+        row.appendChild(actions);
+        return row;
+    }
+
+    /**
+     * Renders the whole panel: header + count, then the bookmarks grouped by
+     * scenario and session (newest first).
+     */
+    async function renderBookmarkPanel() {
+        if (!bookmarkPanel) return;
+
+        const items = sortBookmarks(await loadBookmarks());
+        bookmarkIds = new Set(items.map(item => item.id));
+
+        const store = await new Promise((resolve) => {
+            try {
+                browser.storage.local.get(null, (data) => resolve(data || {}));
+            } catch (e) {
+                console.warn('Failed to read storage for the bookmarks panel:', e);
+                resolve({});
+            }
+        });
+        const existing = collectExistingMessageIds(store);
+
+        bookmarkPanel.innerHTML = '';
+        const header = document.createElement('div');
+        header.className = 'bookmark-panel-header';
+        const title = document.createElement('span');
+        title.className = 'bookmark-panel-title';
+        title.textContent = `★ ${browser.i18n.getMessage('bookmarkList') || 'Bookmarks'}`;
+        const count = document.createElement('span');
+        count.className = 'bookmark-panel-count';
+        count.textContent = (browser.i18n.getMessage('bookmarkCount') || '{count}')
+            .replace('{count}', String(items.length));
+        header.appendChild(title);
+        header.appendChild(count);
+        bookmarkPanel.appendChild(header);
+
+        if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'bookmark-empty';
+            empty.textContent = browser.i18n.getMessage('bookmarkEmpty') || '';
+            bookmarkPanel.appendChild(empty);
+            return;
+        }
+
+        groupBookmarks(items).forEach(group => {
+            const groupTitle = document.createElement('div');
+            groupTitle.className = 'bookmark-group-title';
+            groupTitle.textContent = bookmarkScenarioLabel(group.scenarioId, group.scenarioName);
+            bookmarkPanel.appendChild(groupTitle);
+            group.sessions.forEach(session => {
+                session.items.forEach(item => bookmarkPanel.appendChild(createBookmarkRow(item, existing)));
+            });
+        });
+
+        // The stars reflect the freshly loaded list.
+        messagesContainer.querySelectorAll('.message').forEach(refreshBookmarkButton);
+    }
+
+    function openBookmarkPanel() {
+        if (!bookmarkPanel) return;
+        closeSearch(); // only one of the two panels is open at a time
+        bookmarkPanelOpen = true;
+        bookmarkPanel.style.display = 'block';
+        renderBookmarkPanel();
+    }
+
+    function closeBookmarkPanel() {
+        if (!bookmarkPanel) return;
+        bookmarkPanelOpen = false;
+        bookmarkPanel.style.display = 'none';
+    }
+
+    function toggleBookmarkPanel() {
+        if (bookmarkPanelOpen) closeBookmarkPanel();
+        else openBookmarkPanel();
+    }
+
+    /**
+     * Opens the message a bookmark points at, in this scenario or another one.
+     * @param {Object} item - Bookmark entry
+     */
+    function jumpToBookmark(item) {
+        if (!stopFlag) {
+            showChatToast(browser.i18n.getMessage('chatSearchBusy') || 'Wait for the answer to finish.');
+            return;
+        }
+        const sessionId = parseInt(item.sessionId, 10);
+        const rtime = Number(item.rtime);
+        if (!Number.isFinite(rtime)) return;
+
+        if (String(item.scenarioId) === (ccId || '0')) {
+            pendingGoto = rtime;
+            loadChatHistory(String(item.scenarioId), Number.isFinite(sessionId) ? sessionId : 0);
+        } else {
+            location.href = `./chat.html?id=${encodeURIComponent(item.scenarioId)}`
+                + `&session=${encodeURIComponent(String(item.sessionId))}`
+                + `&goto=${encodeURIComponent(String(rtime))}`;
+        }
+    }
+
+    /**
+     * Consumes a jump requested before the conversation was (re-)rendered and
+     * flashes the target message. Called after every render, right after the
+     * search jump is applied.
+     */
+    function applyPendingGoto() {
+        const rtime = pendingGoto;
+        pendingGoto = null;
+        if (!Number.isFinite(rtime)) return;
+
+        const messageEl = messagesContainer.querySelector(`.message[data-timestamp="${rtime}"]`);
+        if (!messageEl) return;
+        messageEl.scrollIntoView({ block: 'center' });
+        messageEl.classList.add('bookmark-flash');
+        setTimeout(() => messageEl.classList.remove('bookmark-flash'), 2000);
+    }
+
+    /**
+     * Keeps the stars (and the panel) in sync when the bookmarks change — e.g. the
+     * same chat page open in another window, or an import of a backup file.
+     * @param {Object} changes - Storage change payload
+     * @param {string} area - Storage area name
+     */
+    function handleBookmarkStorageChange(changes, area) {
+        if (area !== 'local' || !changes[DB_KEY.chatBookmarks]) return;
+        const next = changes[DB_KEY.chatBookmarks].newValue || [];
+        bookmarkIds = new Set(next.map(item => item?.id).filter(Boolean));
+        messagesContainer.querySelectorAll('.message').forEach(refreshBookmarkButton);
+        if (bookmarkPanelOpen) renderBookmarkPanel();
+    }
+
+    /** Wires the toolbar button, the storage listener and the ?goto= parameter. */
+    function setupBookmarks() {
+        if (bBookmarks) {
+            bBookmarks.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleBookmarkPanel();
+            });
+        }
+        browser.storage.onChanged.addListener(handleBookmarkStorageChange);
+
+        const initialGoto = parseInt(getQueryParam('goto'), 10);
+        if (Number.isFinite(initialGoto)) pendingGoto = initialGoto;
+    }
+
+    setupBookmarks();
+
+
+
     async function loadChatHistory(scenarioId, sessionId) {
         const effectiveScenarioId = scenarioId || "0";
         const storageKey = `chatHistory_${effectiveScenarioId}`;
 
-        browser.storage.local.get(storageKey, (data) => {
+        browser.storage.local.get([storageKey, DB_KEY.chatBookmarks], (data) => {
             let scenarioData = data[storageKey];
 
             if (!scenarioData?.history?.length) {
@@ -2472,9 +3390,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             const session = scenarioData.history.find(s => s.id === sessionId);
 
             if (session) {
+                // The bubbles are about to be thrown away, so any highlight that
+                // still points at them must be dropped too (the search itself is
+                // re-applied once the new conversation is rendered).
+                clearSearchHighlights();
                 messagesContainer.innerText = "";
                 // From here on the pending cards are rendered for THIS session only.
                 currentSessionId = session.id;
+                // Stars are painted from this set while the bubbles are built, so
+                // it has to be ready before the loop below.
+                bookmarkIds = new Set((data[DB_KEY.chatBookmarks] || []).map(item => item?.id).filter(Boolean));
                 historyMessages = session.records ? [...session.records] : [];
 
                 historyMessages.forEach((item) => {
@@ -2499,6 +3424,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 renderPendingCards();
                 updateResendButtonVisibility();
                 updateLearnControls();
+                // Last step: the conversation exists again, so a search that was
+                // open (or a result the user clicked) can be re-applied to it,
+                // and a bookmark's jump target can be flashed.
+                applyPendingSearchJump();
+                applyPendingGoto();
             } else {
                 const fallbackSession = scenarioData.history.find(s => s.id === 0) || scenarioData.history[0];
                 if (fallbackSession) {
@@ -2931,8 +3861,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                     scenarioData.currentId = scenarioData.history[0]?.id ?? 0;
                 }
 
-                await loadChatHistory(initialScenarioId, scenarioData.currentId);
-                updateChatRecordsList(scenarioData.history, scenarioData.currentId);
+                // A search result in another scenario links back here with
+                // ?session=<id>; it only wins when that session still exists.
+                const requestedSessionId = parseInt(getQueryParam("session"), 10);
+                const targetSessionId = Number.isFinite(requestedSessionId)
+                    && scenarioData.history.some(s => s.id === requestedSessionId)
+                    ? requestedSessionId
+                    : scenarioData.currentId;
+
+                await loadChatHistory(initialScenarioId, targetSessionId);
+                updateChatRecordsList(scenarioData.history, targetSessionId);
                 updateResendButtonVisibility();
                 resolve();
             });

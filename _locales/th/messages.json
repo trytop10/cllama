@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "กำลังคิด โปรดรอสักครู่..."
     },
-    "confirmClearChat": {
-        "message": "คุณยืนยันที่จะลบบันทึกการสนทนานี้หรือไม่?"
+    "confirmDeleteChat": {
+        "message": "ลบการสนทนานี้หรือไม่? ไม่สามารถเรียกคืนได้"
     },
     "insightifyPageError1": {
         "message": "ชื่อเรื่องและเนื้อหาว่างเปล่า ไม่สามารถสร้างข้อมูลที่เกี่ยวข้องกับหน้าเว็บได้"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "ยังมีคำตอบที่กำลังดำเนินอยู่ โปรดทบทวนเมื่อจบรอบนี้"
+    },
+    "chatSearch": {
+        "message": "ค้นหาในประวัติการสนทนา"
+    },
+    "chatSearchPlaceholder": {
+        "message": "ค้นหาในแชทนี้…"
+    },
+    "chatSearchPrev": {
+        "message": "รายการก่อนหน้า"
+    },
+    "chatSearchNext": {
+        "message": "รายการถัดไป"
+    },
+    "chatSearchClose": {
+        "message": "ปิดการค้นหา"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "ไม่พบรายการ"
+    },
+    "chatSearchScopeSession": {
+        "message": "แชทนี้"
+    },
+    "chatSearchScopeScenario": {
+        "message": "ฉากนี้"
+    },
+    "chatSearchScopeAll": {
+        "message": "ทุกฉาก"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "โปรดรอให้คำตอบปัจจุบันเสร็จสิ้น"
+    },
+    "bookmarkAdd": {
+        "message": "บันทึกคำตอบนี้"
+    },
+    "bookmarkRemove": {
+        "message": "ยกเลิกบันทึก"
+    },
+    "bookmarkList": {
+        "message": "รายการบันทึก"
+    },
+    "bookmarkEmpty": {
+        "message": "ยังไม่มีรายการบันทึก คลิก ★ ที่คำตอบเพื่อบันทึกไว้ที่นี่"
+    },
+    "bookmarkJump": {
+        "message": "ไปยังข้อความ"
+    },
+    "bookmarkGone": {
+        "message": "บทสนทนาเดิมถูกลบแล้ว"
+    },
+    "bookmarkAdded": {
+        "message": "บันทึกแล้ว"
+    },
+    "bookmarkRemoved": {
+        "message": "ยกเลิกการบันทึกแล้ว"
+    },
+    "bookmarkLimitReached": {
+        "message": "ถึงขีดจำกัดรายการบันทึกแล้ว โปรดลบบางรายการก่อน"
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "เนื้อหายาวเกินไปและถูกตัดทิ้ง"
+    },
+    "newChat": {
+        "message": "แชทใหม่"
+    },
+    "deleteChat": {
+        "message": "ลบแชทนี้"
+    },
+    "uploadFile": {
+        "message": "แนบไฟล์"
+    },
+    "collapseAll": {
+        "message": "ย่อทั้งหมด"
+    },
+    "expandAll": {
+        "message": "ขยายทั้งหมด"
+    },
+    "apiSettingsTitle": {
+        "message": "พารามิเตอร์การสร้าง"
+    },
+    "aboutTitle": {
+        "message": "เกี่ยวกับ"
+    },
+    "aboutHomepage": {
+        "message": "หน้าแรกของปลั๊กอิน"
+    },
+    "aboutSource": {
+        "message": "ซอร์สโค้ด"
     }
 }

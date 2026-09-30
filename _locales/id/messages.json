@@ -231,8 +231,8 @@
     "waitMessage": {
         "message": "Sedang berpikir, harap tunggu..."
     },
-    "confirmClearChat": {
-        "message": "Anda yakin ingin menghapus riwayat percakapan ini?"
+    "confirmDeleteChat": {
+        "message": "Hapus percakapan ini? Tidak dapat dibatalkan."
     },
     "insightifyPageError1": {
         "message": "Judul dan konten kosong, tidak dapat menghasilkan informasi terkait halaman."
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "Masih ada jawaban yang berjalan: renungkan setelah selesai."
+    },
+    "chatSearch": {
+        "message": "Cari di riwayat chat"
+    },
+    "chatSearchPlaceholder": {
+        "message": "Cari di chat ini…"
+    },
+    "chatSearchPrev": {
+        "message": "Kecocokan sebelumnya"
+    },
+    "chatSearchNext": {
+        "message": "Kecocokan berikutnya"
+    },
+    "chatSearchClose": {
+        "message": "Tutup pencarian"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "Tidak ada kecocokan"
+    },
+    "chatSearchScopeSession": {
+        "message": "Chat ini"
+    },
+    "chatSearchScopeScenario": {
+        "message": "Skenario ini"
+    },
+    "chatSearchScopeAll": {
+        "message": "Semua skenario"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "Tunggu hingga jawaban saat ini selesai."
+    },
+    "bookmarkAdd": {
+        "message": "Tandai jawaban ini"
+    },
+    "bookmarkRemove": {
+        "message": "Hapus tanda"
+    },
+    "bookmarkList": {
+        "message": "Markah"
+    },
+    "bookmarkEmpty": {
+        "message": "Belum ada markah. Klik ★ pada jawaban untuk menyimpannya di sini."
+    },
+    "bookmarkJump": {
+        "message": "Buka pesan"
+    },
+    "bookmarkGone": {
+        "message": "Percakapan asli telah dihapus"
+    },
+    "bookmarkAdded": {
+        "message": "Ditandai"
+    },
+    "bookmarkRemoved": {
+        "message": "Tanda dihapus"
+    },
+    "bookmarkLimitReached": {
+        "message": "Batas markah tercapai - hapus beberapa dulu."
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "Konten terlalu panjang dan dipotong"
+    },
+    "newChat": {
+        "message": "Chat baru"
+    },
+    "deleteChat": {
+        "message": "Hapus chat ini"
+    },
+    "uploadFile": {
+        "message": "Lampirkan file"
+    },
+    "collapseAll": {
+        "message": "Ciutkan semua"
+    },
+    "expandAll": {
+        "message": "Bentangkan semua"
+    },
+    "apiSettingsTitle": {
+        "message": "Parameter pembuatan"
+    },
+    "aboutTitle": {
+        "message": "Tentang"
+    },
+    "aboutHomepage": {
+        "message": "Beranda plugin"
+    },
+    "aboutSource": {
+        "message": "Kode sumber"
     }
 }

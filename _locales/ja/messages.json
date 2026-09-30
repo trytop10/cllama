@@ -276,8 +276,8 @@
     "directorExample1_sample": {
         "message": "「法律顧問」のプロンプトを生成してください"
     },
-    "confirmClearChat": {
-        "message": "このチャットを削除しますか？"
+    "confirmDeleteChat": {
+        "message": "この会話を削除しますか？元に戻せません。"
     },
     "apiSettingsCreativityLabel": {
         "message": "創造性 (0-2)"
@@ -816,5 +816,101 @@
     },
     "reflectBusy": {
         "message": "まだ回答中です。このターンが終わってから振り返ってください。"
+    },
+    "chatSearch": {
+        "message": "チャット履歴を検索"
+    },
+    "chatSearchPlaceholder": {
+        "message": "このチャットを検索…"
+    },
+    "chatSearchPrev": {
+        "message": "前の一致"
+    },
+    "chatSearchNext": {
+        "message": "次の一致"
+    },
+    "chatSearchClose": {
+        "message": "検索を閉じる"
+    },
+    "chatSearchCount": {
+        "message": "{index}/{total}"
+    },
+    "chatSearchNoMatch": {
+        "message": "一致なし"
+    },
+    "chatSearchScopeSession": {
+        "message": "このチャット"
+    },
+    "chatSearchScopeScenario": {
+        "message": "このシナリオ"
+    },
+    "chatSearchScopeAll": {
+        "message": "すべてのシナリオ"
+    },
+    "chatSearchResultsCount": {
+        "message": "{count}"
+    },
+    "chatSearchBusy": {
+        "message": "現在の回答が終わるまでお待ちください。"
+    },
+    "bookmarkAdd": {
+        "message": "この回答を保存"
+    },
+    "bookmarkRemove": {
+        "message": "保存を解除"
+    },
+    "bookmarkList": {
+        "message": "ブックマーク"
+    },
+    "bookmarkEmpty": {
+        "message": "まだブックマークはありません。回答の★をクリックするとここに保存されます。"
+    },
+    "bookmarkJump": {
+        "message": "メッセージへ移動"
+    },
+    "bookmarkGone": {
+        "message": "元の会話は削除されました"
+    },
+    "bookmarkAdded": {
+        "message": "保存しました"
+    },
+    "bookmarkRemoved": {
+        "message": "保存を解除しました"
+    },
+    "bookmarkLimitReached": {
+        "message": "ブックマークの上限に達しました。先にいくつか削除してください。"
+    },
+    "bookmarkCount": {
+        "message": "{count}"
+    },
+    "bookmarkTruncated": {
+        "message": "内容が長すぎるため切り詰めました"
+    },
+    "newChat": {
+        "message": "新しいチャット"
+    },
+    "deleteChat": {
+        "message": "このチャットを削除"
+    },
+    "uploadFile": {
+        "message": "ファイルを添付"
+    },
+    "collapseAll": {
+        "message": "すべて折りたたむ"
+    },
+    "expandAll": {
+        "message": "すべて展開"
+    },
+    "apiSettingsTitle": {
+        "message": "生成パラメータ"
+    },
+    "aboutTitle": {
+        "message": "このアプリについて"
+    },
+    "aboutHomepage": {
+        "message": "プラグインのホームページ"
+    },
+    "aboutSource": {
+        "message": "ソースコード"
     }
 }

@@ -59,12 +59,14 @@ hr {
 }
 
 .message:hover .delete-message-btn,
-.message:hover .copy-message-btn {
+.message:hover .copy-message-btn,
+.message:hover .bookmark-message-btn {
     opacity: 1; /* show buttons when message is hovered */
 }
 
 .copy-message-btn,
-.delete-message-btn {
+.delete-message-btn,
+.bookmark-message-btn {
     opacity: 0; /* hidden by default */
     transition: opacity 0.2s ease-in-out, color 0.2s ease-in-out, background-color 0.2s ease-in-out;
     cursor: pointer;
@@ -74,6 +76,37 @@ hr {
     padding: 0.1rem 0.2rem; /* fine-tune padding */
     border-radius: 0.2rem;
     color: var(--bs-secondary-color); /* default color in light mode, using Bootstrap variable */
+}
+
+/* Bookmarks: an out-of-line star is drawn with a stroke, a saved one is filled.
+   One symbol covers both states (see #svg_star in chat.html). */
+.bookmark-message-btn {
+    background: none;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+.bookmark-message-btn svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 40;
+    stroke-linejoin: round;
+}
+
+.bookmark-message-btn.bookmark-active {
+    color: var(--bs-warning);
+}
+
+.bookmark-message-btn.bookmark-active svg {
+    fill: currentColor;
+}
+
+.bookmark-message-btn[data-flag="false"] {
+    opacity: 0.35;
+    cursor: default;
 }
 
 /* Dark mode specific adjustments for buttons */
@@ -574,6 +607,66 @@ hr {
   }
 
   
+  /* ── Composer toolbar icons ────────────────────────────────────────────────
+     The icons are grouped by what they act on, with a hairline divider between
+     the groups. The divider is a ::before on the cluster itself, so hiding a
+     cluster (the scenario-learning one, see updateLearnControls) hides its
+     divider too — no stray separator is ever left behind. */
+  .function-icons {
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-cluster {
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-cluster + .icon-cluster::before {
+    content: "";
+    width: 1px;
+    height: 1.1em;
+    margin: 0 0.35rem;
+    background: var(--bs-border-color);
+  }
+
+  .function-icons .btn {
+    border: 0;
+    padding: 0.15rem 0.35rem;
+    line-height: 1;
+  }
+
+  .function-icons .btn svg {
+    width: 1.3em;
+    height: 1.3em;
+  }
+
+  /* About menu: two icon-only links, so it is a compact row instead of the
+     default 10rem-wide list. The flex display is scoped to `.show` on purpose —
+     styling the idle menu with `display: flex` would beat Bootstrap's
+     `display: none` and leave it permanently open. */
+  #aboutMenu {
+    min-width: 0;
+    padding: 0.25rem;
+  }
+
+  #aboutMenu.show {
+    display: flex;
+    gap: 0.1rem;
+  }
+
+  #aboutMenu .dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.5rem;
+  }
+
+  #aboutMenu .dropdown-item svg {
+    width: 1.15em;
+    height: 1.15em;
+  }
+
   .function-bar {
     border-color: #a0acbc;
   }
@@ -910,4 +1003,285 @@ code.language-markdown {
 #b_reflect.reflect-disabled svg {
     fill: var(--bs-secondary-color);
 }
+
+/* ── Chat-history search ────────────────────────────────────────────────────
+   A compact bar (own flex row above the composer) plus the result list used by
+   the "scenario" / "all" scopes. Both follow the panel look of .lesson-panel. */
+.chat-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+    background: var(--bs-tertiary-bg);
+}
+
+.chat-search-icon {
+    width: 0.9em;
+    height: 0.9em;
+    flex: 0 0 auto;
+    fill: var(--bs-secondary-color);
+}
+
+.chat-search-input {
+    flex: 1 1 auto;
+    min-width: 5rem;
+}
+
+.chat-search-scope {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 12rem;
+}
+
+.chat-search-count {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+}
+
+.chat-search-nav {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0.1rem 0.35rem;
+    line-height: 1;
+}
+
+.chat-search-nav svg {
+    width: 1em;
+    height: 1em;
+}
+
+/* Up / down: the two toolbar icons are arrows; stack them without a rotation
+   hack by simply accepting their natural direction (expand = up, collapse = down). */
+#searchClose {
+    font-size: 1.1rem;
+}
+
+.chat-search-results {
+    border: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+    background: var(--bs-body-bg);
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.chat-search-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.chat-search-item:last-child {
+    border-bottom: none;
+}
+
+.chat-search-item:hover,
+.chat-search-item:focus-visible {
+    background: var(--bs-secondary-bg);
+}
+
+.chat-search-item-meta {
+    font-size: 0.72rem;
+    color: var(--bs-secondary-color);
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.chat-search-item-role {
+    font-weight: 600;
+}
+
+.chat-search-snippet {
+    font-size: 0.83rem;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.chat-search-empty {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+
+/* Match highlight inside the rendered conversation. `mark` inherits the warning
+   palette from GitHub-flavoured markdown, but we need it to stand out in both
+   themes and to mark the *current* hit. */
+mark.chat-search-hit {
+    background-color: var(--bs-warning-bg-subtle, #fff3cd);
+    color: inherit;
+    padding: 0 1px;
+    border-radius: 2px;
+}
+
+mark.chat-search-hit.chat-search-current {
+    background-color: var(--bs-warning, #ffc107);
+    color: #212529;
+    outline: 1px solid var(--bs-warning-border-subtle, #ffe69c);
+}
+
+/* A highlighted code block keeps readable contrast in dark mode. */
+[data-bs-theme="dark"] mark.chat-search-hit {
+    background-color: rgba(187, 128, 9, 0.45);
+    color: inherit;
+}
+
+[data-bs-theme="dark"] mark.chat-search-hit.chat-search-current {
+    background-color: #bb8009;
+    color: #fff;
+}
+
+/* ── Bookmarks (收藏) ───────────────────────────────────────────────────────
+   The panel reuses the look of .chat-search-results (own flex row above the
+   composer) and lists the saved answers grouped by scenario and session. */
+.bookmark-panel {
+    border: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+    background: var(--bs-body-bg);
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.bookmark-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.bookmark-panel-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.bookmark-panel-count {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+
+.bookmark-group-title {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+    position: sticky;
+    top: 0;
+}
+
+.bookmark-item {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.bookmark-item:last-child {
+    border-bottom: none;
+}
+
+.bookmark-item-meta {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.15rem;
+}
+
+.bookmark-item-role {
+    font-weight: 600;
+}
+
+.bookmark-item-text {
+    font-size: 0.83rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 4.5em;
+    overflow: hidden;
+    user-select: text;
+}
+
+.bookmark-item-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+}
+
+.bookmark-item-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+}
+
+.bookmark-gone {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    font-style: italic;
+}
+
+.bookmark-empty {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+}
+
+/* Short-lived notice used by the bookmark actions (a modal would be too heavy
+   for a star click). Pinned above the composer, never intercepts clicks. */
+.chat-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 5.5rem;
+    transform: translateX(-50%);
+    max-width: 80%;
+    padding: 0.35rem 0.8rem;
+    border-radius: 1rem;
+    background: var(--bs-dark);
+    color: var(--bs-light);
+    font-size: 0.8rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    z-index: 1080;
+    pointer-events: none;
+    text-align: center;
+}
+
+[data-bs-theme="dark"] .chat-toast {
+    background: var(--bs-light);
+    color: var(--bs-dark);
+}
+
+/* Short highlight of the message a bookmark jumped to, so it is obvious which
+   bubble was opened (removed again by chat.js after ~2s). */
+.bookmark-flash {
+    animation: bookmark-flash 2s ease-out 1;
+}
+
+@keyframes bookmark-flash {
+    0% { background-color: var(--bs-warning-bg-subtle, #fff3cd); }
+    60% { background-color: var(--bs-warning-bg-subtle, #fff3cd); }
+    100% { background-color: transparent; }
+}
+
+[data-bs-theme="dark"] .bookmark-flash {
+    animation: bookmark-flash-dark 2s ease-out 1;
+}
+
+@keyframes bookmark-flash-dark {
+    0% { background-color: rgba(187, 128, 9, 0.35); }
+    60% { background-color: rgba(187, 128, 9, 0.35); }
+    100% { background-color: transparent; }
+}
+
 
