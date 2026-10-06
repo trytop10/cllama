@@ -2111,17 +2111,23 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     async function offerCardsFromText(text) {
         if (!text) return;
-        // A "builder"-like Skill: the page-builder itself, or any Skill that owns
-        // the propose_artifact tool. A reflection turn counts too: its numbered
-        // candidate list is meant to become clickable options.
+        // A "builder"-like turn: the page-builder / conversation-builder itself,
+        // or any Skill that owns the propose_artifact tool. A reflection turn
+        // counts too: its numbered candidate list is meant to become clickable
+        // options. ONLY these turns asked the model to draft candidates.
         const isBuilder = reflectInProgress ||
             activeSkill?.id === 'page-builder' ||
             (Array.isArray(activeSkill?.tools) && activeSkill.tools.some(t => (t?.name || t) === 'propose_artifact'));
-        const hasChoiceCue = /(请选择|选择哪|哪几项|选好后|回复编号|choose|pick|which (one|ones)|select)/i.test(text);
 
         // Option list (skip when the ask_user_choice tool did it in this turn).
-        // Gated on a choice cue so ordinary answers never turn into a list.
-        if (isBuilder || hasChoiceCue) {
+        // Gated on the builder context alone: an ordinary answer often happens to
+        // contain "select"/"choose"/"请选择" plus a numbered list (steps, options,
+        // a how-to), and turning that into a clickable card used to pop up a
+        // "Pick what to distill" list in every normal conversation — with no
+        // builder running, confirming it then did nothing at all. When a real
+        // Skill wants options outside this pipeline it calls ask_user_choice,
+        // which is handled through storage (renderPendingChoice), not here.
+        if (isBuilder) {
             const choiceStored = await loadPendingChoice();
             const choice = belongsToThisSession(choiceStored) ? choiceStored : null;
             if (!(choice && choice.id >= turnStartedAt)) {
@@ -2136,9 +2142,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Artifact drafts (skip when the propose_artifact tool did it this turn).
-        // NOT gated on the choice cue: whenever the answer carries drafts, the
-        // Import cards must appear — that is the whole import path, and dropping
-        // them silently is what made "import" look broken.
+        // Deliberately NOT gated on the builder context: whenever the answer
+        // carries drafts, the Import cards must appear — that is the whole import
+        // path, and dropping them silently is what made "import" look broken.
         const pendingStored = await loadPendingArtifact();
         // A card left over from another conversation must not count as "already
         // shown": this turn's identical draft still has to be written for THIS chat.
