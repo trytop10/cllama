@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "Modell"
     },
+    "exportReply": {
+        "message": "Diese Antwort exportieren"
+    },
+    "exportReplyHtml": {
+        "message": "Als HTML speichern"
+    },
+    "exportReplyPdf": {
+        "message": "Als PDF speichern (drucken)"
+    },
     "exportGeneratedBy": {
         "message": "Exportiert von cllama"
     },

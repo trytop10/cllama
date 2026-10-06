@@ -7,10 +7,11 @@
  * stub is needed here: a tiny fake renderer keeps the assertions readable.
  */
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const {
   buildChatHtml, buildExportFileName, escapeHtml, formatDateTime,
-  recordToHtml, sanitizeFileName, splitThinkBlocks
+  recordToHtml, sanitizeFileName, splitThinkBlocks, EXPORT_LAYOUT_CSS
 } = await import('../js/chat-export.mjs');
 
 let passed = 0;
@@ -163,6 +164,24 @@ check('buildChatHtml produces a complete, self-contained document', () => {
   assert.ok(html.includes('Input ≈5'), 'estimated usage is marked in the export too');
 });
 
+check('print rules let long answers flow instead of owning a page', () => {
+  const printBlock = EXPORT_LAYOUT_CSS.slice(EXPORT_LAYOUT_CSS.indexOf('@media print'));
+  assert.ok(printBlock.length > 0, '@media print must exist');
+  // The rule carries a comment explaining why .message is absent, so strip
+  // comments before looking for selectors.
+  const printCss = printBlock.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  // Blocks that look broken when split stay together...
+  assert.ok(printCss.includes('break-inside: avoid'), 'code/tables/images must stay unbreakable');
+  // ...but a whole message must be splittable: `avoid` on .message pushes the
+  // entire bubble to the next page and leaves the previous one almost empty.
+  assert.ok(!printCss.includes('.message'), '.message must not appear in the print rules at all');
+  // No orphan/widow lines at a page boundary.
+  assert.ok(/orphans:/.test(printCss) && /widows:/.test(printCss), 'orphans/widows must be set');
+  // Headings must not be stranded at the bottom of a page.
+  assert.ok(/break-after:\s*avoid/.test(printCss), 'headings must not break right after');
+});
+
 check('buildChatHtml survives empty / malformed input', () => {
   assert.ok(buildChatHtml({}).includes('<!DOCTYPE html>'));
   const withJunk = buildChatHtml({ records: [null, {}, { role: 'assistant' }], renderMarkdown });
@@ -193,5 +212,70 @@ assert.ok(integration.includes('Input 10 · Output 2 · Total 12 tokens'));
 assert.ok(!integration.includes('<script'), 'the export must contain no script');
 passed++;
 console.log('ok - real markdown pipeline renders a formatted document');
+
+// ------------------- per-answer export (chat/chat.js) -------------------
+// One answer is exported with the same builder, but in `minimal` mode: only the
+// answer body survives — no heading, no model name, no token line, no footer,
+// and no thinking block. The file name is what remembers where it came from.
+const replyOnly = buildChatHtml({
+  title: 'Chat freely · 00',
+  meta: ['Model: gemma3'],
+  records: [{
+    role: 'assistant',
+    content: '<think>secret reasoning</think>The answer.',
+    rtime: Date.now(),
+    model: 'gemma3',
+    usage: { input: 19, output: 300, total: 319, cached: 0, estimated: false }
+  }],
+  renderMarkdown,
+  labels: { generatedBy: 'Exported by cllama' },
+  options: { includeThinking: false, minimal: true }
+});
+assert.ok(replyOnly.includes('The answer.'), 'the reply text must be exported');
+assert.ok(!replyOnly.includes('secret reasoning'), 'thinking must not be exported');
+assert.ok(!replyOnly.includes('<details class="think">'), 'no think block must be emitted');
+assert.ok(!replyOnly.includes('class="export-header"'), 'no document header in a minimal export');
+assert.ok(!replyOnly.includes('Chat freely'), 'no scenario/session heading in a minimal export');
+assert.ok(!replyOnly.includes('gemma3'), 'no model name in a minimal export');
+assert.ok(!replyOnly.includes('class="message-header"'), 'no sender/time line in a minimal export');
+assert.ok(!replyOnly.includes('class="token-usage"'), 'no token line in a minimal export');
+assert.ok(!replyOnly.includes('class="export-footer"'), 'no footer in a minimal export');
+assert.ok(!replyOnly.includes('Exported by cllama'), 'the export credit line must be gone too');
+assert.ok(!replyOnly.includes('Input'), 'usage labels must not leak in either');
+assert.ok(replyOnly.includes('cllama-export-minimal'), 'the minimal marker class must be set');
+passed++;
+console.log('ok - a single answer exports as just the answer body');
+
+check('minimal does not change the session export', () => {
+  const full = buildChatHtml({
+    title: 'Chat freely · 00',
+    meta: ['Messages: 1'],
+    records: [{ role: 'assistant', content: 'Hi', model: 'gemma3', usage: { input: 1, output: 2, total: 3 } }],
+    renderMarkdown,
+    options: { includeThinking: false }
+  });
+  assert.ok(full.includes('class="export-header"'), 'the session export keeps its header');
+  assert.ok(full.includes('class="message-header"'), 'the session export keeps sender/time');
+  assert.ok(full.includes('class="token-usage"'), 'the session export keeps the token line');
+  assert.ok(full.includes('class="export-footer"'), 'the session export keeps its footer');
+  // The rule itself is always in the shared stylesheet; it is the body class
+  // that must stay off (see EXPORT_LAYOUT_CSS).
+  assert.ok(full.includes('<body class="cllama-export">'), 'the session export is not marked minimal');
+});
+
+// ------------------- i18n parity -------------------
+check('every locale defines the per-answer export messages', () => {
+  const required = ['exportReply', 'exportReplyHtml', 'exportReplyPdf'];
+  const en = JSON.parse(readFileSync(new URL('../_locales/en/messages.json', import.meta.url), 'utf8'));
+  for (const key of required) {
+    assert.ok(en[key]?.message, `en is missing ${key}`);
+  }
+  for (const locale of readdirSync(new URL('../_locales', import.meta.url))) {
+    const messages = JSON.parse(readFileSync(new URL(`../_locales/${locale}/messages.json`, import.meta.url), 'utf8'));
+    for (const key of required) {
+      assert.ok(messages[key]?.message, `${locale} is missing ${key}`);
+    }
+  }
+});
 
 console.log(`\n${passed} checks passed.`);

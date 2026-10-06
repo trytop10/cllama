@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "模型"
     },
+    "exportReply": {
+        "message": "匯出此回答"
+    },
+    "exportReplyHtml": {
+        "message": "匯出為 HTML"
+    },
+    "exportReplyPdf": {
+        "message": "匯出為 PDF（列印）"
+    },
     "exportGeneratedBy": {
         "message": "由 cllama 匯出"
     },

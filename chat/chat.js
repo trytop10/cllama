@@ -10,7 +10,7 @@ import { buildChatHtml, buildExportFileName } from '../js/chat-export.mjs';
 import { findMatches, searchHistoryStore } from '../js/chat-search.mjs';
 import { formatUsage } from '../js/token-usage.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
-import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
+import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, openPrintView, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // API configuration settings
@@ -856,6 +856,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                             starBtn.setAttribute("data-flag", "true");
                             refreshBookmarkButton(pdiv);
                         }
+                        // The per-answer export is only usable once the answer is
+                        // final too (same placeholder-rtime reason as the star).
+                        const exportBtn = pdiv.querySelector(".export-message-btn");
+                        if (exportBtn) exportBtn.setAttribute("data-flag", "true");
                         // Persisted usage (or its local estimate) of this answer.
                         setTokenUsage(pdiv, assistantMessageToAdd.usage);
                     }
@@ -1008,6 +1012,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <button type="button" class="bookmark-message-btn" data-flag="${flag}" title="${browser.i18n.getMessage("bookmarkAdd")}">
                         <svg viewBox="0 0 576 512" aria-hidden="true"><use href="#svg_star"></use></svg>
                     </button>
+                    ${isSelf ? '' : `<button type="button" class="export-message-btn" data-flag="${flag}" title="${browser.i18n.getMessage("exportReply")}">
+                        <svg viewBox="0 0 512 512" aria-hidden="true"><use href="#svg_download"></use></svg>
+                    </button>`}
                     <img src="/images/clear.svg" class="delete-message-btn" data-flag="${flag}" style="height:13px;" title="${browser.i18n.getMessage("delete")}"/>
                     ${isSelf ? `<span class="resend-message-btn" style="cursor:pointer;display:none;margin-left:5px;font-size:13px;" title="${browser.i18n.getMessage("resend")}">↺</span>` : ''}
                 </div>
@@ -1157,6 +1164,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                     sessionName: currentSessionName()
                 });
                 applyBookmarkResult(messageDiv, result);
+            });
+        }
+
+        const exportBtn = messageDiv.querySelector('.export-message-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // Streaming answer: its rtime is still the placeholder value, so
+                // there is no final record to export yet (same rule as the star).
+                if (exportBtn.getAttribute('data-flag') === 'false') {
+                    showChatToast(browser.i18n.getMessage('chatSearchBusy') || 'Wait for the answer to finish.');
+                    return;
+                }
+                showExportMenu(exportBtn, (format) => exportReply(messageDiv, format));
             });
         }
 
@@ -2488,11 +2510,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
-     * Export the current session as one self-contained HTML file: markdown
-     * rendered, styles inlined, attachments embedded as data URLs.
+     * Records of the conversation on screen that carry something to export.
+     * @returns {Array<Object>} Exportable records
      */
-    async function exportCurrentSession() {
-        const records = (historyMessages || []).filter(r => String(r?.content || '').trim() || r?.fileInfo);
+    function exportableRecords() {
+        return (historyMessages || []).filter(r => String(r?.content || '').trim() || r?.fileInfo);
+    }
+
+    /**
+     * Export the current session as one self-contained document: markdown
+     * rendered, styles inlined, attachments embedded as data URLs. HTML is
+     * downloaded, PDF goes through the browser's own print dialog.
+     * @param {'html'|'pdf'} [format='html'] - Export target
+     */
+    async function exportCurrentSession(format = 'html') {
+        const records = exportableRecords();
         if (!records.length) {
             balert(browser.i18n.getMessage('exportChatEmpty') || 'Nothing to export.');
             return;
@@ -2518,18 +2550,171 @@ document.addEventListener("DOMContentLoaded", async () => {
             options: { includeThinking: true, includeImages: true }
         });
 
-        exportFile(
-            html,
-            'html',
-            buildExportFileName({ scenario: scenarioName, session: sessionName }),
-            'text/html;charset=utf-8'
-        );
+        if (format === 'pdf') {
+            // Same hand-off as the per-answer export: the document is printed
+            // from its own tab, where "Save as PDF" is one of the targets.
+            await openPrintView(html, title);
+        } else {
+            exportFile(
+                html,
+                'html',
+                buildExportFileName({ scenario: scenarioName, session: sessionName }),
+                'text/html;charset=utf-8'
+            );
+        }
     }
 
-    document.getElementById("b_export")?.addEventListener('click', async (e) => {
+    // The toolbar button offers the same two targets as the per-answer export.
+    const bExport = document.getElementById("b_export");
+    bExport?.addEventListener('click', (e) => {
         e.preventDefault();
-        await exportCurrentSession();
+        e.stopPropagation();
+        if (!exportableRecords().length) {
+            balert(browser.i18n.getMessage('exportChatEmpty') || 'Nothing to export.');
+            return;
+        }
+        showExportMenu(bExport, (format) => exportCurrentSession(format));
     });
+
+    /* ── Export menu (HTML / PDF) ─────────────────────────────────────────────
+       Two buttons share this menu: the toolbar's "export this chat" and the
+       download icon of every answer. Both offer a standalone HTML file and a
+       PDF produced by the browser's own print dialog (`viewer/print.html`, see
+       openPrintView in js/util.js). The per-answer export drops every wrapper
+       (see `minimal`); the session export keeps its header, model and token
+       lines. */
+
+    let exportMenu = null;        // the open menu, if any
+    let exportMenuAnchor = null;  // the button it belongs to (for toggling)
+
+    /** Closes the export menu. */
+    function closeExportMenu() {
+        if (!exportMenu) return;
+        exportMenu.remove();
+        exportMenu = null;
+        exportMenuAnchor = null;
+        document.removeEventListener('click', handleExportMenuOutsideClick);
+        document.removeEventListener('keydown', handleExportMenuKeydown, true);
+    }
+
+    /**
+     * A click anywhere outside the menu closes it.
+     *
+     * The click that just opened the menu is still propagating when this
+     * listener is registered, and a listener added to an ancestor during
+     * dispatch *is* called once the event gets there — without the anchor check
+     * the menu would close within the very same click and nothing would appear
+     * to happen. The button's own handler owns the open/close toggle.
+     */
+    function handleExportMenuOutsideClick(e) {
+        if (!exportMenu) return;
+        if (exportMenu.contains(e.target)) return;
+        if (exportMenuAnchor?.contains(e.target)) return;
+        closeExportMenu();
+    }
+
+    /** Escape closes the menu. */
+    function handleExportMenuKeydown(e) {
+        if (e.key === 'Escape') closeExportMenu();
+    }
+
+    /**
+     * Shows the HTML / PDF menu right under the button that opened it.
+     * @param {HTMLElement} anchorEl - The button the menu belongs to
+     * @param {Function} onPick - async (format: 'html'|'pdf') => void
+     */
+    function showExportMenu(anchorEl, onPick) {
+        // Clicking the button that opened the menu closes it again.
+        if (exportMenu && exportMenuAnchor === anchorEl) {
+            closeExportMenu();
+            return;
+        }
+        closeExportMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'export-menu';
+        menu.setAttribute('role', 'menu');
+        menu.innerHTML = `
+            <button type="button" class="export-menu-item" role="menuitem" data-format="html">${escapeHTML(browser.i18n.getMessage('exportReplyHtml') || 'HTML')}</button>
+            <button type="button" class="export-menu-item" role="menuitem" data-format="pdf">${escapeHTML(browser.i18n.getMessage('exportReplyPdf') || 'PDF')}</button>
+        `;
+        document.body.appendChild(menu);
+        exportMenu = menu;
+        exportMenuAnchor = anchorEl;
+
+        // Fixed positioning: the message list scrolls underneath, the menu must
+        // not travel with it. Flip above the button when there is no room below.
+        const rect = anchorEl.getBoundingClientRect();
+        const width = menu.offsetWidth;
+        const height = menu.offsetHeight;
+        let left = Math.min(rect.left, window.innerWidth - width - 8);
+        let top = rect.bottom + 4;
+        if (top + height > window.innerHeight - 8) top = Math.max(8, rect.top - height - 4);
+        menu.style.left = `${Math.max(8, left)}px`;
+        menu.style.top = `${top}px`;
+
+        menu.querySelectorAll('.export-menu-item').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const format = btn.dataset.format;
+                closeExportMenu();
+                try {
+                    await onPick(format);
+                } catch (err) {
+                    console.error('Export failed:', err);
+                    balert(browser.i18n.getMessage('cllamaError') || 'Export failed.');
+                }
+            });
+        });
+
+        document.addEventListener('click', handleExportMenuOutsideClick);
+        document.addEventListener('keydown', handleExportMenuKeydown, true);
+    }
+
+    /**
+     * Saves ONE answer as a standalone document.
+     * @param {HTMLElement} messageDiv - The .message element of the answer
+     * @param {'html'|'pdf'} format - 'html' downloads a file, 'pdf' opens the print dialog
+     */
+    async function exportReply(messageDiv, format) {
+        const rtime = parseInt(messageDiv.dataset.timestamp, 10);
+        const record = historyMessages.find(item => item.rtime === rtime) || {
+            role: messageDiv.classList.contains('user-message') ? 'user' : 'assistant',
+            content: messageTextFallback(messageDiv),
+            rtime
+        };
+
+        if (!String(record.content || '').trim()) {
+            balert(browser.i18n.getMessage('exportChatEmpty') || 'Nothing to export.');
+            return;
+        }
+
+        const scenarioName = currentScenarioName();
+        const sessionName = await getCurrentSessionName(ccId || '0');
+        const labels = tokenUsageLabels();
+
+        const html = buildChatHtml({
+            lang: browser.i18n.getUILanguage(),
+            records: [record],
+            css: await loadExportStylesheets(),
+            renderMarkdown: (md) => marked.parse(md),
+            labels,
+            // Nothing but the answer itself: no scenario/session heading, no
+            // model name, no token line, no footer, no thinking block. Only the
+            // file name remembers where it came from.
+            options: { includeThinking: false, includeImages: true, minimal: true }
+        });
+
+        const fileName = buildExportFileName({ scenario: scenarioName, session: sessionName });
+        if (format === 'pdf') {
+            // Handing off to the browser's own print dialog keeps this simple:
+            // no PDF library, no generated fonts, and the user picks
+            // "Save as PDF" as the target.
+            await openPrintView(html);
+        } else {
+            exportFile(html, 'html', fileName, 'text/html;charset=utf-8');
+        }
+    }
 
     /* ── Chat-history search ──────────────────────────────────────────────────
        One bar, two scopes. "session" walks the conversation on screen and wraps

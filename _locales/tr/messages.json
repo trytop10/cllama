@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "Model"
     },
+    "exportReply": {
+        "message": "Bu yanıtı dışa aktar"
+    },
+    "exportReplyHtml": {
+        "message": "HTML olarak kaydet"
+    },
+    "exportReplyPdf": {
+        "message": "PDF olarak kaydet (yazdır)"
+    },
     "exportGeneratedBy": {
         "message": "cllama ile dışa aktarıldı"
     },

@@ -117,7 +117,9 @@ export function recordToHtml(record, context = {}) {
     ? context.renderMarkdown
     : (text) => escapeHtml(text);
   const labels = context.labels || {};
-  const options = { includeThinking: true, includeImages: true, ...(context.options || {}) };
+  const options = { includeThinking: true, includeImages: true, minimal: false, ...(context.options || {}) };
+  // Minimal = "just the answer": no sender/model, no time, no token line.
+  const minimal = options.minimal === true;
 
   const isUser = record?.role === 'user';
   const time = formatDateTime(record?.rtime);
@@ -143,15 +145,18 @@ export function recordToHtml(record, context = {}) {
     }).join('\n');
   }
 
-  const usageText = isUser ? '' : formatUsage(record?.usage, labels);
+  const usageText = (isUser || minimal) ? '' : formatUsage(record?.usage, labels);
   const usageHtml = usageText
     ? `<div class="token-usage">${escapeHtml(usageText)}</div>`
     : '';
 
+  const headerHtml = minimal
+    ? ''
+    : `<div class="message-header"><span class="message-sender">${escapeHtml(sender)}</span>` +
+      `<span class="message-time">${escapeHtml(time)}</span></div>\n  `;
+
   return `<section class="message ${isUser ? 'user-message' : 'bot-message'}">
-  <div class="message-header"><span class="message-sender">${escapeHtml(sender)}</span>` +
-    `<span class="message-time">${escapeHtml(time)}</span></div>
-  <div class="message-body">${body}</div>
+  ${headerHtml}<div class="message-body">${body}</div>
   ${usageHtml}
 </section>`;
 }
@@ -192,6 +197,10 @@ body.cllama-export {
 .export-meta { font-size: 0.78rem; color: #59636e; }
 .export-meta span + span::before { content: " · "; }
 .export-body { max-width: 900px; margin: 0 auto; }
+/* Minimal export (one answer on its own): the document is nothing but the
+   body, so neither the header/footer spacing nor the message gap applies. */
+body.cllama-export-minimal { padding: 20px; }
+body.cllama-export-minimal .message { margin-bottom: 0; }
 .message { margin: 0 0 18px; }
 .message-header { font-size: 0.72rem; color: #59636e; margin-bottom: 4px; }
 .message-sender { font-weight: 600; margin-right: 8px; }
@@ -224,8 +233,15 @@ body.cllama-export {
 }
 pre { overflow-x: auto; }
 @media print {
-  body.cllama-export { padding: 0; }
-  .message, pre, table, img, .think { break-inside: avoid; }
+  body.cllama-export { padding: 0; orphans: 3; widows: 3; }
+  /* The .message rule is deliberately NOT in this list. A message is often taller
+     than the space left on the current page, and "break-inside: avoid" then moves
+     the WHOLE bubble to the next page — leaving the previous one almost empty
+     (which is why a three-word question appeared to own a page of its own). Long
+     answers may split across pages; only blocks that look broken when split are
+     kept together. */
+  pre, table, img, .think { break-inside: avoid; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { break-after: avoid; }
   a { color: inherit; text-decoration: none; }
   .export-footer { page-break-before: auto; }
 }
@@ -240,14 +256,22 @@ pre { overflow-x: auto; }
  * @param {string} [params.css] - Extra CSS (markdown / KaTeX stylesheets)
  * @param {Function} [params.renderMarkdown] - markdown → HTML renderer
  * @param {Object} [params.labels] - Localized labels (passed to records)
- * @param {Object} [params.options] - { includeThinking, includeImages }
+ * @param {Object} [params.options] - { includeThinking, includeImages, minimal }
+ *   `minimal: true` keeps only the message bodies: no document header/footer
+ *   (and the title is ignored), no sender or time, no token line — used by the
+ *   per-answer export.
  * @returns {string} Complete HTML document
  */
 export function buildChatHtml(params = {}) {
-  const title = params.title || 'cllama';
   const records = Array.isArray(params.records) ? params.records : [];
   const meta = (params.meta || []).filter(Boolean);
   const labels = params.labels || {};
+  const minimal = params.options?.minimal === true;
+  // A minimal export is "just the answer": the heading is gone and the document
+  // title is forced to the generic fallback, so no scenario/session/model string
+  // leaks into the artifact — nor into the printed page header, which browsers
+  // fill with the document title.
+  const title = minimal ? 'cllama' : (params.title || 'cllama');
 
   const body = records
     .map(record => recordToHtml(record, {
@@ -261,6 +285,18 @@ export function buildChatHtml(params = {}) {
     ? `<div class="export-meta">${meta.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>`
     : '';
 
+  const headerHtml = minimal
+    ? ''
+    : `<header class="export-header">
+<h1>${escapeHtml(title)}</h1>
+${metaHtml}
+</header>
+`;
+  const footerHtml = minimal
+    ? ''
+    : `<footer class="export-footer">${escapeHtml(labels.generatedBy || 'Exported by cllama')} · ${escapeHtml(formatDateTime(params.exportedAt ?? Date.now()))}</footer>
+`;
+
   return `<!DOCTYPE html>
 <html lang="${escapeHtml(params.lang || 'en')}">
 <head>
@@ -272,16 +308,11 @@ ${params.css || ''}
 ${EXPORT_LAYOUT_CSS}
 </style>
 </head>
-<body class="cllama-export">
-<header class="export-header">
-<h1>${escapeHtml(title)}</h1>
-${metaHtml}
-</header>
-<main class="export-body">
+<body class="cllama-export${minimal ? ' cllama-export-minimal' : ''}">
+${headerHtml}<main class="export-body">
 ${body}
 </main>
-<footer class="export-footer">${escapeHtml(labels.generatedBy || 'Exported by cllama')} · ${escapeHtml(formatDateTime(params.exportedAt ?? Date.now()))}</footer>
-</body>
+${footerHtml}</body>
 </html>
 `;
 }

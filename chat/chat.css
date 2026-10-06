@@ -60,13 +60,15 @@ hr {
 
 .message:hover .delete-message-btn,
 .message:hover .copy-message-btn,
-.message:hover .bookmark-message-btn {
+.message:hover .bookmark-message-btn,
+.message:hover .export-message-btn {
     opacity: 1; /* show buttons when message is hovered */
 }
 
 .copy-message-btn,
 .delete-message-btn,
-.bookmark-message-btn {
+.bookmark-message-btn,
+.export-message-btn {
     opacity: 0; /* hidden by default */
     transition: opacity 0.2s ease-in-out, color 0.2s ease-in-out, background-color 0.2s ease-in-out;
     cursor: pointer;
@@ -107,6 +109,57 @@ hr {
 .bookmark-message-btn[data-flag="false"] {
     opacity: 0.35;
     cursor: default;
+}
+
+/* Export one answer: a button like the star (so it shares the hover/opacity
+   rules above), drawn with the toolbar's #svg_download symbol. */
+.export-message-btn {
+    background: none;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
+}
+
+.export-message-btn svg {
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
+}
+
+.export-message-btn[data-flag="false"] {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* Export menu (HTML / PDF), shared by the toolbar's "export this chat" button
+   and the per-answer download icon. Fixed-positioned by chat.js next to the
+   button it belongs to, so it does not scroll away with the message list. */
+.export-menu {
+    position: fixed;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    min-width: 9rem;
+    padding: 0.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    background: var(--bs-body-bg);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+}
+
+.export-menu-item {
+    padding: 0.3rem 0.6rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: none;
+    color: var(--bs-body-color);
+    font-size: 0.85rem;
+    text-align: start;
+    white-space: nowrap;
+}
+
+.export-menu-item:hover {
+    background: var(--bs-tertiary-bg);
 }
 
 /* Dark mode specific adjustments for buttons */

@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "Mô hình"
     },
+    "exportReply": {
+        "message": "Xuất câu trả lời này"
+    },
+    "exportReplyHtml": {
+        "message": "Lưu dưới dạng HTML"
+    },
+    "exportReplyPdf": {
+        "message": "Lưu dưới dạng PDF (in)"
+    },
     "exportGeneratedBy": {
         "message": "Được xuất bởi cllama"
     },

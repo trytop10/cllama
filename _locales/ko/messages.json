@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "모델"
     },
+    "exportReply": {
+        "message": "이 답변 내보내기"
+    },
+    "exportReplyHtml": {
+        "message": "HTML로 저장"
+    },
+    "exportReplyPdf": {
+        "message": "PDF로 저장(인쇄)"
+    },
     "exportGeneratedBy": {
         "message": "cllama에서 내보냄"
     },

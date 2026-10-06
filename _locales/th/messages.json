@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "โมเดล"
     },
+    "exportReply": {
+        "message": "ส่งออกคำตอบนี้"
+    },
+    "exportReplyHtml": {
+        "message": "บันทึกเป็น HTML"
+    },
+    "exportReplyPdf": {
+        "message": "บันทึกเป็น PDF (พิมพ์)"
+    },
     "exportGeneratedBy": {
         "message": "ส่งออกโดย cllama"
     },

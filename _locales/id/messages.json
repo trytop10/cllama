@@ -742,6 +742,15 @@
     "exportChatModel": {
         "message": "Model"
     },
+    "exportReply": {
+        "message": "Ekspor jawaban ini"
+    },
+    "exportReplyHtml": {
+        "message": "Simpan sebagai HTML"
+    },
+    "exportReplyPdf": {
+        "message": "Simpan sebagai PDF (cetak)"
+    },
     "exportGeneratedBy": {
         "message": "Diekspor oleh cllama"
     },

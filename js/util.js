@@ -303,6 +303,46 @@ export function openHtmlInNewTab(htmlString, title = 'New Page') {
 }
 
 /**
+ * Storage key used to hand a document over to the print tab
+ * (see `viewer/print.js`).
+ */
+export const PRINT_STORAGE_KEY = 'pendingPrintHtml';
+
+/**
+ * Opens a self-contained HTML document in a new tab and triggers the browser's
+ * own print dialog, where the user can pick "Save as PDF" as the target — no
+ * PDF library, no generated fonts, and the print styles of the exported
+ * document (`@media print` in js/chat-export.mjs) are respected.
+ *
+ * The document is handed over through storage instead of a message, because
+ * the tab id is not known before the tab exists and the HTML can be large
+ * (a session export easily exceeds what a data URL comfortably carries).
+ * @param {string} htmlString - Complete standalone HTML document
+ * @param {string} [title] - Document title
+ * @returns {Promise<void>}
+ */
+export async function openPrintView(htmlString, title = 'cllama') {
+  await setStorageItem({ [PRINT_STORAGE_KEY]: { htmlString, title } });
+  await browser.tabs.create({ url: browser.runtime.getURL('viewer/print.html') });
+}
+
+/**
+ * Writes one `storage.local` item and resolves only once the write is durable.
+ *
+ * The print tab reads the item as soon as it loads, so the write must land
+ * first. Both API styles are supported: Chrome MV3 returns a promise, the
+ * callback-style namespaces (and Firefox's `chrome`) only call back.
+ * @param {Object} item - Keys to write
+ * @returns {Promise<void>}
+ */
+function setStorageItem(item) {
+  return new Promise((resolve) => {
+    const result = browser.storage.local.set(item, resolve);
+    if (result && typeof result.then === 'function') result.then(resolve);
+  });
+}
+
+/**
  * Finds the first parent node matching any of the given selectors
  * @param {HTMLElement} node - Starting node
  * @param {...string} selectors - CSS selectors to match
