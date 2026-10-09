@@ -2136,37 +2136,44 @@ document.addEventListener("DOMContentLoaded", async () => {
         // A "builder"-like turn: the page-builder / conversation-builder itself,
         // or any Skill that owns the propose_artifact tool. A reflection turn
         // counts too: its numbered candidate list is meant to become clickable
-        // options. ONLY these turns asked the model to draft candidates.
+        // options. ONLY these turns asked the model to draft candidates/artifacts.
         const isBuilder = reflectInProgress ||
             activeSkill?.id === 'page-builder' ||
             (Array.isArray(activeSkill?.tools) && activeSkill.tools.some(t => (t?.name || t) === 'propose_artifact'));
 
+        // Ordinary chats must stay card-free. Two independent false positives
+        // used to fire here with no builder running:
+        //  - a normal answer often contains "select"/"choose"/"请选择" plus a
+        //    numbered list (steps, options, a how-to) → it became a clickable
+        //    "Pick what to distill" list;
+        //  - a normal answer may carry a fenced or bare JSON block for a dozen
+        //    unrelated reasons (an example payload, a config snippet, braces in
+        //    pseudo-code) → an unparsable one became a red
+        //    "Could not be imported (unnamed): invalid JSON" card.
+        // Confirming either did nothing, because no builder was there to draft
+        // anything. Nothing in such an answer is actually a draft, so nothing is
+        // dropped by returning: the ask_user_choice / propose_artifact tools
+        // write their cards through storage (renderPendingChoice /
+        // renderPendingArtifacts) and do not depend on this text parsing.
+        if (!isBuilder) return;
+
         // Option list (skip when the ask_user_choice tool did it in this turn).
-        // Gated on the builder context alone: an ordinary answer often happens to
-        // contain "select"/"choose"/"请选择" plus a numbered list (steps, options,
-        // a how-to), and turning that into a clickable card used to pop up a
-        // "Pick what to distill" list in every normal conversation — with no
-        // builder running, confirming it then did nothing at all. When a real
-        // Skill wants options outside this pipeline it calls ask_user_choice,
-        // which is handled through storage (renderPendingChoice), not here.
-        if (isBuilder) {
-            const choiceStored = await loadPendingChoice();
-            const choice = belongsToThisSession(choiceStored) ? choiceStored : null;
-            if (!(choice && choice.id >= turnStartedAt)) {
-                const options = parseChoiceOptions(text);
-                if (options.length) {
-                    // Keep the options of an identical card instead of re-creating it.
-                    const same = choice && choice.options.length === options.length &&
-                        choice.options.every((o, i) => o.title === options[i].title);
-                    if (!same) await setPendingChoice(options, '', sessionKey());
-                }
+        const choiceStored = await loadPendingChoice();
+        const choice = belongsToThisSession(choiceStored) ? choiceStored : null;
+        if (!(choice && choice.id >= turnStartedAt)) {
+            const options = parseChoiceOptions(text);
+            if (options.length) {
+                // Keep the options of an identical card instead of re-creating it.
+                const same = choice && choice.options.length === options.length &&
+                    choice.options.every((o, i) => o.title === options[i].title);
+                if (!same) await setPendingChoice(options, '', sessionKey());
             }
         }
 
         // Artifact drafts (skip when the propose_artifact tool did it this turn).
-        // Deliberately NOT gated on the builder context: whenever the answer
-        // carries drafts, the Import cards must appear — that is the whole import
-        // path, and dropping them silently is what made "import" look broken.
+        // Inside a builder turn a draft must never be dropped silently — that is
+        // why rejected blocks are surfaced instead of ignored. (Outside such a
+        // turn this whole function returned early: there is no draft to drop.)
         const pendingStored = await loadPendingArtifact();
         // A card left over from another conversation must not count as "already
         // shown": this turn's identical draft still has to be written for THIS chat.
