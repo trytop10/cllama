@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Quellcode"
+    },
+    "mcpAppTitle": {
+        "message": "Interaktive App"
+    },
+    "mcpAppUnsupported": {
+        "message": "Interaktive Apps werden in dieser Umgebung nicht unterstützt - stattdessen wird das Text-Ergebnis angezeigt."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Die interaktive App konnte nicht geladen werden"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "Die App hat eine Anfrage im Eingabefeld vorbereitet - prüfen und senden."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Ein unsicherer Link der App wurde blockiert"
+    },
+    "skillRunApp": {
+        "message": "App"
+    },
+    "skillRunFilterApp": {
+        "message": "App-Aufrufe"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "Die Ansicht wurde geladen, aber ihr Skript wurde nie gestartet - dieser Build kann es nicht ausführen (vom Browser blockiert)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "Die Ansicht lädt ihr Skript von einer Remote-URL, was die Sandbox nicht zulässt - sie wurde daher gerendert, aber nie gestartet."
+    },
+    "mcpAppViewError": {
+        "message": "Das Skript der Ansicht hat einen Fehler ausgelöst: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Diese Umgebung erlaubt es nicht, das Skript der Ansicht auszuführen, daher kann die interaktive App nicht angezeigt werden."
+    },
+    "mcpAppRender": {
+        "message": "Interaktive Ansicht rendern"
+    },
+    "mcpAppAutoRender": {
+        "message": "Interaktive Ansichten beim erneuten Öffnen eines Chats rendern"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "Eine Ansicht aus der gerade erhaltenen Antwort wird immer sofort gerendert. Dieser Schalter gilt für wieder geöffnete Unterhaltungen: ausgeschaltet bleiben deren Ansichten eingeklappt, bis Sie auf das Symbol klicken."
+    },
+    "mcpAppHide": {
+        "message": "Interaktive Ansicht ausblenden"
     }
 }

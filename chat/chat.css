@@ -493,6 +493,92 @@ hr {
     padding: 0.2rem 0.35rem;
 }
 
+/* ------------------- MCP Apps (interactive UI from an MCP server) ------------------- */
+.mcp-app-card {
+    display: block;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.8rem;
+    background-color: var(--bs-body-bg);
+    overflow: hidden;
+}
+
+.mcp-app-header {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    word-break: break-word;
+}
+
+/* The view is a sandboxed iframe: it must never grow the bubble sideways, and
+   its height is driven by the app's own size-changed notifications (bounded in
+   chat.js, so a misbehaving app cannot inflate the conversation). */
+.mcp-app-frame {
+    display: block;
+    width: 100%;
+    border: 0;
+    background-color: var(--bs-body-bg);
+}
+
+.mcp-app-notice {
+    font-size: 0.78rem;
+    color: var(--bs-secondary-color);
+    padding: 0.35rem 0.6rem;
+    border-top: 1px solid var(--bs-border-color);
+    word-break: break-word;
+}
+
+/* "Render this view": the message footer icon (next to the token line) that
+   renders — and hides — an interactive view on demand. With auto-rendering on,
+   the card is rendered instead and no icon is needed. */
+.message-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.message-footer .token-usage {
+    margin-top: 0;
+    margin-left: auto; /* the token line stays at the right edge */
+}
+
+.mcp-app-triggers {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.mcp-app-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    border: 0;
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    color: var(--bs-secondary-color);
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+.mcp-app-trigger-btn:hover {
+    color: var(--bs-primary);
+    background-color: var(--bs-tertiary-bg);
+}
+
+.mcp-app-trigger-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.mcp-app-trigger-btn.mcp-app-trigger-active {
+    color: var(--bs-primary);
+}
+
 .artifact-note {
     margin-bottom: 0.6rem;
 }

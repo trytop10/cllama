@@ -1215,6 +1215,13 @@ export const DB_KEY = {
   pendingArtifact: "pendingArtifact",
   pendingChoice: "pendingChoice",
   mcpServers: "mcpServers",
+  // Whether MCP App views are rendered as soon as a tool produces one (true,
+  // the default) or kept behind a per-view "render" button (see §7.13).
+  mcpAppAutoRender: "mcpAppAutoRender",
+  // Per-conversation Skill choice, keyed "<scenarioId>:<sessionId>": the Skill
+  // picked in a chat is remembered when that chat is opened again. Deliberately
+  // neither a global nor a scenario-wide default.
+  skillSelection: "skillSelection",
   // Learned notes per chat scenario (see js/scenario-learn.mjs): a manual,
   // user-confirmed way for a scenario to improve itself over time.
   scenarioLearn: "scenarioLearn",
@@ -1227,6 +1234,75 @@ export const DB_KEY = {
   toolGrants: "toolGrants",                 // "session:tool" pairs allowed without re-asking
   skillRuns: "skillRuns"                    // audit trail of skill/tool runs (metadata only)
 };
+
+// ------------------- MCP Apps rendering preference -------------------
+
+/**
+ * Whether an MCP App view is rendered as soon as a tool produces one.
+ * Defaults to true — the behaviour from before this setting existed.
+ * @returns {Promise<boolean>}
+ */
+export async function loadMcpAppAutoRender() {
+  const data = await browser.storage.local.get(DB_KEY.mcpAppAutoRender);
+  return data[DB_KEY.mcpAppAutoRender] !== false;
+}
+
+/**
+ * Persist the "render interactive views automatically" preference. When off,
+ * every view stays collapsed behind its "render" button (history reloads
+ * included — the reference is what makes that button possible).
+ * @param {boolean} enabled - Whether views render without a click
+ * @returns {Promise<void>}
+ */
+export async function setMcpAppAutoRender(enabled) {
+  await browser.storage.local.set({ [DB_KEY.mcpAppAutoRender]: enabled === true });
+}
+
+// ------------------- per-conversation Skill selection -------------------
+// The Skill a user picks is remembered *for that conversation only*
+// ("<scenarioId>:<sessionId>"): reopening the chat restores it, and no other
+// chat (not even in the same scenario) is affected. There is deliberately no
+// global or scenario-wide default.
+
+/**
+ * Read the Skill choice remembered for one conversation.
+ * @param {string} sessionKey - "<scenarioId>:<sessionId>"
+ * @returns {Promise<Object|null>} { skillId, args } | { auto: true } | { disabled: true } | null
+ */
+export async function loadSkillSelection(sessionKey) {
+  if (!sessionKey) return null;
+  const data = await browser.storage.local.get(DB_KEY.skillSelection);
+  const map = data[DB_KEY.skillSelection];
+  if (!map || typeof map !== 'object') return null;
+  const entry = map[sessionKey];
+  return entry && typeof entry === 'object' ? entry : null;
+}
+
+/**
+ * Remember (or, with a null entry, forget) the Skill choice of one conversation.
+ * @param {string} sessionKey - "<scenarioId>:<sessionId>"
+ * @param {Object|null} entry - { skillId, args } | { auto: true } | { disabled: true }
+ * @returns {Promise<void>}
+ */
+export async function saveSkillSelection(sessionKey, entry) {
+  if (!sessionKey) return;
+  const data = await browser.storage.local.get(DB_KEY.skillSelection);
+  const stored = data[DB_KEY.skillSelection];
+  const map = stored && typeof stored === 'object' ? { ...stored } : {};
+  if (entry && typeof entry === 'object' && Object.keys(entry).length) map[sessionKey] = entry;
+  else delete map[sessionKey];
+  await browser.storage.local.set({ [DB_KEY.skillSelection]: map });
+}
+
+/**
+ * Forget the Skill choice of a conversation (used when that conversation is
+ * deleted), so no entry pointing at a dead session lingers.
+ * @param {string} sessionKey - "<scenarioId>:<sessionId>"
+ * @returns {Promise<void>}
+ */
+export async function removeSkillSelection(sessionKey) {
+  await saveSkillSelection(sessionKey, null);
+}
 
 // ------------------- Tool governance: audit trail & confirmation -------------------
 // Metadata only: run records never contain page content, model answers or
@@ -1245,7 +1321,7 @@ const TOOL_CONFIRM_TIMEOUT_MS = 5 * 60 * 1000;
  * filter means.
  * @param {Array<Object>} runs - Records from loadSkillRuns()
  * @param {Object} [filter] - { origin, status, skill, query }
- *   origin: 'all' | 'model' | 'user' | 'page'; status: 'all' | 'ok' | 'failed';
+ *   origin: 'all' | 'model' | 'app' | 'user' | 'page'; status: 'all' | 'ok' | 'failed';
  *   skill: exact skill name ('all' for every Skill); query: free text search.
  * @returns {Array<Object>} Matching records, order preserved
  */
@@ -1337,10 +1413,13 @@ function sanitizeStep(step) {
  * @returns {Object} Run object (mutated by recordRunStep / finishSkillRun)
  */
 export function startSkillRun(meta = {}) {
+  // 'model': the tools this turn called. 'user'/'page': see below.
+  // 'app': an MCP App (interactive UI in the conversation) asked for a tool —
+  // still attributable, so the timeline keeps showing who did what.
+  const ORIGINS = ['model', 'app', 'user', 'page'];
   return {
     id: `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    // 'model': the tools this turn called. 'user'/'page': see below.
-    origin: 'model',
+    origin: ORIGINS.includes(meta.origin) ? meta.origin : 'model',
     time: Date.now(),
     skillId: meta.skillId || null,
     skillName: meta.skillName || null,
@@ -1561,6 +1640,15 @@ export function buildToolContext(meta = {}) {
     onStep: (step) => {
       if (run) recordRunStep(run, step).catch((e) => console.warn('audit write failed:', e));
       typeof options.onToolStep === 'function' && options.onToolStep(step);
+    },
+    /**
+     * UI data channel: the raw result of a tool that declares an MCP App
+     * (interactive UI). Deliberately separate from `onStep`, because the audit
+     * trail stores metadata only — the payload must not be persisted there.
+     * @param {Object} info - { tool, args, output, ui, serverName }
+     */
+    onToolResult: (info) => {
+      typeof options.onToolResult === 'function' && options.onToolResult(info);
     }
   };
 }

@@ -1,4 +1,4 @@
-import { i18n, DB_KEY, loadSkills, saveSkills, loadSkillRuns, clearSkillRuns, filterSkillRuns, getRuntimeConfig } from "../js/cllama.js";
+import { i18n, DB_KEY, loadSkills, saveSkills, loadSkillRuns, clearSkillRuns, filterSkillRuns, getRuntimeConfig, loadMcpAppAutoRender, setMcpAppAutoRender } from "../js/cllama.js";
 import { listTools } from "../js/skill-tools.mjs";
 import { loadMcpServers, saveMcpServers, listMcpTools, initMcpTools } from "../js/mcp.mjs";
 import { balert } from "../js/dialog.mjs";
@@ -51,6 +51,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // each time a Skill form opens, so late-registered tools appear there.
   initMcpTools().catch(e => console.warn('[MCP] init failed:', e));
   await initMcpList();
+
+  // MCP App views: render them automatically, or keep every one of them behind
+  // its own "render" button (see AGENTS.md §7.13).
+  const autoRenderBox = document.getElementById('mcpAppAutoRender');
+  if (autoRenderBox) {
+    autoRenderBox.checked = await loadMcpAppAutoRender();
+    autoRenderBox.addEventListener('change', () => setMcpAppAutoRender(autoRenderBox.checked));
+  }
   await initSkillList();
   await renderSkillRuns();
   i18n();
@@ -104,6 +112,16 @@ function runActionLabel(entry = {}) {
   }[action];
   return (key && browser.i18n.getMessage(key)) || action || 'unknown';
 }
+
+/**
+ * Localized label for the origin of an audit record. 'model' is intentionally
+ * absent: those records are labelled with the Skill name instead.
+ */
+const ORIGIN_LABELS = {
+  user: 'skillRunManual',
+  page: 'skillRunPage',
+  app: 'skillRunApp'
+};
 
 /**
  * Read the audit trail, refresh the filter dropdowns and render the list.
@@ -213,15 +231,15 @@ function renderRunList() {
     const head = document.createElement('div');
     head.className = 'skill-run-head';
     const badge = run.status === 'failed' ? '⚠️' : run.status === 'aborted' ? '⏹️'
-      : origin === 'model' ? '✅' : '🖐️';
+      : origin === 'model' ? '✅' : origin === 'app' ? '🧩' : '🖐️';
     const when = new Date(run.time).toLocaleString();
-    // Runs started by the model show which Skill ran; user/page records show the
-    // action instead, so the timeline reads "who did what".
+    // Runs started by the model show which Skill ran; user/page/app records show
+    // the action instead, so the timeline reads "who did what".
     const label = origin === 'model'
       ? (run.skillName || browser.i18n.getMessage('skillRunNoSkill') || 'No Skill')
-      : `${browser.i18n.getMessage(origin === 'user' ? 'skillRunManual' : 'skillRunPage') || origin} · ${runActionLabel(run)}`;
+      : `${browser.i18n.getMessage(ORIGIN_LABELS[origin] || 'skillRunPage') || origin} · ${runActionLabel(run)}`;
     head.textContent = `${badge} ${label} · ${when}`;
-    if (origin === 'model') head.textContent += ` · ${(run.duration / 1000).toFixed(1)}s`;
+    if (origin === 'model' || origin === 'app') head.textContent += ` · ${(run.duration / 1000).toFixed(1)}s`;
     if (run.model) head.textContent += ` · ${run.model}`;
     item.appendChild(head);
 

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MCP App demo view</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 12px; font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  h1 { font-size: 15px; margin: 0 0 2px; }
+  h2 { font-size: 12px; margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .04em; opacity: .65; }
+  .sub { margin: 0 0 10px; opacity: .7; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  button { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid #8884; background: #8881; cursor: pointer; }
+  button:hover { background: #8882; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  pre { margin: 0; padding: 6px 8px; background: #8881; border-radius: 6px; white-space: pre-wrap; word-break: break-word; max-height: 140px; overflow: auto; }
+  #log { max-height: 180px; }
+  .ok { color: #2e7d32; } .err { color: #c62828; }
+</style>
+</head>
+<body>
+  <h1 id="title">🧪 MCP App demo — ⚠️ script did NOT run</h1>
+  <p class="sub">The heading above is replaced by the view's own script. If it still says
+    <strong>“script did NOT run”</strong>, the document rendered but its inline <code>&lt;script&gt;</code> was blocked
+    (Chrome: the frame's CSP; the iframe's console shows “Refused to execute inline script”).
+    If it says <strong>“inline script IS running”</strong>, the sandbox works — check the panels below and try the buttons.</p>
+
+  <div class="row">
+    <button id="b_add">tools/call → add_point</button>
+    <button id="b_link">ui/open-link (https)</button>
+    <button id="b_badlink">ui/open-link (javascript:)</button>
+    <button id="b_msg">ui/message (prefill)</button>
+    <button id="b_size">size-changed</button>
+    <button id="b_host">tools/call → save_skill (must be refused)</button>
+  </div>
+
+  <div class="grid">
+    <section><h2>this frame (script probe)</h2><pre id="frame">-</pre></section>
+    <section><h2>host capabilities</h2><pre id="caps">-</pre></section>
+    <section><h2>tool input</h2><pre id="input">-</pre></section>
+    <section><h2>tool result</h2><pre id="output">-</pre></section>
+  </div>
+
+  <h2>log</h2>
+  <pre id="log"></pre>
+  <script>
+  /* INLINE on purpose: this document is where "does the sandbox allow inline
+     scripts?" is actually answered. An external <script src> could not work
+     here anyway — the frame has an opaque origin, so relative URLs resolve
+     against the shell's extension URL. */
+  const $ = (id) => document.getElementById(id);
+  /** Append one timestamped line to the on-screen log (the test record). */
+  const log = (text, cls) => {
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
+    $('log').appendChild(line);
+    $('log').scrollTop = $('log').scrollHeight;
+  };
+
+  // First proof that the inline script ran: overwrite the "did NOT run" heading.
+  // (The markup ships with the pessimistic text on purpose — that is what makes
+  // the difference between "rendered but blocked" and "working" visible at a
+  // glance, without a console.)
+  $('title').textContent = '✅ MCP App demo — inline script IS running';
+  $('title').className = 'ok';
+
+  // Isolation facts: this is what the sandbox promise means in practice.
+  // NOTE: `location.origin` is NOT the opaque-origin test here — a Chrome
+  // sandboxed extension page still reports its `chrome-extension://…` URL from
+  // `location.origin`. `window.origin` is the one that reads `null`. And the
+  // `chrome` global may exist as an empty object, so ask about the APIs.
+  $('frame').textContent = [
+    'inline script: executed',
+    `window.origin: ${window.origin}`,
+    `location.origin: ${location.origin}`,
+    `chrome.runtime: ${typeof (window.chrome && chrome.runtime)}`,
+    `chrome.storage: ${typeof (window.chrome && chrome.storage)}`,
+    `browser: ${typeof window.browser}`,
+    `parent: ${window.parent === window ? 'self (not framed!)' : 'host window'}`
+  ].join('\n');
+
+  let nextId = 1;
+  const pending = new Map();
+
+  /** JSON-RPC request to the host (window.parent === the chat page). */
+  function request(method, params) {
+    const id = nextId++;
+    return new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject });
+      window.parent.postMessage({ jsonrpc: '2.0', id, method, params: params || {} }, '*');
+      setTimeout(() => {
+        if (!pending.has(id)) return;
+        pending.delete(id);
+        reject(new Error(`timeout waiting for ${method}`));
+      }, 8000);
+    });
+  }
+  /** JSON-RPC notification (no reply expected). */
+  function notify(method, params) {
+    window.parent.postMessage({ jsonrpc: '2.0', method, params: params || {} }, '*');
+  }
+
+  window.addEventListener('message', (event) => {
+    const data = event.data;
+    if (!data || typeof data !== 'object') return;
+
+    // A reply to one of our requests.
+    if (data.id !== undefined && pending.has(data.id)) {
+      const { resolve, reject } = pending.get(data.id);
+      pending.delete(data.id);
+      if (data.error) {
+        log(`← ${data.method || 'response'} error: ${data.error.message}`, 'err');
+        reject(new Error(data.error.message));
+      } else {
+        resolve(data.result);
+      }
+      return;
+    }
+
+    // Host → app notifications: the data the view exists for.
+    if (data.method === 'ui/notifications/tool-input') {
+      $('input').textContent = JSON.stringify(data.params, null, 2);
+      log('← tool-input');
+      return;
+    }
+    if (data.method === 'ui/notifications/tool-result') {
+      $('output').textContent = JSON.stringify(data.params?.content ?? data.params, null, 2);
+      log('← tool-result');
+      return;
+    }
+    log(`← ${data.method || 'unhandled message'}`);
+  });
+
+  // ------------------- buttons -------------------
+
+  $('b_add').addEventListener('click', async () => {
+    const value = Math.floor(Math.random() * 90) + 10;
+    try {
+      log(`→ tools/call add_point {value: ${value}} (expect a confirmation card)`);
+      const result = await request('tools/call', { name: 'add_point', arguments: { value } });
+      $('output').textContent = JSON.stringify(result, null, 2);
+      log('✓ tools/call answered (check the audit trail for origin=app)', 'ok');
+    } catch (e) {
+      log(`✗ tools/call: ${e.message}`, 'err');
+    }
+  });
+
+  $('b_host').addEventListener('click', async () => {
+    try {
+      log('→ tools/call save_skill (a host tool — must be refused)');
+      await request('tools/call', { name: 'save_skill', arguments: { name: 'pwn', prompt: 'x' } });
+      log('✗ the host allowed a built-in tool call!', 'err');
+    } catch (e) {
+      log(`✓ refused as expected: ${e.message}`, 'ok');
+    }
+  });
+
+  $('b_link').addEventListener('click', async () => {
+    try {
+      const r = await request('ui/open-link', { url: 'https://example.com/' });
+      log(`✓ open-link https → opened=${r?.opened}`, r?.opened ? 'ok' : 'err');
+    } catch (e) { log(`✗ open-link: ${e.message}`, 'err'); }
+  });
+
+  $('b_badlink').addEventListener('click', async () => {
+    try {
+      const r = await request('ui/open-link', { url: 'javascript:alert(1)' });
+      log(`${r?.opened ? '✗ unsafe link was opened!' : '✓ javascript: link blocked'}`, r?.opened ? 'err' : 'ok');
+    } catch (e) { log(`✗ open-link: ${e.message}`, 'err'); }
+  });
+
+  $('b_msg').addEventListener('click', async () => {
+    try {
+      const r = await request('ui/message', { content: 'Hello from the MCP app — please summarize this page.' });
+      log(`✓ ui/message → delivered=${r?.delivered} (P0 prefills the input box only)`, r?.delivered ? 'ok' : 'err');
+    } catch (e) { log(`✗ ui/message: ${e.message}`, 'err'); }
+  });
+
+  let height = 220;
+  $('b_size').addEventListener('click', () => {
+    height = height === 220 ? 520 : 220;
+    notify('ui/notifications/size-changed', { height, width: window.innerWidth });
+    log(`→ size-changed ${height}px (the card must follow)`);
+  });
+
+  // ------------------- handshake -------------------
+
+  (async function boot() {
+    log('→ ui/initialize');
+    try {
+      const init = await request('ui/initialize', { protocolVersion: '2025-06-18', appInfo: { name: 'cllama-demo', version: '1' } });
+      log('✓ ui/initialize answered', 'ok');
+      $('caps').textContent = JSON.stringify(init?.hostCapabilities ?? {}, null, 2);
+      // The host also hands over the call that produced this view, so a view
+      // renders even if it never subscribed to the notifications below.
+      if (init?.toolInput) $('input').textContent = JSON.stringify(init.toolInput, null, 2);
+      if (init?.toolOutput) $('output').textContent = init.toolOutput;
+      log(`  tool: ${init?.toolName}  server: ${init?.serverName}`);
+      notify('ui/notifications/initialized');
+      log('→ notifications/initialized (tool-input/tool-result should follow)');
+    } catch (e) {
+      log(`✗ ui/initialize failed: ${e.message}`, 'err');
+    }
+  })();
+
+  </script>
+</body>
+</html>

@@ -1,8 +1,10 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
-import { initMcpTools } from '../js/mcp.mjs';
+import { getMcpServerByName, initMcpTools, readMcpResource } from '../js/mcp.mjs';
+import { runTool, getTool } from '../js/skill-tools.mjs';
+import { MCP_APP_ERROR_TYPE, MCP_APP_HTML_MAX, MCP_APP_HTML_MIME_PREFIX, MCP_APP_INIT_TIMEOUT_MS, MCP_APP_METHODS, MCP_APP_READY_TIMEOUT_MS, MCP_APP_READY_TYPE, MCP_APP_RENDERED_TYPE, MCP_APP_RENDER_TYPE, MCP_APP_SANDBOX_PAGE, MCP_APP_VIEW_ERROR_TYPE, buildInitResult, clampPayload, hostSupportsSandboxPages, isAllowedAppLink, isAppToolAllowed, makeAppRef, normalizeAppRefs, parseAppMessage, resolveAppToolName } from '../js/mcp-apps.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
 import { balert } from '../js/dialog.mjs';
@@ -200,6 +202,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentAssistantBlock = null;
     let turnPageUrl = null;
     let turnPageTitle = null;
+    // Interactive MCP App views (see AGENTS.md §7.13): whether a view renders as
+    // soon as a tool produces one, and the references collected during the
+    // running turn — they are attached to the assistant record so the views can
+    // be rebuilt after a reload (the frames themselves are torn down).
+    let mcpAppAutoRender = true;
+    let pendingAppRefs = [];
     // Cached data source list, so the "@name" model override can be resolved
     // synchronously while typing/sending.
     let dsListCache = [];
@@ -259,7 +267,14 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     async function refreshSkills() {
         initMcpTools().catch(e => console.warn('[MCP] init failed:', e));
+        // Rendering preference for MCP App views (see §7.13), read here so the
+        // very first turn already honours it.
+        mcpAppAutoRender = await loadMcpAppAutoRender();
         skills = await loadSkills();
+        // The Skill list is finally available, so a choice remembered for this
+        // conversation can be resolved to a real Skill (a chat may have loaded
+        // before the list was ready).
+        await applyStoredSkillSelection({ skillsReady: true });
     }
 
     /**
@@ -323,6 +338,81 @@ document.addEventListener("DOMContentLoaded", async () => {
             skillBar.title = browser.i18n.getMessage("skillBarAutoHint") || 'AI will choose a Skill when relevant. Click to pick one.';
             if (clearSkillBtn) clearSkillBtn.style.display = 'none';
         }
+    }
+
+    /**
+     * The current Skill choice in the shape that gets stored: a fixed Skill (with
+     * its inline args), Auto, or "off".
+     * @returns {Object} { skillId, args } | { auto: true } | { disabled: true }
+     */
+    function currentSkillSelection() {
+        if (skillDisabled) return { disabled: true };
+        if (activeSkill) return { skillId: activeSkill.id, args: activeSkillArgs || '' };
+        return { auto: true };
+    }
+
+    /**
+     * Remember the choice for *this conversation only* (DB_KEY.skillSelection):
+     * reopening the chat brings it back, and no other chat is affected — the user
+     * should not have to pick the same Skill again and again.
+     * @returns {void}
+     */
+    function persistSkillSelection() {
+        saveSkillSelection(sessionKey(), currentSkillSelection())
+            .catch((e) => console.warn('Failed to remember the Skill selection:', e));
+    }
+
+    /**
+     * Apply the choice remembered for the conversation on screen.
+     * @param {Object} [opts] - { skillsReady } true once the Skill list is loaded
+     * @returns {Promise<void>}
+     */
+    async function applyStoredSkillSelection({ skillsReady = false } = {}) {
+        let entry = null;
+        try {
+            entry = await loadSkillSelection(sessionKey());
+        } catch (e) {
+            console.warn('Failed to read the remembered Skill selection:', e);
+            return;
+        }
+        if (!entry) {
+            // No memory for THIS conversation → fall back to the page default
+            // ("No Skill"), never to whatever the previous conversation happened
+            // to have selected: the choice belongs to the conversation, not to
+            // the page. (Nothing is written back here — an entry is only created
+            // by an explicit choice, so browsing chats leaves no trace.)
+            activeSkill = null;
+            activeSkillArgs = '';
+            skillDisabled = true;
+            closeSkillPicker();
+            renderActiveSkillBar();
+            return;
+        }
+
+        if (entry.skillId) {
+            const skill = skills.find((s) => String(s.id) === String(entry.skillId));
+            // The list may still be loading: wait for refreshSkills() rather than
+            // silently degrading to "off".
+            if (!skill) {
+                if (!skillsReady) return;
+                // The Skill was deleted meanwhile — drop the stale entry.
+                removeSkillSelection(sessionKey()).catch(() => {});
+                return;
+            }
+            activeSkill = skill;
+            activeSkillArgs = entry.args || '';
+            skillDisabled = false;
+        } else if (entry.auto) {
+            activeSkill = null;
+            activeSkillArgs = '';
+            skillDisabled = false;
+        } else {
+            activeSkill = null;
+            activeSkillArgs = '';
+            skillDisabled = true;
+        }
+        closeSkillPicker();
+        renderActiveSkillBar();
     }
 
     /**
@@ -479,6 +569,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         skillDisabled = false;
         closeSkillPicker();
         renderActiveSkillBar();
+        persistSkillSelection();
         if (msgInput) {
             prefillStarter(skill);
             msgInput.focus();
@@ -496,6 +587,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (msgInput && msgInput.value.startsWith('/')) msgInput.value = '';
         closeSkillPicker();
         renderActiveSkillBar();
+        persistSkillSelection();
     }
 
     /**
@@ -510,6 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (msgInput && msgInput.value.startsWith('/')) msgInput.value = '';
         closeSkillPicker();
         renderActiveSkillBar();
+        persistSkillSelection();
     }
 
     /**
@@ -795,6 +888,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         turnStartedAt = Date.now();
+        // Views produced by this turn: reset before the turn starts so a failed
+        // or aborted turn can never leak references into the next one.
+        pendingAppRefs = [];
         const activeTabInfo = await getActiveTabInfo();
         turnPageUrl = activeTabInfo.url;
         turnPageTitle = activeTabInfo.title;
@@ -819,6 +915,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Live trace of every tool step: failures are surfaced right in the
             // message (never silently summed up by the model).
             onToolStep: (step) => showToolStep(step),
+            // Tools that declare an MCP App (`_meta.ui.resourceUri`) also hand
+            // their result to the sandboxed view; see the MCP Apps section.
+            onToolResult: (info) => renderMcpApp(info),
             // Blank answer (empty text / undelivered tool call): say so instead of
             // leaving an empty bubble.
             onEmptyResponse: (info) => showEmptyResponseNotice(info),
@@ -842,6 +941,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                             rtime: assistantResponse.rtime || Date.now(),
                             model: currModelName
                         };
+                        // Remember the interactive views this turn produced: the
+                        // frames die with the conversation, these references do
+                        // not (see mountAppView on reload).
+                        if (pendingAppRefs.length) {
+                            assistantMessageToAdd.mcpApps = normalizeAppRefs(pendingAppRefs);
+                        }
+                        pendingAppRefs = [];
                         historyMessages.push(assistantMessageToAdd);
                         
                         const pdiv = findMatchingParentNode(assistantMsgDiv, ".bot-message");
@@ -1019,7 +1125,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     ${isSelf ? `<span class="resend-message-btn" style="cursor:pointer;display:none;margin-left:5px;font-size:13px;" title="${browser.i18n.getMessage("resend")}">↺</span>` : ''}
                 </div>
                 <${divpre} class="message-text ${markdownSelf}">${msgText}</${divpre}>
-                ${isSelf ? '' : tokenUsageHtml(usage)}
+                ${isSelf ? '' : `<div class="message-footer">
+                    <div class="mcp-app-triggers"></div>
+                    ${tokenUsageHtml(usage)}
+                </div>`}
             </div>
         `;
 
@@ -1795,6 +1904,629 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
+    /* ------------------- MCP Apps (SEP-1865): interactive UI in the conversation -------------------
+     * A tool may declare `_meta.ui.resourceUri`; the server then also ships a
+     * `ui://` resource holding an HTML view. We render that view in a sandboxed
+     * iframe next to the answer and bridge it to the host over postMessage.
+     * The security-relevant decisions (what a valid app message is, which links
+     * and tool calls an app may make, what we admit to supporting) live in
+     * js/mcp-apps.mjs; this section only does DOM + dispatch.
+     */
+
+    // Live views: { frame, card, meta, serverName, tool, args, output, skill,
+    //               ready, initialized, busy, readyTimer, html, failed }
+    const mcpAppBridges = new Set();
+    // Height bounds for an app frame (an app may ask for more, never for less).
+    const MCP_APP_FRAME_MIN = 160;
+    const MCP_APP_FRAME_MAX = 900;
+    // An app only *prefills* the input box, so keep that text to a sane size.
+    const MCP_APP_MESSAGE_MAX_CHARS = 4000;
+
+    /**
+     * Match an incoming message back to its view. A sandboxed frame reports its
+     * origin as "null", so `event.source` identity — not origin — is the check
+     * that actually means something here.
+     * @param {MessageEventSource} source - `event.source`
+     * @returns {Object|null} The bridge, or null when the message is not ours
+     */
+    function findMcpAppBridge(source) {
+        for (const bridge of mcpAppBridges) {
+            if (bridge.frame && bridge.frame.contentWindow === source) return bridge;
+        }
+        return null;
+    }
+
+    /**
+     * Post a JSON-RPC payload (result or notification) to an app.
+     * @param {Object} bridge - View state
+     * @param {Object} payload - Message
+     */
+    function postToApp(bridge, payload) {
+        try {
+            bridge.frame?.contentWindow?.postMessage(payload, '*');
+        } catch (e) {
+            console.warn('Failed to post to MCP App:', e);
+        }
+    }
+
+    /**
+     * One-line, non-fatal explanation shown inside an app card (unsupported
+     * environment, failed resource, blocked link...). Never silent: an app that
+     * renders nothing must say why.
+     * @param {HTMLElement} cardEl - The card element
+     * @param {string} key - i18n key
+     * @param {string} fallback - English fallback
+     */
+    function setCardNotice(cardEl, key, fallback) {
+        setCardNoticeText(cardEl, browser.i18n.getMessage(key) || fallback);
+    }
+
+    /**
+     * Same as setCardNotice for text that is already resolved (a message with a
+     * runtime placeholder, say). The notice element is created on demand.
+     * @param {HTMLElement} cardEl - The card element
+     * @param {string} text - The text to show
+     */
+    function setCardNoticeText(cardEl, text) {
+        if (!cardEl) return;
+        let note = cardEl.querySelector('.mcp-app-notice');
+        if (!note) {
+            note = document.createElement('div');
+            note.className = 'mcp-app-notice';
+            cardEl.appendChild(note);
+        }
+        note.textContent = String(text ?? '');
+    }
+
+    /**
+     * Same as setCardNotice, for a live view state object.
+     * @param {Object} bridge - View state
+     * @param {string} key - i18n key
+     * @param {string} fallback - English fallback
+     */
+    function setMcpAppNotice(bridge, key, fallback) {
+        setCardNotice(bridge?.card, key, fallback);
+    }
+
+    /**
+     * Send the UI document to the shell (only once it said it is alive), then
+     * watch for the view to introduce itself: a document whose script never runs
+     * (a CSP without inline scripts, a broken view) must not look like a card
+     * that simply renders nothing.
+     * @param {Object} bridge - View state
+     */
+    function sendMcpAppHtml(bridge) {
+        if (!bridge.html) return;
+        postToApp(bridge, { type: MCP_APP_RENDER_TYPE, html: bridge.html });
+        clearTimeout(bridge.initTimer);
+        bridge.initTimer = setTimeout(() => {
+            if (bridge.initialized || bridge.failed) return;
+            bridge.failed = true;
+            // Priority order, most specific first. All three are only announced
+            // after a real timeout, so a view that works is never mislabelled.
+            if (bridge.viewError) {
+                // The direct evidence beats every inference: name what the view
+                // actually threw (its own dependency, usually) instead of saying
+                // that "the script never started".
+                const template = browser.i18n.getMessage('mcpAppViewError') || "The view's script threw an error: {message}";
+                setCardNoticeText(bridge.card, template.replace('{message}', bridge.viewError.message));
+                return;
+            }
+            if (bridge.remoteScripts?.length) {
+                setMcpAppNotice(bridge, 'mcpAppExternalScriptBlocked', 'The view loads its script from a remote URL, which the sandbox does not allow — so it rendered but never started.');
+                console.error(`[MCP Apps] the view never called ui/initialize and it loads scripts the sandbox CSP blocks: ${bridge.remoteScripts.join(', ')}. Inline scripts and https: URLs are allowed — bundle the view's code inline (or load it over https) to fix this.`);
+                return;
+            }
+            setMcpAppNotice(bridge, 'mcpAppScriptBlocked', 'The view loaded, but its script never started — this build cannot execute it.');
+            console.error('[MCP Apps] the view never called ui/initialize. Most likely the frame\'s CSP blocks inline scripts — check the frame\'s console for "Refused to execute inline script" (the sandbox CSP is declared under content_security_policy.sandbox in manifest.json), or the view is simply broken.');
+        }, MCP_APP_INIT_TIMEOUT_MS);
+    }
+
+    /**
+     * Handle one tool result that declared a UI resource: remember it on this
+     * turn's assistant message (so the view can be rebuilt later) and mount its
+     * card. Best-effort by design — any failure keeps the text result (which is
+     * always sent to the model) and only adds a notice.
+     * @param {Object} info - { tool, args, output, ui, serverName }
+     * @returns {void}
+     */
+    function renderMcpApp(info) {
+        // A view produced by the answer being generated RIGHT NOW always renders:
+        // the user just triggered it and is watching. The auto-render preference
+        // is about *reopened* conversations (see loadChatHistory) — there the view
+        // is not the result of an action the user is currently waiting on.
+        const block = currentAssistantBlock;
+        if (!block) return;
+        const ref = makeAppRef(info);
+        if (!ref) return;
+        // The reference is what survives the conversation: frames are torn down
+        // when the conversation is replaced, the reference is not.
+        pendingAppRefs.push(ref);
+        mountAppView(block, ref, { auto: true });
+    }
+
+    /**
+     * Attach one interactive view to a message.
+     *
+     * Either it renders right away (auto), or the *message footer* gets a small
+     * icon next to the token line and nothing else exists until it is clicked —
+     * no card, no frame, no request. That is also what keeps the icon honest:
+     * it appears exactly for the messages that have a view, and a message without
+     * one never shows it.
+     * @param {HTMLElement} block - The message element
+     * @param {Object} ref - Stored view reference (see js/mcp-apps.mjs)
+     * @param {Object} [opts] - { auto }
+     * @returns {void}
+     */
+    function mountAppView(block, ref, { auto = true } = {}) {
+        const content = block?.querySelector('.message-content');
+        if (!content) return;
+        // Decisive trace for "the switch seems ignored" reports: this names the
+        // branch that actually ran for this view, and with which preference.
+        console.log(`[MCP Apps] ${ref.tool}: ${auto ? 'auto-render → card' : 'on demand → footer icon'}`);
+        if (auto) createAppCard(content, ref);
+        else addAppTriggerIcon(block, ref);
+    }
+
+    /**
+     * The footer icon that renders — and hides — one view on demand. It is the
+     * only trace of a view while auto-rendering is off, which is why it exists
+     * per view (the tooltip names it).
+     * @param {HTMLElement} block - The message element
+     * @param {Object} ref - Stored view reference
+     * @returns {void}
+     */
+    function addAppTriggerIcon(block, ref) {
+        const box = block?.querySelector('.mcp-app-triggers');
+        if (!box) {
+            // The footer is missing → the view would be unreachable, so say so
+            // instead of dropping it silently.
+            console.warn('[MCP Apps] no message footer to attach the view icon to; the view is unavailable.');
+            return;
+        }
+        const showLabel = `${browser.i18n.getMessage('mcpAppRender') || 'Render interactive view'} · ${ref.tool}`;
+        const hideLabel = `${browser.i18n.getMessage('mcpAppHide') || 'Hide interactive view'} · ${ref.tool}`;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mcp-app-trigger-btn';
+        btn.title = showLabel;
+        btn.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><use href="#svg_app"></use></svg>';
+
+        let card = null;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // a click on the bubble would collapse it
+            if (card) {
+                removeAppCard(card);
+                card = null;
+                btn.classList.remove('mcp-app-trigger-active');
+                btn.title = showLabel;
+                return;
+            }
+            const content = block.querySelector('.message-content');
+            if (!content) return;
+            card = createAppCard(content, ref);
+            btn.classList.add('mcp-app-trigger-active');
+            btn.title = hideLabel;
+        });
+        box.appendChild(btn);
+    }
+
+    /**
+     * Build the card for one view: heading, sandboxed frame, bridge.
+     * @param {HTMLElement} container - The message's `.message-content`
+     * @param {Object} ref - Stored view reference
+     * @returns {HTMLElement} The card element (may carry a notice instead of a frame)
+     */
+    function createAppCard(container, ref) {
+        const card = document.createElement('div');
+        card.className = 'mcp-app-card';
+        const head = document.createElement('div');
+        head.className = 'mcp-app-header';
+        head.textContent = `${browser.i18n.getMessage('mcpAppTitle') || 'Interactive app'} · ${ref.tool}`;
+        card.appendChild(head);
+        container.appendChild(card);
+        if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Can this build host a view at all? Firefox/Android have no
+        // `manifest.sandbox`, so their shell page is an ordinary extension page
+        // whose `script-src 'self'` blocks the view's own script: say so up front
+        // instead of building a card that would silently do nothing.
+        if (!hostSupportsSandboxPages(browser.runtime?.getManifest?.() || null)) {
+            setCardNotice(card, 'mcpAppUnsupported', 'Interactive apps are not supported in this environment — showing the text result instead.');
+            console.warn('[MCP Apps] this build has no manifest "sandbox" support: the view is not rendered (the text result is unaffected).');
+            return card;
+        }
+        openMcpAppView(card, ref);
+        return card;
+    }
+
+    /**
+     * Tear one card down again (the "hide" half of the footer icon). The
+     * reference on the message record is untouched, so the view can be reopened.
+     * @param {HTMLElement} card - The card element
+     * @returns {void}
+     */
+    function removeAppCard(card) {
+        for (const bridge of [...mcpAppBridges]) {
+            if (bridge.card !== card) continue;
+            clearTimeout(bridge.readyTimer);
+            clearTimeout(bridge.initTimer);
+            mcpAppBridges.delete(bridge);
+        }
+        try {
+            card.remove();
+        } catch (e) {
+            // Already gone — nothing to do.
+        }
+    }
+
+    /**
+     * Create the sandboxed frame for a view and start loading its document.
+     * @param {HTMLElement} card - The card element
+     * @param {Object} ref - Stored view reference
+     * @returns {void}
+     */
+    function openMcpAppView(card, ref) {
+        const frame = document.createElement('iframe');
+        frame.className = 'mcp-app-frame';
+        // allow-same-origin is NOT granted: the view gets an opaque origin and
+        // must never be able to touch the chat page or the extension APIs.
+        frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+        frame.setAttribute('referrerpolicy', 'no-referrer');
+        frame.style.height = `${MCP_APP_FRAME_MIN}px`;
+        frame.src = browser.runtime.getURL(MCP_APP_SANDBOX_PAGE);
+        card.appendChild(frame);
+        if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        const bridge = {
+            frame,
+            card,
+            meta: { resourceUri: ref.resourceUri },
+            serverName: ref.serverName,
+            tool: ref.tool,
+            args: ref.args,
+            output: ref.output,
+            // Snapshot of the Skill of the turn that produced the view: a later
+            // app-initiated tool call is checked against its whitelist like any
+            // other call, even after the turn ended.
+            skill: activeSkill,
+            ready: false,
+            initialized: false,
+            busy: false,
+            failed: false
+        };
+        mcpAppBridges.add(bridge);
+
+        // No "hello" from the shell means the frame never loaded at all.
+        bridge.readyTimer = setTimeout(() => {
+            if (bridge.ready || bridge.failed) return;
+            setMcpAppNotice(bridge, 'mcpAppUnsupported', 'Interactive apps are not supported in this environment — showing the text result instead.');
+        }, MCP_APP_READY_TIMEOUT_MS);
+
+        loadMcpAppDocument(bridge, ref);
+    }
+
+    /**
+     * Fetch a view's document and hand it to the shell once it is alive.
+     * The HTML is always re-fetched and never stored, and the tool is never
+     * re-run just to show a view again (that could repeat its side effects).
+     * @param {Object} bridge - View state
+     * @param {Object} ref - Stored view reference
+     * @returns {Promise<void>}
+     */
+    async function loadMcpAppDocument(bridge, ref) {
+        try {
+            const server = await getMcpServerByName(ref.serverName);
+            if (!server) throw new Error(`unknown MCP server: ${ref.serverName}`);
+            const res = await readMcpResource(server, ref.resourceUri);
+            const mime = String(res.mimeType || '');
+            if (mime && !mime.startsWith(MCP_APP_HTML_MIME_PREFIX)) {
+                throw new Error(`unsupported UI resource type: ${mime}`);
+            }
+            if (res.text.length > MCP_APP_HTML_MAX) throw new Error('UI resource too large');
+            bridge.html = res.text;
+            if (bridge.ready) sendMcpAppHtml(bridge);
+        } catch (e) {
+            bridge.failed = true;
+            setMcpAppNotice(bridge, 'mcpAppLoadFailed', 'Failed to load the interactive app');
+            console.warn('[MCP Apps] failed to load UI resource:', e);
+        }
+    }
+
+    /**
+     * Single listener for every app view: frames are matched by identity, and
+     * anything that does not belong to a live frame is ignored outright.
+     */
+    window.addEventListener('message', async (event) => {
+        const bridge = findMcpAppBridge(event.source);
+        if (!bridge) return;
+        const data = event.data;
+
+        if (data?.type === MCP_APP_READY_TYPE) {
+            bridge.ready = true;
+            clearTimeout(bridge.readyTimer);
+            // The shell also reports whether this frame can run the view's own
+            // (inline) script at all. If it cannot, injecting would produce a
+            // card that renders and then does nothing — so explain instead.
+            if (data.inlineScripts === false) {
+                bridge.failed = true;
+                setMcpAppNotice(bridge, 'mcpAppInlineBlocked', 'This environment does not allow the view\'s script to run, so the interactive app cannot be shown.');
+                console.error(`[MCP Apps] the frame cannot execute inline scripts (origin=${data.origin}, sandboxed=${data.sandboxed}), so the view would render but never respond. Check that content_security_policy.sandbox in manifest.json allows script-src 'unsafe-inline', and that this build registers ${MCP_APP_SANDBOX_PAGE} under "sandbox.pages".`);
+                return;
+            }
+            sendMcpAppHtml(bridge);
+            return;
+        }
+        if (data?.type === MCP_APP_ERROR_TYPE) {
+            bridge.failed = true;
+            setMcpAppNotice(bridge, 'mcpAppLoadFailed', 'Failed to load the interactive app');
+            console.warn('[MCP Apps] shell reported an error:', data.reason);
+            return;
+        }
+        if (data?.type === MCP_APP_RENDERED_TYPE) {
+            // Facts from inside the frame about what was actually written. A
+            // remote bundle is blocked by the sandbox CSP and is by far the most
+            // common reason a view renders and then never starts, so remember it
+            // here and let the watchdog below name that cause instead of the
+            // generic one.
+            bridge.remoteScripts = Array.isArray(data.remoteScripts)
+                ? data.remoteScripts.slice(0, 5).map(String)
+                : [];
+            if (bridge.remoteScripts.length) {
+                console.warn(`[MCP Apps] the view loads scripts the sandbox cannot load: ${bridge.remoteScripts.join(', ')}`);
+            }
+            return;
+        }
+        if (data?.type === MCP_APP_VIEW_ERROR_TYPE) {
+            // The view's own code threw. The frame has an opaque origin, so this
+            // report is the only way the reason can ever leave it; keep the first
+            // one (the load-time failure) and let the watchdog announce it.
+            if (!bridge.viewError) {
+                bridge.viewError = {
+                    message: String(data.message || 'unknown error').slice(0, 300),
+                    source: String(data.source || '').slice(0, 200),
+                    line: Number(data.line) || 0
+                };
+            }
+            console.error(`[MCP Apps] the view threw: ${bridge.viewError.message} (${bridge.viewError.source}:${bridge.viewError.line})`);
+            return;
+        }
+
+        const parsed = parseAppMessage(data);
+        if (!parsed.ok) {
+            // Malformed frames are refused loudly-but-harmlessly: logged with a
+            // reason and never half-handled (an app must not break the page).
+            console.warn('[MCP Apps] ignored app message:', parsed.reason);
+            return;
+        }
+        try {
+            await handleMcpAppMessage(bridge, parsed.msg);
+        } catch (e) {
+            console.warn('[MCP Apps] failed to handle app message:', e);
+            if (parsed.msg.id !== null) {
+                postToApp(bridge, {
+                    jsonrpc: '2.0',
+                    id: parsed.msg.id,
+                    error: { code: -32603, message: String(e?.message || e) }
+                });
+            }
+        }
+    });
+
+    /**
+     * Dispatch one app request/notification. Unknown methods answer with a
+     * JSON-RPC error (plus a console warning) instead of being dropped silently.
+     * @param {Object} bridge - View state
+     * @param {Object} msg - { id, method, params }
+     * @returns {Promise<void>}
+     */
+    async function handleMcpAppMessage(bridge, msg) {
+        const { id, method } = msg;
+        const params = msg.params || {};
+
+        if (method === MCP_APP_METHODS.INITIALIZE) {
+            // The view is alive and talking: the "script never started" watchdog
+            // has done its job.
+            clearTimeout(bridge.initTimer);
+            const result = buildInitResult({
+                toolName: bridge.tool,
+                toolInput: bridge.args,
+                toolOutput: clampPayload(bridge.output),
+                serverName: bridge.serverName,
+                hostVersion: browser.runtime?.getManifest?.().version || '1.0',
+                // Optional per the spec, but apps use it for theming and for
+                // responsive layout, and every field in it is cheap to fill.
+                hostContext: {
+                    theme: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light',
+                    displayMode: 'inline',
+                    availableDisplayModes: ['inline'],
+                    platform: 'desktop',
+                    locale: browser.i18n?.getUILanguage?.() || undefined,
+                    userAgent: navigator.userAgent
+                }
+            });
+            if (id !== null) postToApp(bridge, { jsonrpc: '2.0', id, result });
+            return;
+        }
+
+        if (method === MCP_APP_METHODS.INITIALIZED) {
+            if (bridge.initialized) return;
+            bridge.initialized = true;
+            // Hand over the data the view exists for — twice, in fact: also in the
+            // initialize result, so an app that never subscribes to notifications
+            // still renders (see buildInitResult).
+            // NOTE the payload shapes: the spec's notification params are closed
+            // objects (`additionalProperties: false` for tool-input), so the app
+            // must not receive extra keys such as `toolName`.
+            postToApp(bridge, {
+                jsonrpc: '2.0',
+                method: MCP_APP_METHODS.TOOL_INPUT,
+                params: { arguments: (bridge.args && typeof bridge.args === 'object') ? bridge.args : {} }
+            });
+            postToApp(bridge, {
+                jsonrpc: '2.0',
+                method: MCP_APP_METHODS.TOOL_RESULT,
+                params: {
+                    // A standard MCP tool result: `content` is the required field.
+                    content: [{ type: 'text', text: clampPayload(bridge.output) }]
+                }
+            });
+            return;
+        }
+
+        if (method === MCP_APP_METHODS.SIZE_CHANGED) {
+            const height = Number(params.height);
+            if (Number.isFinite(height) && height > 0) {
+                bridge.frame.style.height = `${Math.max(MCP_APP_FRAME_MIN, Math.min(MCP_APP_FRAME_MAX, Math.round(height)))}px`;
+            }
+            return;
+        }
+
+        if (method === MCP_APP_METHODS.OPEN_LINK) {
+            const url = params.url || params.href;
+            const allowed = isAllowedAppLink(url);
+            // The SDK reads `isError` from the result, so a refusal must say so
+            // (the extra `opened` flag is ours, and the result is passthrough).
+            if (id !== null) postToApp(bridge, { jsonrpc: '2.0', id, result: allowed ? { opened: true } : { opened: false, isError: true } });
+            if (allowed) {
+                browser.tabs.create({ url });
+            } else {
+                setMcpAppNotice(bridge, 'mcpAppLinkBlocked', 'Blocked an unsafe link from the app');
+                console.warn(`[MCP Apps] refused app link: ${String(url).slice(0, 120)}`);
+            }
+            return;
+        }
+
+        if (method === MCP_APP_METHODS.MESSAGE) {
+            const text = String(params.content ?? params.text ?? '').trim();
+            const delivered = Boolean(text && msgInput);
+            if (id !== null) postToApp(bridge, { jsonrpc: '2.0', id, result: delivered ? { delivered: true } : { delivered: false, isError: true } });
+            if (!text || !msgInput) return;
+            // P0: prefill only. An app must not be able to spend a model call on
+            // its own — the user reads the request and presses send.
+            msgInput.value = text.slice(0, MCP_APP_MESSAGE_MAX_CHARS);
+            msgInput.focus();
+            setMcpAppNotice(bridge, 'mcpAppMessagePrefilled', 'The app prepared a request in the input box — review it and send.');
+            return;
+        }
+
+        if (method === MCP_APP_METHODS.TOOLS_CALL) {
+            await handleAppToolCall(bridge, msg);
+            return;
+        }
+
+        console.warn(`[MCP Apps] unsupported method from app: ${method}`);
+        if (id !== null) {
+            postToApp(bridge, { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not supported: ${method}` } });
+        }
+    }
+
+    /**
+     * Run a tool the app asked for. It goes through exactly the same pipeline as
+     * a model-issued call — Skill whitelist, side-effect confirmation card, audit
+     * trail, live ✅/⚠️ chips — so an app can never quietly do more than the
+     * model can. The one extra restriction: only the server that shipped this
+     * view is reachable (see isAppToolAllowed).
+     * @param {Object} bridge - View state
+     * @param {Object} msg - { id, method, params }
+     * @returns {Promise<void>}
+     */
+    async function handleAppToolCall(bridge, msg) {
+        const rawName = String(msg.params.name || '');
+        const args = (msg.params.arguments && typeof msg.params.arguments === 'object') ? msg.params.arguments : {};
+        const fail = (message, code = -32602) => {
+            if (msg.id !== null) postToApp(bridge, { jsonrpc: '2.0', id: msg.id, error: { code, message } });
+        };
+
+        if (bridge.busy) {
+            fail('A tool call from this app is already running');
+            return;
+        }
+        bridge.busy = true;
+
+        const modelName = currentServiceConfig?.modelName || currentModel || null;
+        const service = currentServiceConfig?.service || null;
+        // Its own audit run with origin 'app', so the timeline keeps showing who
+        // did what (model call vs. interactive app vs. user import).
+        const run = startSkillRun({
+            origin: 'app',
+            skillId: bridge.skill?.id || null,
+            skillName: bridge.skill?.name || null,
+            model: modelName,
+            service,
+            sessionId: ccId || '0'
+        });
+        const ctx = buildToolContext({
+            run,
+            activeSkill: bridge.skill || null,
+            model: modelName,
+            service,
+            options: {
+                sessionId: ccId || '0',
+                sessionKey: sessionKey(),
+                pageUrl: turnPageUrl,
+                pageTitle: turnPageTitle,
+                onToolStep: (step) => showToolStep(step)
+            }
+        });
+        // A refusal must be visible in the conversation as well as in the audit
+        // trail: an app call that silently does nothing is indistinguishable from
+        // a broken button.
+        const deny = (message) => {
+            fail(message);
+            ctx.onStep({ tool: rawName || 'app-tool', ok: false, denied: true, error: message });
+        };
+
+        try {
+            // Apps name tools the way their server does ("add_point"); the
+            // registry uses "mcp_<server>_<tool>" (see resolveAppToolName).
+            const name = resolveAppToolName(rawName, bridge.serverName);
+            if (!name) {
+                deny(`Tool not available to this app: ${rawName}`);
+                return;
+            }
+            const tool = getTool(name);
+            if (!tool) {
+                deny(`Unknown tool: ${rawName}`);
+                return;
+            }
+            // Same pipeline as a model-issued call: skill whitelist, side-effect
+            // confirmation card, audit trail and the live ✅/⚠️ chips.
+            const output = await runTool(name, args, bridge.skill || null, ctx);
+            if (msg.id !== null) {
+                postToApp(bridge, {
+                    jsonrpc: '2.0',
+                    id: msg.id,
+                    result: { content: [{ type: 'text', text: clampPayload(output) }] }
+                });
+            }
+        } catch (e) {
+            fail(String(e?.message || e));
+        } finally {
+            await finishSkillRun(run);
+            bridge.busy = false;
+        }
+    }
+
+    /**
+     * Drop every app view when the conversation it belongs to is replaced: a
+     * frame left behind would keep sending and receiving messages for a chat
+     * that is no longer on screen.
+     */
+    function teardownMcpApps() {
+        for (const bridge of mcpAppBridges) {
+            clearTimeout(bridge.readyTimer);
+            clearTimeout(bridge.initTimer);
+            try {
+                bridge.frame?.remove();
+            } catch (e) {
+                // Frame already gone (conversation was re-rendered) — nothing to do.
+            }
+        }
+        mcpAppBridges.clear();
+    }
+
     /**
      * Re-send the last user message (used by the ↺ button and by failed tool
      * steps). No-op while a turn is still running.
@@ -2398,6 +3130,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
             if (sessionIndexToDelete !== -1) {
                 scenarioData.history.splice(sessionIndexToDelete, 1);
+                // The conversation is gone: drop the Skill choice remembered for
+                // it instead of leaving an orphan pointing at a dead session.
+                removeSkillSelection(`${ccId || '0'}:${scenarioData.currentId}`).catch(() => {});
             }
 
             if (scenarioData.history.length === 0) {
@@ -3570,6 +4305,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     async function loadChatHistory(scenarioId, sessionId) {
+        // Restored views are the ones the auto-render preference governs, so read
+        // it fresh here (never from a value cached at page load or by an earlier
+        // visit): reopening a conversation must honour the switch as it is now.
+        try {
+            mcpAppAutoRender = await loadMcpAppAutoRender();
+        } catch (e) {
+            console.warn('Failed to read the MCP App rendering preference:', e);
+        }
         const effectiveScenarioId = scenarioId || "0";
         const storageKey = `chatHistory_${effectiveScenarioId}`;
 
@@ -3592,6 +4335,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // still points at them must be dropped too (the search itself is
                 // re-applied once the new conversation is rendered).
                 clearSearchHighlights();
+                // Same for live MCP app views: their frames belong to the old
+                // conversation and must not linger (or keep messaging) here.
+                teardownMcpApps();
                 messagesContainer.innerText = "";
                 // From here on the pending cards are rendered for THIS session only.
                 currentSessionId = session.id;
@@ -3605,7 +4351,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ? item.content 
                         : marked.parse(item.content);
                     const role = item.role === "user" ? "self" : "assistant";
-                    appendMessage(replaceThinkTags(content), item.model || role, item.rtime, true, item.fileInfo, item.usage || null);
+                    const block = appendMessage(replaceThinkTags(content), item.model || role, item.rtime, true, item.fileInfo, item.usage || null);
+                    // Interactive views are rebuilt from the references stored on
+                    // the record, never from stored HTML: the document is
+                    // re-fetched, and with auto-rendering off nothing runs until
+                    // the user clicks the view's button.
+                    const refs = normalizeAppRefs(item.mcpApps);
+                    if (refs.length && block) {
+                        refs.forEach((ref) => mountAppView(block, ref, { auto: mcpAppAutoRender }));
+                    }
                 });
 
                 copyToClipboard(messagesContainer);
@@ -3627,6 +4381,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // and a bookmark's jump target can be flashed.
                 applyPendingSearchJump();
                 applyPendingGoto();
+                // The Skill choice belongs to the conversation: restore whatever
+                // was picked here last time (see applyStoredSkillSelection).
+                applyStoredSkillSelection({ skillsReady: skills.length > 0 });
             } else {
                 const fallbackSession = scenarioData.history.find(s => s.id === 0) || scenarioData.history[0];
                 if (fallbackSession) {
@@ -4075,6 +4832,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     };
 
+    // Read the MCP Apps rendering preference BEFORE the first history load: a
+    // restored conversation mounts its views right there, so reading it later
+    // (as refreshSkills() does) would let the default win and make the switch
+    // look like it does nothing on reload.
+    mcpAppAutoRender = await loadMcpAppAutoRender();
+
     await loadHistory();
     await initializeModelSelection();
 
@@ -4231,6 +4994,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Keep the Skill list live: the model can create Skills at runtime through
     // the save_skill tool (see the "Page Builder" default Skill).
     browser.storage.onChanged.addListener(handleSkillStorageChange);
+    // The MCP App rendering preference can be changed on the Skills page while
+    // this chat stays open (see §7.13).
+    browser.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local' || !changes[DB_KEY.mcpAppAutoRender]) return;
+        mcpAppAutoRender = changes[DB_KEY.mcpAppAutoRender].newValue !== false;
+    });
     // Same for chat scenarios created through save_chat_scenario.
     browser.storage.onChanged.addListener(handleScenarioStorageChange);
     // Show the pending cards: the clickable option list (ask_user_choice) and

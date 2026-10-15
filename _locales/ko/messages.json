@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "소스 코드"
+    },
+    "mcpAppTitle": {
+        "message": "대화형 앱"
+    },
+    "mcpAppUnsupported": {
+        "message": "이 환경에서는 대화형 앱을 지원하지 않습니다 - 대신 텍스트 결과를 표시합니다."
+    },
+    "mcpAppLoadFailed": {
+        "message": "대화형 앱을 불러오지 못했습니다"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "앱이 입력란에 요청을 준비했습니다 - 확인 후 전송하세요."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "앱의 안전하지 않은 링크를 차단했습니다"
+    },
+    "skillRunApp": {
+        "message": "앱"
+    },
+    "skillRunFilterApp": {
+        "message": "앱 호출"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "뷰는 로드되었지만 스크립트가 시작되지 않았습니다 - 이 빌드에서는 실행할 수 없습니다(브라우저 정책에 의해 차단)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "뷰가 원격 URL에서 스크립트를 불러오지만 샌드박스에서 허용하지 않으므로 렌더링만 되고 실행되지는 않았습니다."
+    },
+    "mcpAppViewError": {
+        "message": "뷰 스크립트에서 오류가 발생했습니다: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "이 환경에서는 뷰의 스크립트를 실행할 수 없어 대화형 앱을 표시할 수 없습니다."
+    },
+    "mcpAppRender": {
+        "message": "대화형 뷰 렌더링"
+    },
+    "mcpAppAutoRender": {
+        "message": "대화를 다시 열 때 대화형 뷰 자동 렌더링"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "방금 받은 답변의 뷰는 항상 즉시 렌더링됩니다. 이 스위치는 다시 연 대화에 적용되며, 끄면 아이콘을 클릭할 때까지 접혀 있습니다."
+    },
+    "mcpAppHide": {
+        "message": "대화형 뷰 숨기기"
     }
 }

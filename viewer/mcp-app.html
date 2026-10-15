@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MCP App</title>
+</head>
+<body>
+  <!--
+    Sandboxed shell for MCP Apps (declared under "sandbox.pages" in the
+    manifest). It has an opaque origin and no access to the extension APIs; the
+    chat page sends the UI document over postMessage and mcp-app.js writes it
+    into this window. See the header comment in mcp-app.js for the full picture.
+  -->
+  <script src="mcp-app.js"></script>
+</body>
+</html>

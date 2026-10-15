@@ -86,13 +86,18 @@ body {
 }
 
 /* Audit records that were not started by the model (a user click on an import
-   card, or the page parsing drafts out of an answer). */
+   card, the page parsing drafts out of an answer, or an MCP App asking for a
+   tool through its interactive view). */
 .skill-run-user {
     border-left: 3px solid var(--bs-primary-border-subtle, var(--bs-primary));
 }
 
 .skill-run-page {
     border-left: 3px solid var(--bs-border-color);
+}
+
+.skill-run-app {
+    border-left: 3px solid var(--bs-warning-border-subtle, var(--bs-warning));
 }
 
 /* ------------------- Run-history filters ------------------- */

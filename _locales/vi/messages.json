@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Mã nguồn"
+    },
+    "mcpAppTitle": {
+        "message": "Ứng dụng tương tác"
+    },
+    "mcpAppUnsupported": {
+        "message": "Môi trường này không hỗ trợ ứng dụng tương tác - hiển thị kết quả văn bản thay thế."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Không tải được ứng dụng tương tác"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "Ứng dụng đã chuẩn bị một yêu cầu trong ô nhập - hãy xem lại và gửi."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Đã chặn liên kết không an toàn từ ứng dụng"
+    },
+    "skillRunApp": {
+        "message": "Ứng dụng"
+    },
+    "skillRunFilterApp": {
+        "message": "Lệnh gọi từ ứng dụng"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "Chế độ xem đã tải nhưng script không hề chạy - bản dựng này không thể thực thi nó (bị trình duyệt chặn)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "Chế độ xem tải tập lệnh từ URL từ xa, điều mà sandbox không cho phép - nên nó đã hiển thị nhưng không bao giờ chạy."
+    },
+    "mcpAppViewError": {
+        "message": "Tập lệnh của chế độ xem đã gây ra lỗi: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Môi trường này không cho phép chạy script của chế độ xem, nên không thể hiển thị ứng dụng tương tác."
+    },
+    "mcpAppRender": {
+        "message": "Hiển thị chế độ xem tương tác"
+    },
+    "mcpAppAutoRender": {
+        "message": "Hiển thị chế độ xem tương tác khi mở lại cuộc trò chuyện"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "Chế độ xem của câu trả lời bạn vừa nhận luôn được hiển thị ngay. Tùy chọn này áp dụng cho các cuộc trò chuyện mở lại: khi tắt, các chế độ xem vẫn thu gọn cho đến khi bạn nhấp vào biểu tượng."
+    },
+    "mcpAppHide": {
+        "message": "Ẩn chế độ xem tương tác"
     }
 }

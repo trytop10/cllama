@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Código fuente"
+    },
+    "mcpAppTitle": {
+        "message": "Aplicación interactiva"
+    },
+    "mcpAppUnsupported": {
+        "message": "Las aplicaciones interactivas no son compatibles con este entorno - se muestra el resultado de texto en su lugar."
+    },
+    "mcpAppLoadFailed": {
+        "message": "No se pudo cargar la aplicación interactiva"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "La aplicación preparó una solicitud en el cuadro de texto - revísala y envíala."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Se bloqueó un enlace no seguro de la aplicación"
+    },
+    "skillRunApp": {
+        "message": "Aplicación"
+    },
+    "skillRunFilterApp": {
+        "message": "Llamadas de la aplicación"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "La vista se cargó, pero su script nunca se ejecutó: esta versión no puede ejecutarlo (bloqueado por el navegador)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "La vista carga su script desde una URL remota, lo que la sandbox no permite - por lo que se renderizó pero nunca se inició."
+    },
+    "mcpAppViewError": {
+        "message": "El script de la vista lanzó un error: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Este entorno no permite ejecutar el script de la vista, por lo que la aplicación interactiva no puede mostrarse."
+    },
+    "mcpAppRender": {
+        "message": "Mostrar la vista interactiva"
+    },
+    "mcpAppAutoRender": {
+        "message": "Mostrar vistas interactivas al reabrir un chat"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "La vista de la respuesta que acabas de recibir siempre se muestra. Este ajuste se aplica a las conversaciones reabiertas: si está desactivado, sus vistas permanecen contraídas hasta que pulses el icono."
+    },
+    "mcpAppHide": {
+        "message": "Ocultar la vista interactiva"
     }
 }

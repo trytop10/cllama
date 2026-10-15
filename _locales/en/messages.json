@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Source code"
+    },
+    "mcpAppTitle": {
+        "message": "Interactive app"
+    },
+    "mcpAppUnsupported": {
+        "message": "Interactive apps are not supported in this environment - showing the text result instead."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Failed to load the interactive app"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "The app put a request in the input box - review it and send."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Blocked an unsafe link from the app"
+    },
+    "skillRunApp": {
+        "message": "App"
+    },
+    "skillRunFilterApp": {
+        "message": "App calls"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "The view loaded but its script never started - this build cannot execute it (blocked by the browser's policy)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "The view loads its script from a remote URL, which the sandbox does not allow - so it rendered but never started."
+    },
+    "mcpAppViewError": {
+        "message": "The view's script threw an error: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "This environment does not allow the view's script to run, so the interactive app cannot be shown."
+    },
+    "mcpAppRender": {
+        "message": "Render interactive view"
+    },
+    "mcpAppAutoRender": {
+        "message": "Render views when reopening a chat"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "A view from the answer you just received always renders right away. This applies to conversations you reopen: with it off, their views stay collapsed until you click the icon."
+    },
+    "mcpAppHide": {
+        "message": "Hide interactive view"
     }
 }

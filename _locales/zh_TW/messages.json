@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "原始碼"
+    },
+    "mcpAppTitle": {
+        "message": "互動式應用程式"
+    },
+    "mcpAppUnsupported": {
+        "message": "此環境不支援互動式應用程式 - 改為顯示文字結果。"
+    },
+    "mcpAppLoadFailed": {
+        "message": "無法載入互動式應用程式"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "應用程式已在輸入框準備好一則請求 - 請確認後送出。"
+    },
+    "mcpAppLinkBlocked": {
+        "message": "已阻止應用程式開啟不安全的連結"
+    },
+    "skillRunApp": {
+        "message": "應用程式"
+    },
+    "skillRunFilterApp": {
+        "message": "應用程式呼叫"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "檢視已載入，但它的指令碼沒有開始執行 - 目前建置無法執行它（被瀏覽器政策阻擋）。"
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "檢視從遠端 URL 載入指令碼，而沙箱不允許這麼做 - 因此它雖已渲染卻從未啟動。"
+    },
+    "mcpAppViewError": {
+        "message": "檢視指令碼拋出錯誤：{message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "此環境不允許執行檢視的指令碼，因此無法顯示互動式應用程式。"
+    },
+    "mcpAppRender": {
+        "message": "渲染互動檢視"
+    },
+    "mcpAppAutoRender": {
+        "message": "重新開啟對話時自動渲染互動檢視"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "剛收到的回答所產生的檢視一律立即渲染。此開關針對重新開啟的對話：關閉後，這些對話中的檢視會先保持收合，點擊圖示才會渲染。"
+    },
+    "mcpAppHide": {
+        "message": "收合互動檢視"
     }
 }

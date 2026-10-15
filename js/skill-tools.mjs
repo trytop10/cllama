@@ -146,6 +146,33 @@ export function toolNeedsConfirmation(name) {
 }
 
 /**
+ * Hand a successful tool result to the UI data channel (MCP Apps), kept separate
+ * from `ctx.onStep` on purpose: the audit trail stores *metadata only*, so the
+ * raw output must not travel through it. Tools without UI metadata simply have
+ * no listener and nothing happens.
+ * @param {Object|null} ctx - Tool context
+ * @param {Object} tool - Registered tool definition
+ * @param {Object} args - Merged arguments
+ * @param {*} output - Raw tool output
+ * @returns {void}
+ */
+function notifyToolResult(ctx, tool, args, output) {
+  if (!tool || typeof ctx?.onToolResult !== 'function') return;
+  try {
+    ctx.onToolResult({
+      tool: tool.name,
+      args,
+      output: typeof output === 'string' ? output : String(output ?? ''),
+      ui: tool.ui || null,
+      serverName: tool.serverName || null
+    });
+  } catch (e) {
+    // A broken UI channel must never fail the tool call itself.
+    console.warn('onToolResult failed:', e);
+  }
+}
+
+/**
  * Get a registered tool by name.
  * @param {string} name - Tool name
  * @returns {Object|undefined}
@@ -768,6 +795,7 @@ export async function executeToolCall(call, activeSkill, ctx = null) {
     const out = await tool.func(mergedArgs, ctx);
     const failed = /^Error:/i.test(String(out));
     typeof ctx?.onStep === 'function' && ctx.onStep({ tool: call.name, ok: !failed, ms: Date.now() - t0, args: mergedArgs, error: failed ? String(out) : undefined });
+    if (!failed) notifyToolResult(ctx, tool, mergedArgs, out);
     return wrap(!failed, out);
   } catch (e) {
     typeof ctx?.onStep === 'function' && ctx.onStep({ tool: call.name, ok: false, ms: Date.now() - t0, args: mergedArgs, error: e.message });
@@ -819,6 +847,7 @@ export async function runTool(name, args, activeSkill, ctx = null) {
     const out = String(await tool.func(mergedArgs, ctx));
     const failed = /^Error:/i.test(out);
     typeof ctx?.onStep === 'function' && ctx.onStep({ tool: name, ok: !failed, ms: Date.now() - t0, args: mergedArgs, error: failed ? out : undefined });
+    if (!failed) notifyToolResult(ctx, tool, mergedArgs, out);
     return out;
   } catch (e) {
     typeof ctx?.onStep === 'function' && ctx.onStep({ tool: name, ok: false, ms: Date.now() - t0, args: mergedArgs, error: e.message });

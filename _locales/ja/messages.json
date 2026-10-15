@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "ソースコード"
+    },
+    "mcpAppTitle": {
+        "message": "インタラクティブアプリ"
+    },
+    "mcpAppUnsupported": {
+        "message": "この環境ではインタラクティブアプリを利用できません - 代わりにテキスト結果を表示します。"
+    },
+    "mcpAppLoadFailed": {
+        "message": "インタラクティブアプリを読み込めませんでした"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "アプリが入力欄にリクエストを用意しました - 確認して送信してください。"
+    },
+    "mcpAppLinkBlocked": {
+        "message": "アプリからの安全でないリンクをブロックしました"
+    },
+    "skillRunApp": {
+        "message": "アプリ"
+    },
+    "skillRunFilterApp": {
+        "message": "アプリからの呼び出し"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "ビューは読み込まれましたが、そのスクリプトは実行されませんでした - このビルドでは実行できません（ブラウザーのポリシーによりブロック）。"
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "ビューはリモート URL からスクリプトを読み込みますが、サンドボックスでは許可されていないため、描画されたものの実行されませんでした。"
+    },
+    "mcpAppViewError": {
+        "message": "ビューのスクリプトでエラーが発生しました: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "この環境ではビューのスクリプトを実行できないため、インタラクティブアプリを表示できません。"
+    },
+    "mcpAppRender": {
+        "message": "インタラクティブビューを表示"
+    },
+    "mcpAppAutoRender": {
+        "message": "会話を開き直したときにビューを自動表示"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "たった今受け取った回答のビューは常にすぐ表示されます。このスイッチは開き直した会話に適用され、オフの場合はアイコンをクリックするまで折りたたまれます。"
+    },
+    "mcpAppHide": {
+        "message": "インタラクティブビューを隠す"
     }
 }

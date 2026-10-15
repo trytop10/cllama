@@ -19,6 +19,7 @@
 import { registerTool, getTool, listTools, setMcpReady } from './skill-tools.mjs';
 import { DB_KEY } from './cllama.js';
 import { browser } from './browser.mjs';
+import { extractUiMeta } from './mcp-apps.mjs';
 
 // Protocol versions this client can speak, newest first. initialize offers the
 // newest; per the MCP versioning spec the server replies with the version it
@@ -279,6 +280,13 @@ export async function initMcpTools() {
             // Remote servers can act outside the browser: always an external
             // side effect, so the user confirms before it runs.
             sideEffect: 'external',
+            // MCP Apps metadata (SEP-1865): when the tool declares a `ui://`
+            // resource, the chat page renders that HTML in a sandboxed iframe
+            // next to the answer. Absent UI metadata changes nothing.
+            ui: extractUiMeta(t) || undefined,
+            // Kept so an app can only call tools of the server that declared it
+            // (see isAppToolAllowed in js/mcp-apps.mjs).
+            serverName: server.name,
             func: async (args) => callMcpTool(server, t.name, args)
           });
         }
@@ -290,5 +298,56 @@ export async function initMcpTools() {
   })();
   setMcpReady(done.catch(() => {}));
   return done;
+}
+
+/**
+ * Look up a configured MCP server by its user-assigned name.
+ * @param {string} name - Server name as stored in DB_KEY.mcpServers
+ * @returns {Promise<Object|null>} The server entry, or null
+ */
+export async function getMcpServerByName(name) {
+  if (!name) return null;
+  const wanted = String(name).trim().toLowerCase();
+  const servers = await loadMcpServers();
+  return servers.find(s => String(s.name || '').trim().toLowerCase() === wanted) || null;
+}
+
+/**
+ * Read an MCP resource (`resources/read`). Used for the `ui://` documents an
+ * MCP App declares, but implemented generically: no assumption about the
+ * resource kind beyond "text comes back as text".
+ *
+ * Reuses the session established during tool listing and re-handshakes once when
+ * the server reports a missing/expired session (same policy as callMcpTool).
+ * @param {Object} server - { name, url, headers }
+ * @param {string} uri - Resource URI (e.g. "ui://charts/bar-chart")
+ * @returns {Promise<{mimeType: string, text: string}>}
+ */
+export async function readMcpResource(server, uri) {
+  if (!server?.url) throw new Error('readMcpResource: no server');
+  if (!uri) throw new Error('readMcpResource: no uri');
+  const request = (session) => rpc(
+    server,
+    { jsonrpc: '2.0', id: Date.now(), method: 'resources/read', params: { uri } },
+    session ? session.sessionId : null,
+    MCP_PROBE_TIMEOUT_MS,
+    session ? session.protocolVersion : null
+  );
+
+  let res = await request(mcpSessions.get(server.url));
+  if (!res.result && isSessionError(res.error)) {
+    const session = await initializeSession(server);
+    res = await request(session);
+  }
+  if (res.error && !res.result) {
+    throw new Error(res.error.message || 'resources/read failed');
+  }
+  const contents = Array.isArray(res.result?.contents) ? res.result.contents : [];
+  const first = contents.find(c => c && (typeof c.text === 'string' || c.blob));
+  if (!first) throw new Error(`resource not found: ${uri}`);
+  // Binary resources cannot be rendered as an HTML view; fail loudly instead of
+  // posting an empty document to the sandbox.
+  if (!first.text) throw new Error(`resource is not text: ${uri}`);
+  return { mimeType: String(first.mimeType || ''), text: String(first.text) };
 }
 

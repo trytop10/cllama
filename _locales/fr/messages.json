@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Code source"
+    },
+    "mcpAppTitle": {
+        "message": "Application interactive"
+    },
+    "mcpAppUnsupported": {
+        "message": "Les applications interactives ne sont pas prises en charge dans cet environnement - le résultat texte est affiché à la place."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Échec du chargement de l'application interactive"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "L'application a préparé une requête dans le champ de saisie - vérifiez-la et envoyez-la."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Un lien non sûr provenant de l'application a été bloqué"
+    },
+    "skillRunApp": {
+        "message": "Application"
+    },
+    "skillRunFilterApp": {
+        "message": "Appels d'application"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "La vue a été chargée mais son script ne s'est jamais exécuté - cette version ne peut pas l'exécuter (bloqué par le navigateur)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "La vue charge son script depuis une URL distante, ce que le bac à sable n'autorise pas - elle s'est donc affichée sans jamais démarrer."
+    },
+    "mcpAppViewError": {
+        "message": "Le script de la vue a levé une erreur : {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Cet environnement n'autorise pas l'exécution du script de la vue : l'application interactive ne peut pas être affichée."
+    },
+    "mcpAppRender": {
+        "message": "Afficher la vue interactive"
+    },
+    "mcpAppAutoRender": {
+        "message": "Afficher les vues interactives à la réouverture d'un chat"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "La vue de la réponse que vous venez de recevoir s'affiche toujours. Ce réglage concerne les conversations rouvertes : désactivé, leurs vues restent repliées jusqu'au clic sur l'icône."
+    },
+    "mcpAppHide": {
+        "message": "Masquer la vue interactive"
     }
 }

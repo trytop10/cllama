@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "源代码"
+    },
+    "mcpAppTitle": {
+        "message": "交互式应用"
+    },
+    "mcpAppUnsupported": {
+        "message": "此环境不支持交互式应用 - 改为显示文本结果。"
+    },
+    "mcpAppLoadFailed": {
+        "message": "无法加载交互式应用"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "应用已在输入框准备好一条请求 - 请确认后发送。"
+    },
+    "mcpAppLinkBlocked": {
+        "message": "已阻止应用打开不安全的链接"
+    },
+    "skillRunApp": {
+        "message": "应用"
+    },
+    "skillRunFilterApp": {
+        "message": "应用调用"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "视图已加载，但它的脚本没有开始执行 - 当前构建无法运行它（被浏览器策略拦截）。"
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "视图从远程 URL 加载脚本，而沙箱不允许这样做 - 所以它渲染出来了却从未启动。"
+    },
+    "mcpAppViewError": {
+        "message": "视图脚本抛出错误：{message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "此环境不允许运行视图的脚本，因此无法显示交互式应用。"
+    },
+    "mcpAppRender": {
+        "message": "渲染交互视图"
+    },
+    "mcpAppAutoRender": {
+        "message": "重新打开会话时自动渲染交互视图"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "刚收到的回答所产生的视图始终立即渲染。此开关针对重新打开的会话：关闭后，这些会话里的视图先保持折叠，点击图标才渲染。"
+    },
+    "mcpAppHide": {
+        "message": "收起交互视图"
     }
 }

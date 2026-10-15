@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Código-fonte"
+    },
+    "mcpAppTitle": {
+        "message": "Aplicativo interativo"
+    },
+    "mcpAppUnsupported": {
+        "message": "Aplicativos interativos não são compatíveis com este ambiente - o resultado em texto é exibido no lugar."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Falha ao carregar o aplicativo interativo"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "O aplicativo preparou uma solicitação na caixa de entrada - revise e envie."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Um link inseguro do aplicativo foi bloqueado"
+    },
+    "skillRunApp": {
+        "message": "Aplicativo"
+    },
+    "skillRunFilterApp": {
+        "message": "Chamadas do aplicativo"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "A visualização foi carregada, mas o script nunca foi executado - esta versão não pode executá-lo (bloqueado pelo navegador)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "A visualização carrega o script de uma URL remota, o que a sandbox não permite - então ela foi renderizada mas nunca iniciou."
+    },
+    "mcpAppViewError": {
+        "message": "O script da visualização gerou um erro: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Este ambiente não permite executar o script da visualização, então o aplicativo interativo não pode ser exibido."
+    },
+    "mcpAppRender": {
+        "message": "Renderizar visualização interativa"
+    },
+    "mcpAppAutoRender": {
+        "message": "Renderizar visualizações ao reabrir uma conversa"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "A visualização da resposta que você acabou de receber sempre é renderizada. Esta opção vale para conversas reabertas: desativada, as visualizações ficam recolhidas até você clicar no ícone."
+    },
+    "mcpAppHide": {
+        "message": "Ocultar visualização interativa"
     }
 }

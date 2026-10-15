@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Kode sumber"
+    },
+    "mcpAppTitle": {
+        "message": "Aplikasi interaktif"
+    },
+    "mcpAppUnsupported": {
+        "message": "Aplikasi interaktif tidak didukung di lingkungan ini - hasil teks ditampilkan sebagai gantinya."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Gagal memuat aplikasi interaktif"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "Aplikasi menyiapkan permintaan di kotak input - tinjau lalu kirim."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Tautan tidak aman dari aplikasi diblokir"
+    },
+    "skillRunApp": {
+        "message": "Aplikasi"
+    },
+    "skillRunFilterApp": {
+        "message": "Panggilan aplikasi"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "Tampilan dimuat tetapi skripnya tidak pernah berjalan - build ini tidak dapat menjalankannya (diblokir oleh browser)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "Tampilan memuat skripnya dari URL jarak jauh, yang tidak diizinkan sandbox - jadi tampil tetapi tidak pernah berjalan."
+    },
+    "mcpAppViewError": {
+        "message": "Skrip tampilan melemparkan kesalahan: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Lingkungan ini tidak mengizinkan skrip tampilan dijalankan, sehingga aplikasi interaktif tidak dapat ditampilkan."
+    },
+    "mcpAppRender": {
+        "message": "Render tampilan interaktif"
+    },
+    "mcpAppAutoRender": {
+        "message": "Render tampilan interaktif saat membuka kembali obrolan"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "Tampilan dari jawaban yang baru Anda terima selalu langsung dirender. Opsi ini berlaku untuk percakapan yang dibuka kembali: jika dimatikan, tampilannya tetap terlipat sampai Anda mengklik ikon."
+    },
+    "mcpAppHide": {
+        "message": "Sembunyikan tampilan interaktif"
     }
 }

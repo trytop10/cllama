@@ -29,6 +29,12 @@
     },
     "permissions": ["sidePanel", "activeTab", "storage", "unlimitedStorage", "contextMenus"],
     "host_permissions": ["<all_urls>"],
+    "sandbox": {
+        "pages": ["viewer/mcp-app.html"]
+    },
+    "content_security_policy": {
+        "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; child-src 'self' https:;"
+    },
     "web_accessible_resources": [
       {
         "resources": [

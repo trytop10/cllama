@@ -921,5 +921,50 @@
     },
     "aboutSource": {
         "message": "Kaynak kodu"
+    },
+    "mcpAppTitle": {
+        "message": "Etkileşimli uygulama"
+    },
+    "mcpAppUnsupported": {
+        "message": "Bu ortamda etkileşimli uygulamalar desteklenmiyor - bunun yerine metin sonucu gösteriliyor."
+    },
+    "mcpAppLoadFailed": {
+        "message": "Etkileşimli uygulama yüklenemedi"
+    },
+    "mcpAppMessagePrefilled": {
+        "message": "Uygulama giriş kutusuna bir istek hazırladı - inceleyip gönderin."
+    },
+    "mcpAppLinkBlocked": {
+        "message": "Uygulamadan gelen güvenli olmayan bağlantı engellendi"
+    },
+    "skillRunApp": {
+        "message": "Uygulama"
+    },
+    "skillRunFilterApp": {
+        "message": "Uygulama çağrıları"
+    },
+    "mcpAppScriptBlocked": {
+        "message": "Görünüm yüklendi ancak betiği hiç çalışmadı - bu derleme onu çalıştıramıyor (tarayıcı tarafından engellendi)."
+    },
+    "mcpAppExternalScriptBlocked": {
+        "message": "Görünüm betiğini uzak bir URL'den yüklüyor; korumalı alan buna izin vermediği için görüntülendi ama hiç başlamadı."
+    },
+    "mcpAppViewError": {
+        "message": "Görünümün betiği bir hata verdi: {message}"
+    },
+    "mcpAppInlineBlocked": {
+        "message": "Bu ortam görünümün betiğini çalıştırmaya izin vermiyor, bu yüzden etkileşimli uygulama gösterilemiyor."
+    },
+    "mcpAppRender": {
+        "message": "Etkileşimli görünümü oluştur"
+    },
+    "mcpAppAutoRender": {
+        "message": "Sohbeti yeniden açarken etkileşimli görünümleri oluştur"
+    },
+    "mcpAppAutoRenderHint": {
+        "message": "Yeni aldığınız yanıtın görünümü her zaman hemen gösterilir. Bu anahtar yeniden açılan sohbetler için geçerlidir: kapalıysa görünümler simgeye tıklayana kadar daraltılmış kalır."
+    },
+    "mcpAppHide": {
+        "message": "Etkileşimli görünümü gizle"
     }
 }
