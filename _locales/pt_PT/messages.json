@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Ocultar vista interativa"
+    },
+    "mcpAutoSkill": {
+        "message": "Utilizar também como Skill"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Cria automaticamente uma Skill com o nome do servidor e todas as suas ferramentas. Só pode ser ativada manualmente e não aparece na lista de Skills; selecione-a com \"/\" no chat. As ferramentas destrutivas ficam desativadas por predefinição."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Ferramentas"
+    },
+    "mcpToolsLoading": {
+        "message": "A carregar ferramentas…"
+    },
+    "mcpToolsFound": {
+        "message": "{count} ferramentas encontradas."
+    },
+    "mcpToolsEmpty": {
+        "message": "Este servidor não devolveu nenhuma ferramenta."
+    },
+    "mcpToolsFailed": {
+        "message": "Não foi possível listar as ferramentas"
+    },
+    "mcpToolParams": {
+        "message": "Parâmetros:"
+    },
+    "mcpToolNoUi": {
+        "message": "sem IU"
+    },
+    "mcpToolReadOnly": {
+        "message": "só de leitura"
+    },
+    "mcpToolDestructive": {
+        "message": "destrutiva"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "Quando usar esta ferramenta (opcional) — por ex. editar um item existente; para um novo use create"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "Esta ferramenta pode alterar ou eliminar dados."
+    }
+
 }

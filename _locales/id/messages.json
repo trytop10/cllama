@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Sembunyikan tampilan interaktif"
+    },
+    "mcpAutoSkill": {
+        "message": "Juga gunakan sebagai Skill"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Membuat Skill otomatis dengan nama server dan semua alatnya. Skill ini hanya bisa dipanggil manual dan tidak muncul di daftar Skill; pilih lewat \"/\" di obrolan. Alat yang bersifat merusak dinonaktifkan secara default."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Alat"
+    },
+    "mcpToolsLoading": {
+        "message": "Memuat alat…"
+    },
+    "mcpToolsFound": {
+        "message": "{count} alat ditemukan."
+    },
+    "mcpToolsEmpty": {
+        "message": "Server ini tidak mengembalikan alat apa pun."
+    },
+    "mcpToolsFailed": {
+        "message": "Gagal mengambil daftar alat"
+    },
+    "mcpToolParams": {
+        "message": "Parameter:"
+    },
+    "mcpToolNoUi": {
+        "message": "tanpa UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "hanya baca"
+    },
+    "mcpToolDestructive": {
+        "message": "merusak"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "Kapan memakai alat ini (opsional) — mis. mengubah item yang ada; untuk item baru gunakan create"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "Alat ini dapat mengubah atau menghapus data."
+    }
+
 }

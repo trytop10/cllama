@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "收起交互视图"
+    },
+    "mcpAutoSkill": {
+        "message": "同时作为一个 Skill 使用"
+    },
+    "mcpAutoSkillHint": {
+        "message": "自动生成一个与该服务器同名的 Skill，包含它的全部工具。它只能手动调用，也不会出现在 Skill 列表里，请在聊天框输入 \"/\" 选择。破坏性工具默认禁用。"
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "工具"
+    },
+    "mcpToolsLoading": {
+        "message": "正在读取工具…"
+    },
+    "mcpToolsFound": {
+        "message": "找到 {count} 个工具。"
+    },
+    "mcpToolsEmpty": {
+        "message": "该服务器没有返回任何工具。"
+    },
+    "mcpToolsFailed": {
+        "message": "无法读取工具列表"
+    },
+    "mcpToolParams": {
+        "message": "参数："
+    },
+    "mcpToolNoUi": {
+        "message": "无 UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "只读"
+    },
+    "mcpToolDestructive": {
+        "message": "破坏性"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "何时使用该工具（可选）——例如：修改已有条目；新建请用 create"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "该工具可能修改或删除数据。"
+    }
+
 }

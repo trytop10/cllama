@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "收合互動檢視"
+    },
+    "mcpAutoSkill": {
+        "message": "同時作為一個 Skill 使用"
+    },
+    "mcpAutoSkillHint": {
+        "message": "自動產生一個與該伺服器同名的 Skill，包含它的全部工具。它只能手動呼叫，也不會出現在 Skill 清單裡，請在聊天框輸入 \"/\" 選擇。具破壞性的工具預設停用。"
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "工具"
+    },
+    "mcpToolsLoading": {
+        "message": "正在讀取工具…"
+    },
+    "mcpToolsFound": {
+        "message": "找到 {count} 個工具。"
+    },
+    "mcpToolsEmpty": {
+        "message": "該伺服器沒有回傳任何工具。"
+    },
+    "mcpToolsFailed": {
+        "message": "無法讀取工具清單"
+    },
+    "mcpToolParams": {
+        "message": "參數："
+    },
+    "mcpToolNoUi": {
+        "message": "無 UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "唯讀"
+    },
+    "mcpToolDestructive": {
+        "message": "破壞性"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "何時使用該工具（選填）——例如：修改既有項目；新建請用 create"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "該工具可能修改或刪除資料。"
+    }
+
 }

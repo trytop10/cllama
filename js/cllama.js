@@ -1615,6 +1615,9 @@ export async function requestToolConfirmation(req) {
     tool: req.tool,
     argsPreview: previewToolArgs(req.args),
     sideEffect: req.sideEffect || 'external',
+    // Kept separate from sideEffect: an MCP tool is always `external`, but the
+    // server may also declare that it can destroy data (see the confirm card).
+    destructive: req.destructive === true,
     sessionId: req.sessionId || null,
     skillName: req.skillName || null,
     model: req.model || null,
@@ -1688,6 +1691,9 @@ export function buildToolContext(meta = {}) {
       tool: info.tool,
       args: info.args,
       sideEffect: info.sideEffect,
+      // Only a hint (MCP annotations are often wrong), used to make the confirm
+      // card explicit about data-changing tools. It never blocks anything.
+      destructive: getTool(info.tool)?.annotations?.destructiveHint === true,
       sessionId: options.sessionId || null,
       skillName: skill?.name || null,
       model: meta.model || options.model || null

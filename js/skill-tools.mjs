@@ -679,6 +679,20 @@ export function skillToolName(entry) {
 }
 
 /**
+ * Optional per-Skill "when to use" note attached to a tool entry
+ * (`{ name, args, hint }`). It is appended to the tool description the model
+ * sees — on the native-tools path and in the text protocol alike — so a Skill
+ * can disambiguate two similarly described tools without touching the tool
+ * itself. Content is the user's own words: never translated, never invented.
+ * @param {Object|string} entry - Skill tool entry
+ * @returns {string} The hint, or '' when none
+ */
+export function skillToolHint(entry) {
+  if (!entry || typeof entry !== 'object') return '';
+  return typeof entry.hint === 'string' ? entry.hint.trim() : '';
+}
+
+/**
  * Build the tool-calling instructions appended to a skill's system prompt.
  * @param {Object} activeSkill - The active skill { name, tools: string[] }
  * @returns {string} Empty string if the skill declares no tools.
@@ -692,12 +706,13 @@ export function buildToolInstructions(activeSkill) {
     const args = entry && typeof entry === 'object' ? entry.args : undefined;
     const tool = getTool(name);
     if (!tool) continue;
-    tools.push({ tool, args });
+    tools.push({ tool, args, hint: skillToolHint(entry) });
   }
   if (!tools.length) return '';
 
-  const lines = tools.map(({ tool, args }) => {
+  const lines = tools.map(({ tool, args, hint }) => {
     let line = `- ${tool.name}: ${tool.description}`;
+    if (hint) line += ` — ${hint}`;
     if (args && Object.keys(args).length) {
       line += ` (default args: ${JSON.stringify(args)})`;
     }
@@ -868,11 +883,12 @@ export function buildNativeTools(activeSkill) {
     const name = skillToolName(entry);
     const tool = getTool(name);
     if (!tool) continue;
+    const hint = skillToolHint(entry);
     tools.push({
       type: 'function',
       function: {
         name: tool.name,
-        description: tool.description,
+        description: hint ? `${tool.description || ''} — ${hint}` : (tool.description || ''),
         parameters: tool.parameters || { type: 'object', properties: {} }
       }
     });

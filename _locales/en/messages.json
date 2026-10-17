@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Hide interactive view"
+    },
+    "mcpAutoSkill": {
+        "message": "Also expose this server as a Skill"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Creates an automatic Skill named after the server, containing all of its tools. It is manual-only and does not appear in the Skill list; pick it from the \"/\" menu in the chat. Destructive tools are disabled by default."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Tools"
+    },
+    "mcpToolsLoading": {
+        "message": "Loading tools…"
+    },
+    "mcpToolsFound": {
+        "message": "Found {count} tools."
+    },
+    "mcpToolsEmpty": {
+        "message": "This server returned no tools."
+    },
+    "mcpToolsFailed": {
+        "message": "Could not list tools"
+    },
+    "mcpToolParams": {
+        "message": "Parameters:"
+    },
+    "mcpToolNoUi": {
+        "message": "no UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "read-only"
+    },
+    "mcpToolDestructive": {
+        "message": "destructive"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "When to use this tool (optional) — e.g. edit an existing item; use create for new ones"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "This tool may change or delete data."
+    }
+
 }

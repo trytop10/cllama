@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "ซ่อนมุมมองแบบอินเทอร์แอกทีฟ"
+    },
+    "mcpAutoSkill": {
+        "message": "ใช้เป็น Skill ด้วย"
+    },
+    "mcpAutoSkillHint": {
+        "message": "สร้าง Skill อัตโนมัติโดยใช้ชื่อเซิร์ฟเวอร์และรวมเครื่องมือทั้งหมดไว้ เรียกใช้ได้ด้วยตนเองเท่านั้นและจะไม่แสดงในรายการ Skill ให้เลือกด้วย \"/\" ในแชต เครื่องมือที่ทำลายข้อมูลจะถูกปิดไว้โดยค่าเริ่มต้น"
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "เครื่องมือ"
+    },
+    "mcpToolsLoading": {
+        "message": "กำลังโหลดเครื่องมือ…"
+    },
+    "mcpToolsFound": {
+        "message": "พบเครื่องมือ {count} รายการ"
+    },
+    "mcpToolsEmpty": {
+        "message": "เซิร์ฟเวอร์นี้ไม่ได้ส่งเครื่องมือกลับมา"
+    },
+    "mcpToolsFailed": {
+        "message": "ไม่สามารถดึงรายการเครื่องมือได้"
+    },
+    "mcpToolParams": {
+        "message": "พารามิเตอร์:"
+    },
+    "mcpToolNoUi": {
+        "message": "ไม่มี UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "อ่านอย่างเดียว"
+    },
+    "mcpToolDestructive": {
+        "message": "ทำลายข้อมูล"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "ใช้เครื่องมือนี้เมื่อใด (ไม่บังคับ) — เช่น แก้ไขรายการที่มีอยู่ ใช้ create สำหรับรายการใหม่"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "เครื่องมือนี้สามารถเปลี่ยนหรือลบข้อมูลได้"
+    }
+
 }

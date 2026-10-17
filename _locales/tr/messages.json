@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Etkileşimli görünümü gizle"
+    },
+    "mcpAutoSkill": {
+        "message": "Skill olarak da kullan"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Sunucunun adıyla, tüm araçlarını içeren otomatik bir Skill oluşturur. Yalnızca elle çağrılabilir ve Skill listesinde görünmez; sohbette \"/\" ile seçin. Yıkıcı araçlar varsayılan olarak devre dışıdır."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Araçlar"
+    },
+    "mcpToolsLoading": {
+        "message": "Araçlar yükleniyor…"
+    },
+    "mcpToolsFound": {
+        "message": "{count} araç bulundu."
+    },
+    "mcpToolsEmpty": {
+        "message": "Bu sunucu hiç araç döndürmedi."
+    },
+    "mcpToolsFailed": {
+        "message": "Araç listesi alınamadı"
+    },
+    "mcpToolParams": {
+        "message": "Parametreler:"
+    },
+    "mcpToolNoUi": {
+        "message": "arayüz yok"
+    },
+    "mcpToolReadOnly": {
+        "message": "salt okunur"
+    },
+    "mcpToolDestructive": {
+        "message": "yıkıcı"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "Bu araç ne zaman kullanılır (isteğe bağlı) — ör. mevcut bir öğeyi düzenle; yeni öğe için create kullan"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "Bu araç verileri değiştirebilir veya silebilir."
+    }
+
 }

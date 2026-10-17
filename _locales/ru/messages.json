@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Скрыть интерактивное представление"
+    },
+    "mcpAutoSkill": {
+        "message": "Использовать также как Skill"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Автоматически создаёт Skill с именем сервера и всеми его инструментами. Его можно вызывать только вручную, и он не отображается в списке Skill; выбирайте его через «/» в чате. Разрушительные инструменты по умолчанию отключены."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Инструменты"
+    },
+    "mcpToolsLoading": {
+        "message": "Загрузка инструментов…"
+    },
+    "mcpToolsFound": {
+        "message": "Найдено инструментов: {count}."
+    },
+    "mcpToolsEmpty": {
+        "message": "Сервер не вернул ни одного инструмента."
+    },
+    "mcpToolsFailed": {
+        "message": "Не удалось получить список инструментов"
+    },
+    "mcpToolParams": {
+        "message": "Параметры:"
+    },
+    "mcpToolNoUi": {
+        "message": "без интерфейса"
+    },
+    "mcpToolReadOnly": {
+        "message": "только чтение"
+    },
+    "mcpToolDestructive": {
+        "message": "разрушающий"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "Когда использовать этот инструмент (необязательно) — например, изменить существующий элемент; для нового используйте create"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "Этот инструмент может изменить или удалить данные."
+    }
+
 }

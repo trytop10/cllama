@@ -10,6 +10,9 @@ let skillModal = null;
 let editingTools = []; // [{ name, args }] rows being edited in the modal
 let mcpConfigurations = [];
 let mcpModal = null;
+let mcpToolsModal = null;
+// Last successful "Test connection" result, kept for the copy button.
+let lastMcpToolsPreview = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Breadcrumb link back to the chat page (keeps the chat scenario id).
@@ -29,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('b_add_mcp').addEventListener('click', showAddMcpForm);
   document.getElementById('b_save_mcp').addEventListener('click', saveMcpFromForm);
   document.getElementById('b_test_mcp').addEventListener('click', testMcpFromForm);
+  document.getElementById('b_copy_mcp_tools').addEventListener('click', copyMcpToolsReport);
 
   // Per-Skill model override options (read-only view of the data source list).
   await buildServiceOptions();
@@ -203,6 +207,8 @@ function updateRowParams(rowEl, index) {
   const tool = listTools().find(t => t.name === editingTools[index].name);
   const descEl = rowEl.querySelector('.tool-desc');
   if (descEl) descEl.textContent = tool ? toolDesc(tool) : '';
+  const hintInput = rowEl.querySelector('.tool-hint-input');
+  if (hintInput) hintInput.value = editingTools[index].hint || '';
   const paramWrap = rowEl.querySelector('.tool-param-wrap');
   if (paramWrap) paramWrap.innerHTML = toolParamsHtml(tool, editingTools[index].args || {});
 }
@@ -248,6 +254,9 @@ function renderToolRows() {
           <button type="button" class="btn btn-sm btn-compact btn-outline-danger tool-del-btn" title="${browser.i18n.getMessage("deleteSkill")}">×</button>
         </div>
         <div class="tool-desc text-muted small mt-1">${tool ? toolDesc(tool) : ''}</div>
+        <input type="text" class="form-control form-control-sm tool-hint-input mt-1" maxlength="200"
+               placeholder="${escapeHtml(browser.i18n.getMessage('skillToolHintPlaceholder') || '')}"
+               value="${escapeHtml(item.hint || '')}">
         <div class="tool-param-wrap mt-1">${toolParamsHtml(tool, item.args)}</div>
       </div>
     `;
@@ -266,6 +275,8 @@ function renderToolRows() {
     select.addEventListener('change', () => {
       editingTools[index].name = select.value;
       editingTools[index].args = {};
+      // A hint describes ONE tool; keeping it after switching would lie.
+      editingTools[index].hint = '';
       updateRowParams(rowEl, index);
     });
 
@@ -287,6 +298,8 @@ function syncArgsFromDom() {
       if (val !== undefined) args[inp.dataset.key] = val;
     });
     editingTools[index].args = args;
+    const hintInput = rowEl.querySelector('.tool-hint-input');
+    editingTools[index].hint = hintInput ? hintInput.value.trim() : '';
   });
 }
 
@@ -294,7 +307,7 @@ function syncArgsFromDom() {
  * Add a new empty tool row.
  */
 function appendToolRow() {
-  editingTools.push({ name: '', args: {} });
+  editingTools.push({ name: '', args: {}, hint: '' });
   renderToolRows();
 }
 
@@ -318,6 +331,7 @@ function collectToolsFromForm() {
     .filter(item => item.name)
     .map(item => {
       const entry = { name: item.name, args: item.args || {} };
+      if (item.hint) entry.hint = item.hint;
       if (item.blocked) entry.blocked = true;
       return entry;
     });
@@ -342,7 +356,12 @@ function showSkillForm(skill) {
   const starterInput = document.getElementById('skillStarterInput');
   if (starterInput) starterInput.value = skill ? (skill.starter || '') : '';
   editingTools = skill && Array.isArray(skill.tools)
-    ? skill.tools.map(t => ({ name: t.name || '', args: t.args || {}, blocked: t.blocked === true || (typeof t === 'string' && t.startsWith('!')) }))
+    ? skill.tools.map(t => ({
+        name: t.name || '',
+        args: t.args || {},
+        hint: typeof t.hint === 'string' ? t.hint : '',
+        blocked: t.blocked === true || (typeof t === 'string' && t.startsWith('!'))
+      }))
     : [];
   renderToolRows();
 
@@ -441,6 +460,216 @@ function ensureMcpModal() {
 }
 
 /**
+ * Escape text before it is interpolated into HTML (server-provided tool names
+ * and descriptions are untrusted input).
+ * @param {string} text - Raw text
+ * @returns {string} HTML-safe text
+ */
+function escapeHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Lazily create the MCP tool inspector modal.
+ * @returns {bootstrap.Modal|null}
+ */
+function ensureMcpToolsModal() {
+  if (!mcpToolsModal) {
+    const el = document.getElementById('mcpToolsModal');
+    if (!el) return null;
+    mcpToolsModal = new bootstrap.Modal(el);
+  }
+  return mcpToolsModal;
+}
+
+/**
+ * The `ui://` resource a tool declares, if any (both metadata spellings).
+ * @param {Object} tool - Tool entry from `tools/list`
+ * @returns {string} Resource URI or ''
+ */
+function uiResourceOf(tool) {
+  return tool?._meta?.ui?.resourceUri || tool?._meta?.['ui/resourceUri'] || '';
+}
+
+/**
+ * Compact parameter list: `name* (type), other (object)`.
+ * @param {Object} tool - Tool entry from `tools/list`
+ * @returns {string} Empty string when the tool declares no parameters
+ */
+function describeToolParams(tool) {
+  const schema = tool?.inputSchema || tool?.parameters || {};
+  const props = schema.properties || {};
+  const keys = Object.keys(props);
+  if (!keys.length) return '';
+  const required = new Set(Array.isArray(schema.required) ? schema.required : []);
+  return keys.map((key) => {
+    const type = props[key]?.type || 'string';
+    return `${key}${required.has(key) ? '*' : ''} (${type})`;
+  }).join(', ');
+}
+
+/**
+ * Localized annotation badges (read-only / destructive).
+ * @param {Object} tool - Tool entry from `tools/list`
+ * @returns {string[]} Labels
+ */
+function toolFlagLabels(tool) {
+  const annotations = tool?.annotations || {};
+  const flags = [];
+  if (annotations.readOnlyHint === true) {
+    flags.push(browser.i18n.getMessage('mcpToolReadOnly') || 'read-only');
+  }
+  if (annotations.destructiveHint === true) {
+    flags.push(browser.i18n.getMessage('mcpToolDestructive') || 'destructive');
+  }
+  return flags;
+}
+
+/**
+ * Render the tool list of one server into the inspector modal.
+ * @param {Object} server - Server being inspected
+ * @param {Array<Object>} tools - Result of listMcpTools()
+ * @returns {void}
+ */
+function renderMcpToolsPreview(server, tools) {
+  const summary = document.getElementById('mcpToolsSummary');
+  const preview = document.getElementById('mcpToolsPreview');
+  if (!summary || !preview) return;
+
+  const list = Array.isArray(tools) ? tools : [];
+
+  // Group counts: this is what decides whether "split by ui://" is worth it.
+  const groupCounts = new Map();
+  for (const tool of list) {
+    const uri = uiResourceOf(tool);
+    if (uri) groupCounts.set(uri, (groupCounts.get(uri) || 0) + 1);
+  }
+  const groupsHtml = groupCounts.size
+    ? `<div class="mt-1">${[...groupCounts.entries()]
+        .map(([uri, n]) => `<span class="badge text-bg-light border me-1">${escapeHtml(uri)} · ${n}</span>`)
+        .join('')}</div>`
+    : '';
+
+  const foundText = list.length
+    ? (browser.i18n.getMessage('mcpToolsFound') || 'Found {count} tools.').replace('{count}', list.length)
+    : (browser.i18n.getMessage('mcpToolsEmpty') || 'This server returned no tools.');
+  summary.innerHTML = `<div>${escapeHtml(foundText)}</div>${groupsHtml}`;
+
+  if (!list.length) {
+    preview.innerHTML = '';
+    return;
+  }
+
+  const noUiLabel = browser.i18n.getMessage('mcpToolNoUi') || 'no UI';
+  const paramsLabel = browser.i18n.getMessage('mcpToolParams') || 'Parameters:';
+
+  preview.innerHTML = list.map((tool) => {
+    const title = String(tool?.title || tool?.annotations?.title || '').trim();
+    const desc = String(tool?.description || '').trim();
+    const params = describeToolParams(tool);
+    const uri = uiResourceOf(tool);
+    const flags = toolFlagLabels(tool);
+    return `
+      <div class="mcp-tool-item">
+        <div class="mcp-tool-head">
+          <code>${escapeHtml(tool?.name || '')}</code>
+          ${title ? `<span class="mcp-tool-title">${escapeHtml(title)}</span>` : ''}
+          ${uri
+            ? `<span class="badge text-bg-light border">${escapeHtml(uri)}</span>`
+            : `<span class="text-muted small">${escapeHtml(noUiLabel)}</span>`}
+          ${flags.map((flag) => `<span class="badge text-bg-warning">${escapeHtml(flag)}</span>`).join('')}
+        </div>
+        ${desc ? `<div class="small">${escapeHtml(desc)}</div>` : ''}
+        ${params ? `<div class="small text-muted">${escapeHtml(paramsLabel)} ${escapeHtml(params)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Plain-text version of the inspector content, for copying into a bug report.
+ * @param {Object} server - Server being inspected
+ * @param {Array<Object>} tools - Tool list
+ * @returns {string}
+ */
+function formatMcpToolsReport(server, tools) {
+  const list = Array.isArray(tools) ? tools : [];
+  const lines = [`${server?.name || ''} <${server?.url || ''}> — ${list.length} tools`, ''];
+  for (const tool of list) {
+    const uri = uiResourceOf(tool);
+    const flags = toolFlagLabels(tool);
+    const params = describeToolParams(tool);
+    lines.push(`${tool?.name || ''}${flags.length ? ` [${flags.join(', ')}]` : ''}${uri ? ` [${uri}]` : ''}`);
+    if (tool?.description) lines.push(`  ${String(tool.description).trim()}`);
+    if (params) lines.push(`  params: ${params}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Copy the current inspector report to the clipboard. The page is an extension
+ * page opened by a click, so it carries the user gesture clipboard access needs.
+ * @returns {Promise<void>}
+ */
+async function copyMcpToolsReport() {
+  const btn = document.getElementById('b_copy_mcp_tools');
+  if (!lastMcpToolsPreview) return;
+  try {
+    await navigator.clipboard.writeText(
+      formatMcpToolsReport(lastMcpToolsPreview.server, lastMcpToolsPreview.tools)
+    );
+    if (btn) {
+      btn.textContent = browser.i18n.getMessage('copied') || 'Copied';
+      setTimeout(() => {
+        btn.textContent = browser.i18n.getMessage('copy') || 'Copy';
+      }, 1500);
+    }
+  } catch (e) {
+    balert((browser.i18n.getMessage('replicationFailed') || 'Copy failed') + ': ' + (e?.message || e));
+  }
+}
+
+/**
+ * Open the tool inspector for a server and load its tools.
+ * @param {Object} server - { name, url, headers }
+ * @returns {Promise<void>}
+ */
+async function showMcpToolsPanel(server) {
+  const modal = ensureMcpToolsModal();
+  if (!modal) return;
+
+  const titleEl = document.getElementById('mcpToolsModalTitle');
+  const summary = document.getElementById('mcpToolsSummary');
+  const preview = document.getElementById('mcpToolsPreview');
+  const copyBtn = document.getElementById('b_copy_mcp_tools');
+
+  if (titleEl) {
+    titleEl.textContent = `${server?.name || ''} · ${browser.i18n.getMessage('mcpToolsPreview') || 'Tools'}`;
+  }
+  if (summary) summary.textContent = browser.i18n.getMessage('mcpToolsLoading') || 'Loading tools…';
+  if (preview) preview.innerHTML = '';
+  if (copyBtn) copyBtn.textContent = browser.i18n.getMessage('copy') || 'Copy';
+  lastMcpToolsPreview = null;
+
+  modal.show();
+
+  try {
+    const tools = await listMcpTools(server);
+    lastMcpToolsPreview = { server, tools };
+    renderMcpToolsPreview(server, tools);
+  } catch (e) {
+    if (summary) {
+      const label = browser.i18n.getMessage('mcpToolsFailed') || 'Could not list tools';
+      summary.innerHTML = `<span class="text-danger">${escapeHtml(label + ': ' + (e?.message || e))}</span>`;
+    }
+  }
+}
+
+/**
  * Load MCP servers and render the list.
  */
 async function initMcpList() {
@@ -465,6 +694,7 @@ function renderMcpServers() {
       <div class="flex-grow-1">
         <strong>${s.name}</strong>
         ${s.enabled === false ? `<span class="badge text-bg-secondary ms-1">${browser.i18n.getMessage("mcpDisabled")}</span>` : ''}
+        ${s.autoSkill === true ? `<span class="badge text-bg-info ms-1" title="${browser.i18n.getMessage("mcpAutoSkillHint")}">${browser.i18n.getMessage("mcpAutoSkillBadge")}</span>` : ''}
         <div class="text-muted small">${s.url}</div>
       </div>
       <div class="btn-group ms-2 flex-shrink-0">
@@ -478,14 +708,7 @@ function renderMcpServers() {
   container.querySelectorAll('.mcp-test-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const index = parseInt(btn.closest('[data-mcp-index]').dataset.mcpIndex, 10);
-      btn.textContent = '…';
-      try {
-        const tools = await listMcpTools(mcpConfigurations[index]);
-        balert(browser.i18n.getMessage("mcpTestOk").replace('{count}', tools.length));
-      } catch (e) {
-        balert((browser.i18n.getMessage("mcpTestFail") || 'Failed') + ': ' + e.message);
-      }
-      btn.textContent = '🔌';
+      await showMcpToolsPanel(mcpConfigurations[index]);
     });
   });
 
@@ -524,6 +747,9 @@ function showMcpForm(server) {
   document.getElementById('mcpHeadersInput').value = server && server.headers
     ? JSON.stringify(server.headers, null, 2) : '';
   document.getElementById('mcpEnabledInput').checked = server ? server.enabled !== false : true;
+  // Automatic Skill: off unless the user opted in (a derived Skill, see
+  // js/mcp-skills.mjs — it never appears in the Skill list below).
+  document.getElementById('mcpAutoSkillInput').checked = server ? server.autoSkill === true : false;
 
   const title = document.getElementById('mcpModalTitle');
   if (title) title.textContent = browser.i18n.getMessage(server ? 'editSkill' : 'addMcpServer');
@@ -556,6 +782,7 @@ async function saveMcpFromForm() {
   const url = document.getElementById('mcpUrlInput').value.trim();
   const headers = parseMcpHeaders(document.getElementById('mcpHeadersInput').value);
   const enabled = document.getElementById('mcpEnabledInput').checked;
+  const autoSkill = document.getElementById('mcpAutoSkillInput').checked;
 
   if (!name || !url || headers === null) {
     balert(browser.i18n.getMessage("requiredError"));
@@ -569,9 +796,10 @@ async function saveMcpFromForm() {
       existing.url = url;
       existing.headers = headers;
       existing.enabled = enabled;
+      existing.autoSkill = autoSkill;
     }
   } else {
-    mcpConfigurations.push({ id: `mcp_${Date.now()}`, name, url, headers, enabled });
+    mcpConfigurations.push({ id: `mcp_${Date.now()}`, name, url, headers, enabled, autoSkill });
   }
 
   await saveMcpServers(mcpConfigurations);
@@ -592,10 +820,5 @@ async function testMcpFromForm() {
     balert(browser.i18n.getMessage("requiredError"));
     return;
   }
-  try {
-    const tools = await listMcpTools({ name: name || 'test', url, headers });
-    balert(browser.i18n.getMessage("mcpTestOk").replace('{count}', tools.length));
-  } catch (e) {
-    balert((browser.i18n.getMessage("mcpTestFail") || 'Failed') + ': ' + e.message);
-  }
+  await showMcpToolsPanel({ name: name || 'test', url, headers });
 }

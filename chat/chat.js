@@ -2,8 +2,9 @@ import { getService } from '../js/client/client.mjs';
 import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
-import { getMcpServerByName, initMcpTools, readMcpResource } from '../js/mcp.mjs';
-import { runTool, getTool } from '../js/skill-tools.mjs';
+import { getMcpServerByName, initMcpTools, loadMcpServers, readMcpResource } from '../js/mcp.mjs';
+import { runTool, getTool, getMcpReady, listTools } from '../js/skill-tools.mjs';
+import { buildMcpSkills, serverIdFromSkillId } from '../js/mcp-skills.mjs';
 import { MCP_APP_CONSOLE_TYPE, MCP_APP_ERROR_TYPE, MCP_APP_GET_HTML_TYPE, MCP_APP_HTML_MAX, MCP_APP_HTML_TYPE, MCP_APP_NETWORK_TYPE, MCP_APP_HTML_MIME_PREFIX, MCP_APP_INIT_TIMEOUT_MS, MCP_APP_METHODS, MCP_APP_PROTOCOL_VERSION, MCP_APP_READY_TIMEOUT_MS, MCP_APP_READY_TYPE, MCP_APP_RENDERED_TYPE, MCP_APP_RENDER_TYPE, MCP_APP_SANDBOX_PAGE, MCP_APP_TRACE_TEXT_MAX, MCP_APP_VIEW_ERROR_TYPE, buildAppDiagnostics, buildInitResult, clampPayload, createAppTrace, formatTraceEntry, hostCapabilities, hostSupportsSandboxPages, isAllowedAppLink, isAppToolAllowed, makeAppRef, normalizeAppRefs, parseAppMessage, pickViewHtml, resolveAppToolName } from '../js/mcp-apps.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
@@ -193,6 +194,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     let activeSkillArgs = '';  // Argument string captured when "/skill args..." ran
     let skillDisabled = true; // true => "No Skill (off)" mode: no Skill injection. This is the default state.
     let skills = [];           // All available skills
+    // Server ids that currently qualify for an automatic MCP Skill (enabled +
+    // autoSkill). Used to tell "still probing" from "server was removed" when a
+    // remembered `mcp:<id>` choice cannot be resolved yet (see
+    // applyStoredSkillSelection). Never persisted.
+    let mcpSkillServerIds = new Set();
     let skillPickerOpen = false;
     let skillHighlight = -1;
     // Scenario samples the user closed in this page session, keyed by
@@ -285,7 +291,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         // very first turn already honours it.
         mcpAppAutoRender = await loadMcpAppAutoRender();
         mcpAppDebug = await loadMcpAppDebug();
-        skills = await loadSkills();
+        const stored = await loadSkills();
+        // Automatic Skills of MCP servers with `autoSkill` on. They are derived
+        // from the server list + the tools registered so far and are NEVER
+        // stored in skillList, so the Skills page keeps showing only Skills the
+        // user created (see js/mcp-skills.mjs). Deriving costs no network call:
+        // a server that is still being probed simply contributes nothing yet,
+        // and the getMcpReady() hook at startup rebuilds the list afterwards.
+        let mcpSkills = [];
+        try {
+            const servers = await loadMcpServers();
+            mcpSkillServerIds = new Set(servers
+                .filter(s => s && s.autoSkill === true && s.enabled !== false && s.id !== undefined && s.id !== null)
+                .map(s => String(s.id)));
+            const derived = buildMcpSkills(servers, listTools());
+            mcpSkills = derived.skills;
+            for (const skip of derived.skipped) {
+                if (skip.reason === 'duplicate-name') {
+                    console.warn(`[MCP] "${skip.server?.name}": automatic Skill skipped — another server uses the same name.`);
+                }
+            }
+        } catch (e) {
+            console.warn('[MCP] failed to derive automatic Skills:', e);
+        }
+        skills = [...stored, ...mcpSkills];
         // The Skill list is finally available, so a choice remembered for this
         // conversation can be resolved to a real Skill (a chat may have loaded
         // before the list was ready).
@@ -300,19 +329,41 @@ document.addEventListener("DOMContentLoaded", async () => {
      * @param {Object} changes - Storage change payload
      * @param {string} area - Storage area name
      */
+    /**
+     * Re-point the fixed Skill at the rebuilt list after refreshSkills(): keeps
+     * edits (name/description/tools) and drops a Skill that no longer exists —
+     * including an automatic MCP Skill whose server was deleted or disabled.
+     * @returns {void}
+     */
+    function syncActiveSkillAfterRefresh() {
+        if (activeSkill) {
+            const still = skills.find(s => String(s.id) === String(activeSkill.id));
+            if (still) activeSkill = still;
+            else { activeSkill = null; activeSkillArgs = ''; }
+        }
+        closeSkillPicker();
+        renderActiveSkillBar();
+    }
+
     function handleSkillStorageChange(changes, area) {
         if (area !== 'local' || !changes[DB_KEY.skillList]) return;
-        refreshSkills().then(() => {
-            // Keep the fixed Skill pointing at the fresh entry (its name or
-            // description may have been edited), or drop it when it was deleted.
-            if (activeSkill) {
-                const still = skills.find(s => String(s.id) === String(activeSkill.id));
-                if (still) activeSkill = still;
-                else { activeSkill = null; activeSkillArgs = ''; }
-            }
-            closeSkillPicker();
-            renderActiveSkillBar();
-        });
+        refreshSkills().then(() => syncActiveSkillAfterRefresh());
+    }
+
+    /**
+     * MCP server configuration changed (server added / edited / removed, or its
+     * `autoSkill` toggle flipped). Re-register the tools first — a derived Skill
+     * can only list tools that exist — then rebuild the automatic Skills.
+     * No storage cleanup is needed: they are derived, never stored.
+     * @param {Object} changes - Storage change payload
+     * @param {string} area - Storage area name
+     */
+    function handleMcpServersStorageChange(changes, area) {
+        if (area !== 'local' || !changes[DB_KEY.mcpServers]) return;
+        initMcpTools()
+            .catch(e => console.warn('[MCP] re-init after config change failed:', e))
+            .then(() => refreshSkills())
+            .then(() => syncActiveSkillAfterRefresh());
     }
 
     /**
@@ -410,6 +461,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             // silently degrading to "off".
             if (!skill) {
                 if (!skillsReady) return;
+                // An automatic MCP Skill exists only while its server is enabled
+                // *and* its tools are registered. At startup the probe may still
+                // be running, so keep the remembered choice instead of deleting
+                // it (the getMcpReady() hook refreshes the list afterwards).
+                const serverId = serverIdFromSkillId(String(entry.skillId));
+                if (serverId && mcpSkillServerIds.has(serverId)) {
+                    // Still probing: do not delete the remembered choice, but
+                    // never leave another conversation's Skill on the bar.
+                    activeSkill = null;
+                    activeSkillArgs = '';
+                    skillDisabled = true;
+                    closeSkillPicker();
+                    renderActiveSkillBar();
+                    return;
+                }
                 // The Skill was deleted meanwhile — drop the stale entry.
                 removeSkillSelection(sessionKey()).catch(() => {});
                 return;
@@ -474,12 +540,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!isAutoState) controls += autoRow;   // already Auto => hide
             if (!skillDisabled) controls += offRow;  // already off => hide
         }
-        skillPicker.innerHTML = controls + matches.map((s) =>
-            `<div class="skill-picker-item" data-id="${s.id}">
-                <span class="skill-picker-name">${s.name}</span>
+        skillPicker.innerHTML = controls + matches.map((s) => {
+            // Automatic MCP Skills are derived (never stored), so mark them:
+            // they do not appear in the Skills page, and this picker is their
+            // only entry point.
+            const badge = s.source === 'mcp'
+                ? `<span class="skill-picker-badge">${browser.i18n.getMessage("mcpAutoSkillBadge") || "MCP"}</span>`
+                : '';
+            return `<div class="skill-picker-item" data-id="${s.id}">
+                <span class="skill-picker-name">${s.name}${badge}</span>
                 <span class="skill-picker-desc">${s.description || ''}</span>
-            </div>`
-        ).join('');
+            </div>`;
+        }).join('');
         skillPicker.style.display = 'block';
         skillPickerOpen = true;
 
@@ -1798,6 +1870,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? (browser.i18n.getMessage('toolSideEffectWrite') || 'This tool writes your data.')
             : (browser.i18n.getMessage('toolSideEffectExternal') || 'This tool calls an external service.');
         card.appendChild(kind);
+
+        // The server declared this tool as potentially destructive. It is still
+        // callable (annotations are hints, every call is confirmed); the warning
+        // makes the risk visible instead of silently blocking the tool.
+        if (pending.destructive) {
+            const risky = document.createElement('div');
+            risky.className = 'tool-confirm-kind text-danger';
+            risky.textContent = browser.i18n.getMessage('toolConfirmDestructive')
+                || 'This tool may change or delete data.';
+            card.appendChild(risky);
+        }
 
         if (pending.skillName) {
             const from = document.createElement('div');
@@ -5291,9 +5374,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     refreshSkills().then(() => renderActiveSkillBar());
+    // MCP tools register asynchronously (a dead server must not delay the first
+    // render), so the automatic MCP Skills are derived again once registration
+    // settles. Rebuilding them is local work only — no server is contacted.
+    getMcpReady().then(() => refreshSkills()).then(() => syncActiveSkillAfterRefresh());
     // Keep the Skill list live: the model can create Skills at runtime through
     // the save_skill tool (see the "Page Builder" default Skill).
     browser.storage.onChanged.addListener(handleSkillStorageChange);
+    // Adding / editing / removing an MCP server adds or removes its automatic
+    // Skill. Nothing is stored, so there is nothing to clean up either.
+    browser.storage.onChanged.addListener(handleMcpServersStorageChange);
     // The MCP App rendering preference can be changed on the Skills page while
     // this chat stays open (see §7.13).
     browser.storage.onChanged.addListener((changes, area) => {

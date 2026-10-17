@@ -987,5 +987,50 @@
     },
     "mcpAppHide": {
         "message": "Ẩn chế độ xem tương tác"
+    },
+    "mcpAutoSkill": {
+        "message": "Cũng dùng làm Skill"
+    },
+    "mcpAutoSkillHint": {
+        "message": "Tự động tạo một Skill cùng tên với máy chủ và bao gồm toàn bộ công cụ của nó. Chỉ có thể gọi thủ công và không hiển thị trong danh sách Skill; hãy chọn bằng \"/\" trong cuộc trò chuyện. Các công cụ mang tính phá hủy mặc định bị tắt."
+    },
+    "mcpAutoSkillBadge": {
+        "message": "MCP"
     }
+,
+    "mcpToolsPreview": {
+        "message": "Công cụ"
+    },
+    "mcpToolsLoading": {
+        "message": "Đang tải công cụ…"
+    },
+    "mcpToolsFound": {
+        "message": "Tìm thấy {count} công cụ."
+    },
+    "mcpToolsEmpty": {
+        "message": "Máy chủ này không trả về công cụ nào."
+    },
+    "mcpToolsFailed": {
+        "message": "Không lấy được danh sách công cụ"
+    },
+    "mcpToolParams": {
+        "message": "Tham số:"
+    },
+    "mcpToolNoUi": {
+        "message": "không có UI"
+    },
+    "mcpToolReadOnly": {
+        "message": "chỉ đọc"
+    },
+    "mcpToolDestructive": {
+        "message": "phá hủy"
+    },
+    "skillToolHintPlaceholder": {
+        "message": "Khi nào dùng công cụ này (tùy chọn) — ví dụ sửa mục đã có; dùng create cho mục mới"
+    }
+,
+    "toolConfirmDestructive": {
+        "message": "Công cụ này có thể thay đổi hoặc xóa dữ liệu."
+    }
+
 }

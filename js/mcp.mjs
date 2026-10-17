@@ -20,6 +20,7 @@ import { registerTool, getTool, listTools, setMcpReady } from './skill-tools.mjs
 import { DB_KEY } from './cllama.js';
 import { browser } from './browser.mjs';
 import { extractUiMeta } from './mcp-apps.mjs';
+import { mcpToolDescription } from './mcp-skills.mjs';
 
 // Protocol versions this client can speak, newest first. initialize offers the
 // newest; per the MCP versioning spec the server replies with the version it
@@ -275,7 +276,7 @@ export async function initMcpTools() {
           registeredNames.add(id);
           registerTool({
             name: id,
-            description: `[MCP:${server.name}] ${t.description || t.name}`,
+            description: mcpToolDescription(server.name, t),
             parameters: t.inputSchema || { type: 'object', properties: {} },
             // Remote servers can act outside the browser: always an external
             // side effect, so the user confirms before it runs.
@@ -284,6 +285,9 @@ export async function initMcpTools() {
             // resource, the chat page renders that HTML in a sandboxed iframe
             // next to the answer. Absent UI metadata changes nothing.
             ui: extractUiMeta(t) || undefined,
+            // Kept so the automatic MCP Skill can block destructive tools by
+            // default (annotations.destructiveHint) — see js/mcp-skills.mjs.
+            annotations: t.annotations && typeof t.annotations === 'object' ? t.annotations : undefined,
             // Kept so an app can only call tools of the server that declared it
             // (see isAppToolAllowed in js/mcp-apps.mjs).
             serverName: server.name,

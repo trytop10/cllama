@@ -989,6 +989,19 @@ code.language-markdown {
     font-size: 0.9rem;
 }
 
+/* Automatic MCP Skill: derived from a server configured with "autoSkill", so it
+   is marked here — it never appears in the Skills management list. */
+.skill-picker-badge {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 0.35rem;
+    background: var(--bs-info-bg-subtle, var(--bs-secondary-bg));
+    color: var(--bs-info-text-emphasis, var(--bs-secondary-color));
+    font-size: 0.65rem;
+    font-weight: 600;
+    vertical-align: 0.08em;
+}
+
 .skill-picker-desc {
     font-size: 0.75rem;
     color: var(--bs-secondary-color);

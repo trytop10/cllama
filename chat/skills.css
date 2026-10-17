@@ -50,6 +50,35 @@ body {
     font-weight: 500;
 }
 
+/* ── MCP tool inspector ("Test connection") ── */
+.mcp-tool-item {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    padding: 0.45rem 0.55rem;
+    margin-bottom: 0.4rem;
+}
+
+.mcp-tool-item:last-child {
+    margin-bottom: 0;
+}
+
+.mcp-tool-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.15rem;
+}
+
+.mcp-tool-head code {
+    font-size: 0.82rem;
+}
+
+.mcp-tool-title {
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
 /* ------------------- Skill run audit trail ------------------- */
 .skill-run {
     border: 1px solid var(--bs-border-color);

@@ -70,11 +70,38 @@
             <input class="form-check-input" type="checkbox" id="mcpEnabledInput" checked>
             <label class="form-check-label i18n" for="mcpEnabledInput">mcpEnabled</label>
           </div>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="mcpAutoSkillInput">
+            <label class="form-check-label i18n" for="mcpAutoSkillInput">mcpAutoSkill</label>
+          </div>
+          <div class="text-muted small i18n">mcpAutoSkillHint</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary me-auto i18n" id="b_test_mcp">mcpTestBtn</button>
           <button type="button" class="btn btn-secondary i18n" data-bs-dismiss="modal">close</button>
           <button type="button" class="btn btn-primary i18n" id="b_save_mcp">save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MCP tool inspector: what "Test connection" actually found. Shows the raw
+       metadata the server returned (description, parameters, declared ui://
+       resource, annotations) — the only way to tell why a tool was chosen. -->
+  <div class="modal fade" id="mcpToolsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="mcpToolsModalTitle"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="mcpToolsSummary" class="small mb-2"></div>
+          <div id="mcpToolsPreview"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-compact btn-outline-secondary me-auto i18n" id="b_copy_mcp_tools">copy</button>
+          <button type="button" class="btn btn-secondary i18n" data-bs-dismiss="modal">close</button>
         </div>
       </div>
     </div>
