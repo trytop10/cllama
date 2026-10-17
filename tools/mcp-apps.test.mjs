@@ -15,8 +15,10 @@ const {
   MCP_APP_HTML_MAX, MCP_APP_HTML_MIME_PREFIX, MCP_APP_LINK_PROTOCOLS, MCP_APP_METHODS,
   MCP_APP_PAYLOAD_MAX, MCP_APP_ERROR_TYPE, MCP_APP_INIT_TIMEOUT_MS, MCP_APP_PROTOCOL_VERSION, MCP_APP_READY_TYPE,
   MCP_APP_RENDERED_TYPE, MCP_APP_RENDER_TYPE, MCP_APP_REFS_MAX, MCP_APP_SANDBOX_PAGE, MCP_APP_STORED_ARGS_MAX,
-  MCP_APP_STORED_OUTPUT_MAX, MCP_APP_VIEW_ERROR_TYPE,
-  buildInitResult, clampPayload, extractUiMeta, hostCapabilities, hostSupportsSandboxPages,
+  MCP_APP_STORED_OUTPUT_MAX, MCP_APP_VIEW_ERROR_TYPE, MCP_APP_CONSOLE_TYPE,
+  MCP_APP_GET_HTML_TYPE, MCP_APP_HTML_TYPE, MCP_APP_NETWORK_TYPE,
+  MCP_APP_TRACE_LIMIT, MCP_APP_TRACE_TEXT_MAX,
+  buildAppDiagnostics, buildInitResult, clampPayload, createAppTrace, extractUiMeta, formatTraceEntry, hostCapabilities, hostSupportsSandboxPages, pickViewHtml,
   isAllowedAppLink, isAppToolAllowed, makeAppRef, mcpToolId, mcpToolPrefix, normalizeAppRef,
   normalizeAppRefs, parseAppMessage, resolveAppToolName
 } = await import('../js/mcp-apps.mjs');
@@ -417,10 +419,221 @@ check('the host replies with the payload shapes the spec defines', () => {
   assert.match(chat, /result: delivered \? \{ delivered: true \} : \{ delivered: false, isError: true \}/);
 });
 
+// ------------------- diagnostics: trace + report -------------------
+
+check('createAppTrace keeps a bounded, ordered ring of clamped entries', () => {
+  const trace = createAppTrace(3);
+  for (let i = 1; i <= 5; i++) trace.push({ dir: 'view', kind: `k${i}`, text: `t${i}` });
+  assert.equal(trace.size(), 3);
+  assert.deepEqual(trace.list().map((e) => e.kind), ['k3', 'k4', 'k5']);
+  // list() is a copy: callers cannot mutate the buffer.
+  trace.list().push({ kind: 'nope' });
+  assert.equal(trace.size(), 3);
+  // Long text is clamped (a view can log a whole document).
+  const item = trace.push({ dir: 'view', kind: 'console', text: 'x'.repeat(MCP_APP_TRACE_TEXT_MAX * 3) });
+  assert.ok(item.text.length <= MCP_APP_TRACE_TEXT_MAX + 20);
+  // Defaults: host direction, ok true, kind coerced to a string.
+  const def = createAppTrace().push({});
+  assert.equal(def.dir, 'host');
+  assert.equal(def.ok, true);
+  assert.equal(def.kind, 'event');
+  // A nonsense limit falls back to the module default instead of breaking.
+  assert.equal(createAppTrace(0).push({}).kind, 'event');
+  const cleared = createAppTrace();
+  cleared.push({ kind: 'x' });
+  cleared.clear();
+  assert.deepEqual(cleared.list(), []);
+  assert.equal(MCP_APP_TRACE_LIMIT >= 20, true);
+});
+
+check('formatTraceEntry is greppable and marks failures', () => {
+  const line = formatTraceEntry({ at: Date.UTC(2026, 0, 2, 3, 4, 5, 678), dir: 'view', kind: 'request', method: 'ui/initialize', ok: true, text: 'protocolVersion=2026-01-26' });
+  assert.equal(line, '03:04:05.678  ←  ui/initialize  ok  protocolVersion=2026-01-26');
+  const failed = formatTraceEntry({ at: 0, dir: 'host', method: 'tools/call', ok: false, text: 'denied' });
+  assert.match(failed, /00:00:00\.000 {2}→ {2}tools\/call {2}FAIL {2}denied/);
+  // A missing method falls back to the kind, and empty text leaves no trailing gap.
+  assert.equal(formatTraceEntry({ at: 0, kind: 'ready', dir: 'view' }), '00:00:00.000  ←  ready  ok');
+});
+
+check('buildAppDiagnostics reports the facts before the timeline', () => {
+  const trace = createAppTrace();
+  trace.push({ at: 0, dir: 'view', kind: 'ready', text: 'inlineScripts=true' });
+  trace.push({ at: 0, dir: 'view', kind: 'view-error', ok: false, text: 't.lazy is not a function' });
+  const report = buildAppDiagnostics({
+    tool: 'mcp_calc_calculator_app', serverName: 'calc', resourceUri: 'ui://calc/main',
+    sandboxSupported: true, hostCapabilities: { serverTools: {} },
+    remoteScripts: ['https://cdn.example.com/app.js'],
+    viewError: { message: 't.lazy is not a function', source: 'schemas.ts', line: 6 },
+    initialized: true, userAgent: 'UA/1'
+  }, trace.list());
+  assert.match(report, /^cllama — MCP App diagnostics/);
+  assert.match(report, /tool: mcp_calc_calculator_app/);
+  assert.match(report, /protocolVersion: 2026-01-26/);
+  assert.match(report, /sandbox: yes/);
+  assert.match(report, /remote scripts: https:\/\/cdn\.example\.com\/app\.js/);
+  assert.match(report, /view error: t\.lazy is not a function \(schemas\.ts:6\)/);
+  assert.match(report, /initialized: yes/);
+  assert.match(report, /--- trace \(2\) ---/);
+  assert.match(report, /t\.lazy is not a function/);
+  // Missing facts must not produce "undefined" litter, and an empty trace says so.
+  const bare = buildAppDiagnostics();
+  assert.ok(!bare.includes('undefined'));
+  assert.match(bare, /\(empty\)/);
+});
+
+check('the shell mirrors the view console only when the host asks for it', () => {
+  const shell = read('../viewer/mcp-app.js');
+  assert.match(shell, /const CONSOLE_TYPE = 'cllama:mcp-app:console'/);
+  assert.match(shell, /if \(data\.debug === true\) \{[\s\S]{0,140}enableConsoleForwarding\(\);/);
+  assert.match(shell, /function enableConsoleForwarding\(\)/);
+  // The view's own console must keep working, and the forwarding must be bounded
+  // and idempotent (it wraps globals inside someone else's document).
+  assert.match(shell, /if \(typeof original === 'function'\) original\.apply\(console, args\)/);
+  assert.match(shell, /if \(sent >= CONSOLE_MAX\) return/);
+  assert.match(shell, /if \(window\.__cllamaConsoleForwarding\) return/);
+  for (const level of ['log', 'info', 'warn', 'error']) {
+    assert.match(shell, new RegExp(`console\\.${level} = forward\\('${level}', console\\.${level}\\)`));
+  }
+
+  const chat = read('../chat/chat.js');
+  // The switch travels with the render message…
+  assert.match(chat, /html: bridge\.html, debug: mcpAppDebug === true/);
+  // …the forwarded lines land in this page's console and in the trace…
+  assert.match(chat, /data\?\.type === MCP_APP_CONSOLE_TYPE/);
+  assert.match(chat, /kind: 'console', method: level/);
+  // …and the toggle can be flipped while a chat is open.
+  assert.match(chat, /if \(changes\[DB_KEY\.mcpAppDebug\]\) \{/);
+  assert.match(read('../js/cllama.js'), /mcpAppDebug: "mcpAppDebug"/);
+  const skillsJs = read('../chat/skills.js');
+  assert.match(skillsJs, /getElementById\('mcpAppDebug'\)/);
+  assert.match(skillsJs, /addEventListener\('change', \(\) => setMcpAppDebug/);
+  assert.match(read('../chat/skills.html'), /id="mcpAppDebug"/);
+});
+
+check('a failing view explains itself and leaves a record', () => {
+  const chat = read('../chat/chat.js');
+  // Every view keeps a trace, and the card shows it once the view failed — not
+  // only when the debug switch happens to be on.
+  assert.match(chat, /trace: createAppTrace\(\)/);
+  assert.match(chat, /if \(!mcpAppDebug && bridge\.failed !== true\) return;/);
+  assert.match(chat, /function renderAppDiagnostics\(bridge\)/);
+  assert.match(chat, /mcp-app-diag-trace/);
+  // The trace is filled where things actually happen…
+  for (const kind of ['ready', 'rendered', 'view-error', 'resource', 'timeout', 'request', 'response', 'console']) {
+    assert.match(chat, new RegExp(`kind: '${kind}'`), `the trace must record ${kind}`);
+  }
+  // …and every hard failure also writes ONE audit record (the card is gone as
+  // soon as the conversation moves on).
+  assert.match(chat, /function auditAppFailure\(bridge, reason\)/);
+  assert.match(chat, /recordAppViewEvent\(\{[\s\S]{0,200}action: 'view_failed'/);
+  assert.equal((chat.match(/auditAppFailure\(bridge/g) || []).length >= 4, true);
+  assert.match(read('../js/cllama.js'), /export async function recordAppViewEvent/);
+  assert.match(read('../chat/skills.js'), /view_failed: 'skillRunViewFailed'/);
+});
+
+check('the standalone debugger reuses the host protocol instead of copying it', () => {
+  const page = read('../viewer/mcp-app-debug.html');
+  const js = read('../viewer/mcp-app-debug.js');
+  assert.match(page, /mcp-app-debug\.js/);
+  assert.match(page, /id="viewHtml"/);
+  assert.match(page, /id="b_run"/);
+  // The protocol vocabulary comes from the one place that defines it…
+  assert.match(js, /from '\.\.\/js\/mcp-apps\.mjs'/);
+  assert.ok(!js.includes("'cllama:mcp-app:"), 'the debugger must not hardcode message types');
+  for (const helper of ['buildInitResult', 'parseAppMessage', 'createAppTrace', 'buildAppDiagnostics', 'isAllowedAppLink']) {
+    assert.ok(js.includes(helper), `the debugger must use ${helper}`);
+  }
+  // …it renders in the REAL sandbox shell, with the same flags as the chat page…
+  assert.match(js, /browser\.runtime\.getURL\(MCP_APP_SANDBOX_PAGE\)/);
+  assert.match(js, /setAttribute\('sandbox', 'allow-scripts allow-forms allow-popups'\)/);
+  // The flags, not the word: the comment above the frame mentions
+  // allow-same-origin precisely to explain that it must never be granted.
+  assert.ok(!/setAttribute\('sandbox',[^)]*allow-same-origin/.test(js), 'the debugger must keep the frame opaque-origin');
+  // …with console mirroring always on (that is the point of the page)…
+  assert.match(js, /html: view\.html, debug: true \}/);
+  // …and it says so up front when the build cannot host a view at all.
+  assert.match(js, /hostSupportsSandboxPages\(browser\.runtime\?\.getManifest\?\.\(\)/);
+});
+
+check('pickViewHtml prefers the live DOM and falls back to the source', () => {
+  // The frame is an opaque origin, so the live DOM can only come from the shell;
+  // when it does not answer, the injected source is still better than nothing.
+  assert.deepEqual(pickViewHtml('<html>live</html>', '<html>src</html>'), { text: '<html>live</html>', live: true });
+  assert.deepEqual(pickViewHtml('', '<html>src</html>'), { text: '<html>src</html>', live: false });
+  assert.deepEqual(pickViewHtml(null, '<html>src</html>'), { text: '<html>src</html>', live: false });
+  assert.deepEqual(pickViewHtml('   ', '<html>src</html>'), { text: '<html>src</html>', live: false });
+  assert.deepEqual(pickViewHtml('', ''), { text: '', live: false });
+  // Oversized input is clamped rather than pasted whole.
+  const big = pickViewHtml('x'.repeat(5000), '', 100);
+  assert.equal(big.live, true);
+  assert.ok(big.text.length <= 200);
+});
+
+check('the live view HTML can be copied on demand', () => {
+  const shell = read('../viewer/mcp-app.js');
+  // Only the shell can answer, and only once a view was actually written —
+  // otherwise it would hand over the shell's own document.
+  assert.match(shell, /const GET_HTML_TYPE = 'cllama:mcp-app:get-html'/);
+  assert.match(shell, /data\.type === GET_HTML_TYPE/);
+  assert.match(shell, /document\.documentElement\.outerHTML\.slice\(0, HTML_MAX\)/);
+  assert.match(shell, /if \(!window\.__cllamaViewWritten\) return '';/);
+  assert.match(shell, /window\.__cllamaViewWritten = true;/);
+
+  const chat = read('../chat/chat.js');
+  assert.match(chat, /function requestViewHtml\(bridge, timeoutMs = 1500\)/);
+  assert.match(chat, /postMessage\(\{ type: MCP_APP_GET_HTML_TYPE \}, '\*'\)/);
+  assert.match(chat, /data\?\.type === MCP_APP_HTML_TYPE/);
+  // The button sits next to "copy diagnostics", with the source as fallback.
+  assert.match(chat, /pickViewHtml\(await requestViewHtml\(bridge\), bridge\.html\)/);
+  assert.match(chat, /getMessage\('mcpAppCopyHtml'\)/);
+  assert.ok(chat.indexOf("'mcpAppDiagnosticsCopy'") < chat.indexOf("getMessage('mcpAppCopyHtml')"),
+    'the two copy buttons must stay adjacent in the diagnostics block');
+
+  const page = read('../viewer/mcp-app-debug.html');
+  const debug = read('../viewer/mcp-app-debug.js');
+  assert.match(page, /id="b_copy_html"/);
+  assert.match(debug, /function requestViewHtml\(timeoutMs = 1500\)/);
+  assert.match(debug, /els\.copyHtml\.addEventListener\('click'/);
+  assert.match(debug, /pickViewHtml\(await requestViewHtml\(\), view\?\.html \|\| ''\)/);
+});
+
+check('the shell mirrors the view\'s network traffic in debug mode', () => {
+  const shell = read('../viewer/mcp-app.js');
+  assert.match(shell, /const NETWORK_TYPE = 'cllama:mcp-app:network'/);
+  assert.match(shell, /function enableNetworkForwarding\(\)/);
+  assert.match(shell, /if \(window\.__cllamaNetworkForwarding\) return;/);
+  // Installed next to the console mirroring, and only when the host asked.
+  assert.match(shell, /if \(data\.debug === true\) \{\s*\n\s*enableConsoleForwarding\(\);\s*\n\s*enableNetworkForwarding\(\);/);
+  // Both wrappers must preserve the original behaviour exactly.
+  assert.match(shell, /const originalFetch = window\.fetch/);
+  assert.match(shell, /return promise\.then\(/);
+  assert.match(shell, /const originalOpen = XHR\.prototype\.open/);
+  assert.match(shell, /const originalSend = XHR\.prototype\.send/);
+  assert.match(shell, /return originalOpen\.apply\(this, arguments\)/);
+  assert.match(shell, /return originalSend\.apply\(this, arguments\)/);
+  // METADATA ONLY: what crosses the boundary is named explicitly, and no body or
+  // header ever does (the same rule the audit trail follows).
+  const reporting = shell.match(/function reportNetwork\(info\) \{[\s\S]*?\n\}/)[0];
+  for (const key of ['method', 'url', 'status', 'ok', 'ms', 'error']) {
+    assert.ok(reporting.includes(key), `reportNetwork must report ${key}`);
+  }
+  assert.ok(!/body|header/.test(reporting), 'no request/response bodies or headers may be forwarded');
+  // Bounded, like the console mirror.
+  assert.match(shell, /const NETWORK_MAX = 200;/);
+  assert.match(shell, /sent < NETWORK_MAX/);
+
+  const chat = read('../chat/chat.js');
+  assert.match(chat, /data\?\.type === MCP_APP_NETWORK_TYPE/);
+  assert.match(chat, /kind: 'network', method, ok/);
+  assert.match(read('../viewer/mcp-app-debug.js'), /data\?\.type === MCP_APP_NETWORK_TYPE/);
+});
+
 check('the MCP Apps / app-origin labels exist in every locale', () => {
   const KEYS = ['mcpAppTitle', 'mcpAppUnsupported', 'mcpAppLoadFailed', 'mcpAppScriptBlocked',
     'mcpAppInlineBlocked', 'mcpAppExternalScriptBlocked', 'mcpAppViewError', 'mcpAppMessagePrefilled', 'mcpAppLinkBlocked', 'mcpAppRender',
-    'mcpAppHide', 'mcpAppAutoRender', 'mcpAppAutoRenderHint', 'skillRunApp', 'skillRunFilterApp'];
+    'mcpAppHide', 'mcpAppAutoRender', 'mcpAppAutoRenderHint', 'skillRunApp', 'skillRunFilterApp',
+    'mcpAppDebug', 'mcpAppDebugHint', 'mcpAppDebugPage', 'mcpAppDiagnostics', 'mcpAppDiagnosticsCopy', 'mcpAppCopyHtml',
+    'skillRunViewFailed'];
   const dir = new URL('../_locales/', import.meta.url);
   const locales = readdirSync(dir);
   assert.ok(locales.length >= 15, `expected every locale, found ${locales.length}`);

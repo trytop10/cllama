@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "บล็อกลิงก์ที่ไม่ปลอดภัยจากแอปแล้ว"
     },
+    "mcpAppDebug": {
+        "message": "ดีบักแอปแบบอินเทอร์แอกทีฟ"
+    },
+    "mcpAppDebugHint": {
+        "message": "สะท้อนคอนโซลของแอปมาไว้ในหน้านี้ และแสดงไทม์ไลน์การจับมือบนการ์ด เพื่อให้มุมมองที่ไม่ทำอะไรอธิบายสาเหตุได้ ระหว่างเปิดอยู่ ข้อความบันทึกของมุมมองจะปรากฏในคอนโซล"
+    },
+    "mcpAppDebugPage": {
+        "message": "เปิดตัวดีบัก MCP App"
+    },
+    "mcpAppDiagnostics": {
+        "message": "การวินิจฉัย"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "คัดลอกข้อมูลวินิจฉัย"
+    },
+    "skillRunViewFailed": {
+        "message": "แอปแบบอินเทอร์แอกทีฟล้มเหลว"
+    },
+    "mcpAppCopyHtml": {
+        "message": "คัดลอก HTML ของมุมมอง"
+    },
     "skillRunApp": {
         "message": "แอป"
     },

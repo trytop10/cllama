@@ -1218,6 +1218,7 @@ export const DB_KEY = {
   // Whether MCP App views are rendered as soon as a tool produces one (true,
   // the default) or kept behind a per-view "render" button (see §7.13).
   mcpAppAutoRender: "mcpAppAutoRender",
+  mcpAppDebug: "mcpAppDebug",
   // Per-conversation Skill choice, keyed "<scenarioId>:<sessionId>": the Skill
   // picked in a chat is remembered when that chat is opened again. Deliberately
   // neither a global nor a scenario-wide default.
@@ -1256,6 +1257,29 @@ export async function loadMcpAppAutoRender() {
  */
 export async function setMcpAppAutoRender(enabled) {
   await browser.storage.local.set({ [DB_KEY.mcpAppAutoRender]: enabled === true });
+}
+
+/**
+ * Whether MCP App debugging is on: the view's console is mirrored into the chat
+ * page and every view shows its own handshake timeline.
+ *
+ * Off by default: turning it on wraps three globals inside the view's document
+ * (its own `console`), which is a side effect we do not want to impose on every
+ * app just to make an occasional failure easier to read.
+ * @returns {Promise<boolean>}
+ */
+export async function loadMcpAppDebug() {
+  const data = await browser.storage.local.get(DB_KEY.mcpAppDebug);
+  return data[DB_KEY.mcpAppDebug] === true;
+}
+
+/**
+ * Persist the MCP App debugging preference.
+ * @param {boolean} enabled - Whether to mirror the view's console and show traces
+ * @returns {Promise<void>}
+ */
+export async function setMcpAppDebug(enabled) {
+  await browser.storage.local.set({ [DB_KEY.mcpAppDebug]: enabled === true });
 }
 
 // ------------------- per-conversation Skill selection -------------------
@@ -1522,6 +1546,41 @@ export async function recordPageEvent(entry = {}) {
       tool: action,
       ok: entry.ok !== false,
       ...(typeof entry.count === 'number' ? { args: { count: entry.count } } : {}),
+      error: entry.error
+    })]
+  };
+  if (entry.detail) run.detail = String(entry.detail).slice(0, 300);
+  await persistRun(run);
+}
+
+/**
+ * Record something an MCP App *view* did — including, and mostly, its failures.
+ *
+ * The interactive UI is untrusted third-party code running in a sandboxed frame:
+ * when it fails there is no stack trace anywhere the user can see, so the audit
+ * trail is where the one-line reason has to live (the card is gone as soon as the
+ * conversation moves on). `origin: 'app'` puts it next to the app-initiated tool
+ * calls, which is the same actor from the user's point of view.
+ * @param {Object} entry - { action, ok, tool, detail, sessionId }
+ * @returns {Promise<void>}
+ */
+export async function recordAppViewEvent(entry = {}) {
+  const action = String(entry.action || 'app_view');
+  const run = {
+    id: `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    origin: 'app',
+    action,
+    time: Date.now(),
+    skillId: null,
+    skillName: null,
+    model: null,
+    service: null,
+    sessionId: entry.sessionId || null,
+    status: entry.ok === false ? 'failed' : 'ok',
+    duration: 0,
+    steps: [sanitizeStep({
+      tool: entry.tool || action,
+      ok: entry.ok !== false,
       error: entry.error
     })]
   };

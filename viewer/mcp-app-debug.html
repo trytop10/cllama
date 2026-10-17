@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP App debugger</title>
+  <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="/css/cllama.css">
+  <link rel="stylesheet" type="text/css" href="../chat/chat.css">
+</head>
+<body>
+  <!--
+    Standalone MCP App debugger (see AGENTS.md §7.13).
+
+    The chat page can only show a view inside a conversation; when something goes
+    wrong, this page is the shortest path to an answer: paste a view's HTML, run
+    it in the *real* sandbox shell, and watch the handshake, the JSON-RPC traffic,
+    the view's own console and its errors — none of which a browser's DevTools can
+    show, because every message here is a postMessage.
+  -->
+  <div class="opane" style="padding: 1rem;">
+    <h5 class="i18n mb-1">mcpAppDebugPage</h5>
+    <div class="text-muted small mb-2 i18n">mcpAppDebugHint</div>
+    <div id="unsupported" class="alert alert-warning small i18n d-none">mcpAppUnsupported</div>
+
+    <label class="form-label small mb-1" for="viewHtml">HTML</label>
+    <textarea id="viewHtml" class="form-control form-control-sm" rows="6" spellcheck="false"></textarea>
+
+    <div class="d-flex gap-2 align-items-end mt-2 flex-wrap">
+      <div>
+        <label class="form-label small mb-1" for="toolName">tool</label>
+        <input id="toolName" class="form-control form-control-sm" value="demo_tool">
+      </div>
+      <div class="flex-grow-1">
+        <label class="form-label small mb-1" for="toolArgs">arguments</label>
+        <input id="toolArgs" class="form-control form-control-sm" value='{"a":1,"b":2}'>
+      </div>
+      <div class="flex-grow-1">
+        <label class="form-label small mb-1" for="toolOutput">result</label>
+        <input id="toolOutput" class="form-control form-control-sm" value="ok">
+      </div>
+    </div>
+
+    <div class="mt-2 d-flex gap-2">
+      <button type="button" id="b_run" class="btn btn-sm btn-compact btn-primary i18n">mcpAppRender</button>
+      <button type="button" id="b_copy" class="btn btn-sm btn-compact btn-outline-secondary i18n">mcpAppDiagnosticsCopy</button>
+      <button type="button" id="b_copy_html" class="btn btn-sm btn-compact btn-outline-secondary i18n">mcpAppCopyHtml</button>
+      <span id="copiedHint" class="text-muted small"></span>
+    </div>
+
+    <h6 class="mt-3 mb-1 i18n">mcpAppDiagnostics</h6>
+    <pre id="log" class="mcp-app-diag-trace" style="max-height: 22rem;"></pre>
+
+    <h6 class="mt-3 mb-1 i18n">mcpAppTitle</h6>
+    <div id="hostArea"></div>
+  </div>
+
+  <script src="mcp-app-debug.js" type="module"></script>
+</body>
+</html>

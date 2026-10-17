@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Um link inseguro do aplicativo foi bloqueado"
     },
+    "mcpAppDebug": {
+        "message": "Depurar aplicativos interativos"
+    },
+    "mcpAppDebugHint": {
+        "message": "Espelha o console de cada aplicativo nesta página e mostra a linha do tempo do handshake no cartão, para que uma visualização que não faz nada explique o motivo. Enquanto ativo, os logs da visualização aparecem no console."
+    },
+    "mcpAppDebugPage": {
+        "message": "Abrir o depurador de MCP Apps"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnóstico"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Copiar diagnóstico"
+    },
+    "skillRunViewFailed": {
+        "message": "O aplicativo interativo falhou"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Copiar o HTML da visualização"
+    },
     "skillRunApp": {
         "message": "Aplicativo"
     },

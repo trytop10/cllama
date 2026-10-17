@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "已阻止應用程式開啟不安全的連結"
     },
+    "mcpAppDebug": {
+        "message": "偵錯互動式應用程式"
+    },
+    "mcpAppDebugHint": {
+        "message": "把每個應用程式自己的主控台鏡像到本頁，並在卡片上顯示握手時間軸，讓「什麼都沒發生」的檢視能說明原因。開啟期間檢視的日誌會出現在主控台。"
+    },
+    "mcpAppDebugPage": {
+        "message": "開啟 MCP App 偵錯工具"
+    },
+    "mcpAppDiagnostics": {
+        "message": "診斷"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "複製診斷資訊"
+    },
+    "skillRunViewFailed": {
+        "message": "互動式應用程式失敗"
+    },
+    "mcpAppCopyHtml": {
+        "message": "複製檢視 HTML"
+    },
     "skillRunApp": {
         "message": "應用程式"
     },

@@ -1,10 +1,10 @@
 import { getService } from '../js/client/client.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
 import { getMcpServerByName, initMcpTools, readMcpResource } from '../js/mcp.mjs';
 import { runTool, getTool } from '../js/skill-tools.mjs';
-import { MCP_APP_ERROR_TYPE, MCP_APP_HTML_MAX, MCP_APP_HTML_MIME_PREFIX, MCP_APP_INIT_TIMEOUT_MS, MCP_APP_METHODS, MCP_APP_READY_TIMEOUT_MS, MCP_APP_READY_TYPE, MCP_APP_RENDERED_TYPE, MCP_APP_RENDER_TYPE, MCP_APP_SANDBOX_PAGE, MCP_APP_VIEW_ERROR_TYPE, buildInitResult, clampPayload, hostSupportsSandboxPages, isAllowedAppLink, isAppToolAllowed, makeAppRef, normalizeAppRefs, parseAppMessage, resolveAppToolName } from '../js/mcp-apps.mjs';
+import { MCP_APP_CONSOLE_TYPE, MCP_APP_ERROR_TYPE, MCP_APP_GET_HTML_TYPE, MCP_APP_HTML_MAX, MCP_APP_HTML_TYPE, MCP_APP_NETWORK_TYPE, MCP_APP_HTML_MIME_PREFIX, MCP_APP_INIT_TIMEOUT_MS, MCP_APP_METHODS, MCP_APP_PROTOCOL_VERSION, MCP_APP_READY_TIMEOUT_MS, MCP_APP_READY_TYPE, MCP_APP_RENDERED_TYPE, MCP_APP_RENDER_TYPE, MCP_APP_SANDBOX_PAGE, MCP_APP_TRACE_TEXT_MAX, MCP_APP_VIEW_ERROR_TYPE, buildAppDiagnostics, buildInitResult, clampPayload, createAppTrace, formatTraceEntry, hostCapabilities, hostSupportsSandboxPages, isAllowedAppLink, isAppToolAllowed, makeAppRef, normalizeAppRefs, parseAppMessage, pickViewHtml, resolveAppToolName } from '../js/mcp-apps.mjs';
 import { browser } from '../js/browser.mjs';
 import { marked } from '../js/marked.mjs';
 import { balert } from '../js/dialog.mjs';
@@ -207,6 +207,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // running turn — they are attached to the assistant record so the views can
     // be rebuilt after a reload (the frames themselves are torn down).
     let mcpAppAutoRender = true;
+    // Debug mode for MCP Apps: mirrors each view's console into this page and
+    // shows its handshake timeline on the card (see AGENTS.md §7.13). The trace
+    // itself is always recorded — this only controls what is *shown*.
+    let mcpAppDebug = false;
     let pendingAppRefs = [];
     // Cached data source list, so the "@name" model override can be resolved
     // synchronously while typing/sending.
@@ -270,6 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Rendering preference for MCP App views (see §7.13), read here so the
         // very first turn already honours it.
         mcpAppAutoRender = await loadMcpAppAutoRender();
+        mcpAppDebug = await loadMcpAppDebug();
         skills = await loadSkills();
         // The Skill list is finally available, so a choice remembered for this
         // conversation can be resolved to a real Skill (a chat may have loaded
@@ -1989,6 +1994,199 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * Record one line of a view's timeline, mirror it to this page's console
+     * while debugging is on, and keep the card's diagnostics block current.
+     *
+     * This is the answer to "the app doesn't work and I cannot tell where": every
+     * message between host and view is a postMessage, which no browser can show.
+     * The trace is always recorded (it is bounded and cheap) — `mcpAppDebug` only
+     * decides whether it is visible and mirrored.
+     * @param {Object} bridge - View state
+     * @param {Object} entry - { dir: 'view'|'host', kind, method?, ok?, text? }
+     * @returns {void}
+     */
+    function traceApp(bridge, entry) {
+        try {
+            if (!bridge?.trace) return;
+            const item = bridge.trace.push(entry);
+            if (mcpAppDebug) console.log(`[MCP Apps · ${bridge.tool}] ${formatTraceEntry(item)}`);
+            renderAppDiagnostics(bridge);
+        } catch (e) {
+            // Diagnostics must never be able to break a view.
+        }
+    }
+
+    /**
+     * The facts a diagnostic report starts with — everything a bug report needs
+     * and the reporter should not have to know to collect.
+     * @param {Object} bridge - View state
+     * @returns {Object}
+     */
+    function diagFacts(bridge) {
+        return {
+            tool: bridge.tool,
+            serverName: bridge.serverName,
+            resourceUri: bridge.meta?.resourceUri,
+            protocolVersion: MCP_APP_PROTOCOL_VERSION,
+            sandboxSupported: hostSupportsSandboxPages(browser.runtime?.getManifest?.() || null),
+            hostCapabilities: hostCapabilities(),
+            remoteScripts: bridge.remoteScripts || [],
+            viewError: bridge.viewError || null,
+            initialized: bridge.initialized === true,
+            userAgent: navigator.userAgent
+        };
+    }
+
+    /**
+     * Ask the view's shell for the current HTML of its document.
+     *
+     * The frame has an opaque origin, so this page cannot read it — and Firefox's
+     * inspector will not show it either. The shell can, and only answers once a
+     * view was actually written (it replies with an empty string otherwise, so
+     * the caller can fall back to the injected source).
+     * @param {Object} bridge - View state
+     * @param {number} [timeoutMs] - How long to wait for the answer
+     * @returns {Promise<string>} Live HTML, or '' when the shell did not answer
+     */
+    function requestViewHtml(bridge, timeoutMs = 1500) {
+        return new Promise((resolve) => {
+            if (!bridge?.frame?.contentWindow) {
+                resolve('');
+                return;
+            }
+            let done = false;
+            const finish = (html) => {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                bridge.pendingHtml = null;
+                resolve(typeof html === 'string' ? html : '');
+            };
+            const timer = setTimeout(() => finish(''), timeoutMs);
+            bridge.pendingHtml = finish;
+            try {
+                bridge.frame.contentWindow.postMessage({ type: MCP_APP_GET_HTML_TYPE }, '*');
+            } catch (e) {
+                finish('');
+            }
+        });
+    }
+
+    /**
+     * Show — and keep updating — the card's diagnostics block.
+     *
+     * It appears when debugging is on, or as soon as this view failed: a failure
+     * that cannot explain itself is the whole reason this exists, so it never
+     * depends on a setting the user has to find first.
+     * @param {Object} bridge - View state
+     * @returns {void}
+     */
+    function renderAppDiagnostics(bridge) {
+        try {
+            const card = bridge?.card;
+            if (!card || !bridge.trace || !card.isConnected) return;
+            if (!mcpAppDebug && bridge.failed !== true) return;
+
+            if (!bridge.diagEl || !bridge.diagEl.isConnected) {
+                const box = document.createElement('details');
+                box.className = 'mcp-app-diag';
+                const summary = document.createElement('summary');
+                summary.textContent = browser.i18n.getMessage('mcpAppDiagnostics') || 'Diagnostics';
+                box.appendChild(summary);
+                const pre = document.createElement('pre');
+                pre.className = 'mcp-app-diag-trace';
+                box.appendChild(pre);
+                const actions = document.createElement('div');
+                actions.className = 'mcp-app-diag-actions';
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'btn btn-sm btn-compact btn-outline-secondary';
+                copyBtn.textContent = browser.i18n.getMessage('mcpAppDiagnosticsCopy') || 'Copy diagnostics';
+                copyBtn.addEventListener('click', async () => {
+                    // Everything needed to understand the failure, in one paste.
+                    const report = buildAppDiagnostics(diagFacts(bridge), bridge.trace.list());
+                    try {
+                        await navigator.clipboard.writeText(report);
+                        copyBtn.textContent = browser.i18n.getMessage('copied') || 'Copied';
+                    } catch (e) {
+                        copyBtn.textContent = browser.i18n.getMessage('replicationFailed') || 'Copy failed';
+                    }
+                    setTimeout(() => {
+                        copyBtn.textContent = browser.i18n.getMessage('mcpAppDiagnosticsCopy') || 'Copy diagnostics';
+                    }, 1500);
+                });
+                actions.appendChild(copyBtn);
+
+                // Firefox cannot inspect a sandboxed frame's DOM, and this page
+                // cannot read it either (opaque origin): only the shell can, so
+                // it is asked for the live DOM and the answer goes to the
+                // clipboard — falling back to the injected source.
+                const htmlBtn = document.createElement('button');
+                htmlBtn.type = 'button';
+                htmlBtn.className = 'btn btn-sm btn-compact btn-outline-secondary ms-2';
+                htmlBtn.textContent = browser.i18n.getMessage('mcpAppCopyHtml') || 'Copy view HTML';
+                htmlBtn.addEventListener('click', async () => {
+                    const picked = pickViewHtml(await requestViewHtml(bridge), bridge.html);
+                    try {
+                        // Nothing to copy (no view was rendered, and no source was
+                        // kept) must not look like a successful copy.
+                        if (!picked.text) throw new Error('nothing to copy');
+                        await navigator.clipboard.writeText(picked.text);
+                        htmlBtn.textContent = browser.i18n.getMessage('copied') || 'Copied';
+                    } catch (e) {
+                        htmlBtn.textContent = browser.i18n.getMessage('replicationFailed') || 'Copy failed';
+                    }
+                    setTimeout(() => {
+                        htmlBtn.textContent = browser.i18n.getMessage('mcpAppCopyHtml') || 'Copy view HTML';
+                    }, 1500);
+                    traceApp(bridge, {
+                        dir: 'host', kind: 'html', ok: picked.live,
+                        text: picked.live ? 'copied the live DOM' : 'copied the injected source (the frame did not answer)'
+                    });
+                });
+                actions.appendChild(htmlBtn);
+                box.appendChild(actions);
+                card.appendChild(box);
+                box.open = bridge.failed === true;
+                bridge.diagEl = box;
+            }
+
+            const pre = bridge.diagEl.querySelector('.mcp-app-diag-trace');
+            if (pre) {
+                pre.textContent = bridge.trace.list().map(formatTraceEntry).join('\n');
+                // A collapsed block is fine, but a failed view must not hide its
+                // own explanation.
+                if (bridge.failed === true) bridge.diagEl.open = true;
+            }
+            if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (e) {
+            // Never let diagnostics break the card.
+        }
+    }
+
+    /**
+     * Leave exactly one record in the audit trail when a view fails. Failures are
+     * the events a user later asks "what happened here?" about, and the trail is
+     * the only place that outlives the card (and the conversation).
+     * @param {Object} bridge - View state
+     * @param {string} reason - Short, human-readable reason
+     * @returns {void}
+     */
+    function auditAppFailure(bridge, reason) {
+        try {
+            recordAppViewEvent({
+                action: 'view_failed',
+                ok: false,
+                tool: bridge?.tool || null,
+                sessionId: ccId || '0',
+                detail: String(reason || '').slice(0, MCP_APP_TRACE_TEXT_MAX)
+            }).catch((e) => console.warn('audit write failed:', e));
+        } catch (e) {
+            // The audit trail is best-effort.
+        }
+    }
+
+    /**
      * Send the UI document to the shell (only once it said it is alive), then
      * watch for the view to introduce itself: a document whose script never runs
      * (a CSP without inline scripts, a broken view) must not look like a card
@@ -1997,7 +2195,10 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function sendMcpAppHtml(bridge) {
         if (!bridge.html) return;
-        postToApp(bridge, { type: MCP_APP_RENDER_TYPE, html: bridge.html });
+        // `debug` makes the shell mirror the view's console into this page: the
+        // frame has an opaque origin, so its console is unreadable from here.
+        postToApp(bridge, { type: MCP_APP_RENDER_TYPE, html: bridge.html, debug: mcpAppDebug === true });
+        traceApp(bridge, { dir: 'host', kind: 'render', text: `html=${bridge.html.length}B debug=${mcpAppDebug === true}` });
         clearTimeout(bridge.initTimer);
         bridge.initTimer = setTimeout(() => {
             if (bridge.initialized || bridge.failed) return;
@@ -2010,15 +2211,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // that "the script never started".
                 const template = browser.i18n.getMessage('mcpAppViewError') || "The view's script threw an error: {message}";
                 setCardNoticeText(bridge.card, template.replace('{message}', bridge.viewError.message));
+                traceApp(bridge, { dir: 'host', kind: 'timeout', method: 'ui/initialize', ok: false, text: `view threw: ${bridge.viewError.message}` });
+                auditAppFailure(bridge, `view threw: ${bridge.viewError.message}`);
                 return;
             }
             if (bridge.remoteScripts?.length) {
                 setMcpAppNotice(bridge, 'mcpAppExternalScriptBlocked', 'The view loads its script from a remote URL, which the sandbox does not allow — so it rendered but never started.');
                 console.error(`[MCP Apps] the view never called ui/initialize and it loads scripts the sandbox CSP blocks: ${bridge.remoteScripts.join(', ')}. Inline scripts and https: URLs are allowed — bundle the view's code inline (or load it over https) to fix this.`);
+                traceApp(bridge, { dir: 'host', kind: 'timeout', method: 'ui/initialize', ok: false, text: `no initialize; remote scripts: ${bridge.remoteScripts.join(', ')}` });
+                auditAppFailure(bridge, `no ui/initialize; remote scripts: ${bridge.remoteScripts.join(', ')}`);
                 return;
             }
             setMcpAppNotice(bridge, 'mcpAppScriptBlocked', 'The view loaded, but its script never started — this build cannot execute it.');
             console.error('[MCP Apps] the view never called ui/initialize. Most likely the frame\'s CSP blocks inline scripts — check the frame\'s console for "Refused to execute inline script" (the sandbox CSP is declared under content_security_policy.sandbox in manifest.json), or the view is simply broken.');
+            traceApp(bridge, { dir: 'host', kind: 'timeout', method: 'ui/initialize', ok: false, text: 'the view never called ui/initialize' });
+            auditAppFailure(bridge, 'the view never called ui/initialize');
         }, MCP_APP_INIT_TIMEOUT_MS);
     }
 
@@ -2135,6 +2342,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!hostSupportsSandboxPages(browser.runtime?.getManifest?.() || null)) {
             setCardNotice(card, 'mcpAppUnsupported', 'Interactive apps are not supported in this environment — showing the text result instead.');
             console.warn('[MCP Apps] this build has no manifest "sandbox" support: the view is not rendered (the text result is unaffected).');
+            // The audit trail gets one line: a view that never even started is
+            // exactly the kind of thing asked about later.
+            recordAppViewEvent({
+                action: 'view_failed',
+                ok: false,
+                tool: ref.tool,
+                sessionId: ccId || '0',
+                detail: 'this build has no manifest "sandbox" support'
+            }).catch((e) => console.warn('audit write failed:', e));
             return card;
         }
         openMcpAppView(card, ref);
@@ -2194,14 +2410,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             ready: false,
             initialized: false,
             busy: false,
-            failed: false
+            failed: false,
+            remoteScripts: [],
+            viewError: null,
+            diagEl: null,
+            // Resolver waiting for the shell's answer to MCP_APP_GET_HTML_TYPE.
+            pendingHtml: null,
+            // What happened to this view, in order (see traceApp).
+            trace: createAppTrace()
         };
         mcpAppBridges.add(bridge);
+        traceApp(bridge, { dir: 'host', kind: 'mount', text: `resource=${ref.resourceUri}` });
 
         // No "hello" from the shell means the frame never loaded at all.
         bridge.readyTimer = setTimeout(() => {
             if (bridge.ready || bridge.failed) return;
             setMcpAppNotice(bridge, 'mcpAppUnsupported', 'Interactive apps are not supported in this environment — showing the text result instead.');
+            traceApp(bridge, { dir: 'host', kind: 'timeout', method: 'ready', ok: false, text: 'the sandbox shell never reported itself ready' });
+            auditAppFailure(bridge, 'the sandbox shell never reported itself ready');
         }, MCP_APP_READY_TIMEOUT_MS);
 
         loadMcpAppDocument(bridge, ref);
@@ -2226,11 +2452,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             if (res.text.length > MCP_APP_HTML_MAX) throw new Error('UI resource too large');
             bridge.html = res.text;
+            traceApp(bridge, { dir: 'host', kind: 'resource', method: 'resources/read', text: `mime=${mime || '?'} ${res.text.length}B` });
             if (bridge.ready) sendMcpAppHtml(bridge);
         } catch (e) {
             bridge.failed = true;
             setMcpAppNotice(bridge, 'mcpAppLoadFailed', 'Failed to load the interactive app');
             console.warn('[MCP Apps] failed to load UI resource:', e);
+            traceApp(bridge, { dir: 'host', kind: 'resource', method: 'resources/read', ok: false, text: String(e?.message || e) });
+            auditAppFailure(bridge, `resources/read failed: ${String(e?.message || e)}`);
         }
     }
 
@@ -2246,6 +2475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (data?.type === MCP_APP_READY_TYPE) {
             bridge.ready = true;
             clearTimeout(bridge.readyTimer);
+            traceApp(bridge, { dir: 'view', kind: 'ready', text: `inlineScripts=${data.inlineScripts} sandboxed=${data.sandboxed} origin=${data.origin}` });
             // The shell also reports whether this frame can run the view's own
             // (inline) script at all. If it cannot, injecting would produce a
             // card that renders and then does nothing — so explain instead.
@@ -2253,6 +2483,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 bridge.failed = true;
                 setMcpAppNotice(bridge, 'mcpAppInlineBlocked', 'This environment does not allow the view\'s script to run, so the interactive app cannot be shown.');
                 console.error(`[MCP Apps] the frame cannot execute inline scripts (origin=${data.origin}, sandboxed=${data.sandboxed}), so the view would render but never respond. Check that content_security_policy.sandbox in manifest.json allows script-src 'unsafe-inline', and that this build registers ${MCP_APP_SANDBOX_PAGE} under "sandbox.pages".`);
+                traceApp(bridge, { dir: 'host', kind: 'notice', method: 'inline-scripts', ok: false, text: 'the frame cannot execute inline scripts' });
+                auditAppFailure(bridge, 'the frame cannot execute inline scripts');
                 return;
             }
             sendMcpAppHtml(bridge);
@@ -2262,6 +2494,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             bridge.failed = true;
             setMcpAppNotice(bridge, 'mcpAppLoadFailed', 'Failed to load the interactive app');
             console.warn('[MCP Apps] shell reported an error:', data.reason);
+            traceApp(bridge, { dir: 'view', kind: 'shell-error', ok: false, text: String(data.reason || '') });
+            auditAppFailure(bridge, `shell error: ${String(data.reason || '')}`);
             return;
         }
         if (data?.type === MCP_APP_RENDERED_TYPE) {
@@ -2276,6 +2510,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (bridge.remoteScripts.length) {
                 console.warn(`[MCP Apps] the view loads scripts the sandbox cannot load: ${bridge.remoteScripts.join(', ')}`);
             }
+            traceApp(bridge, { dir: 'view', kind: 'rendered', ok: !bridge.remoteScripts.length, text: bridge.remoteScripts.length ? `remote scripts: ${bridge.remoteScripts.join(', ')}` : '' });
             return;
         }
         if (data?.type === MCP_APP_VIEW_ERROR_TYPE) {
@@ -2284,12 +2519,51 @@ document.addEventListener("DOMContentLoaded", async () => {
             // one (the load-time failure) and let the watchdog announce it.
             if (!bridge.viewError) {
                 bridge.viewError = {
-                    message: String(data.message || 'unknown error').slice(0, 300),
+                    message: String(data.message || 'unknown error').slice(0, MCP_APP_TRACE_TEXT_MAX),
                     source: String(data.source || '').slice(0, 200),
                     line: Number(data.line) || 0
                 };
             }
             console.error(`[MCP Apps] the view threw: ${bridge.viewError.message} (${bridge.viewError.source}:${bridge.viewError.line})`);
+            traceApp(bridge, { dir: 'view', kind: 'view-error', method: 'error', ok: false, text: `${bridge.viewError.message} (${bridge.viewError.source}:${bridge.viewError.line})` });
+            return;
+        }
+        if (data?.type === MCP_APP_CONSOLE_TYPE) {
+            // Debug mode only (the shell patches the view's console on request).
+            // It lands here so the frame's output shows up in the console the
+            // user already has open, and in the card's timeline.
+            const level = String(data.level || 'log');
+            const text = String(data.text || '').slice(0, MCP_APP_TRACE_TEXT_MAX * 4);
+            traceApp(bridge, { dir: 'view', kind: 'console', method: level, text, ok: level !== 'error' });
+            const meta = `[MCP Apps · ${bridge.tool}]`;
+            if (level === 'error') console.error(meta, text);
+            else if (level === 'warn') console.warn(meta, text);
+            else console.log(meta, text);
+            return;
+        }
+        if (data?.type === MCP_APP_HTML_TYPE) {
+            // The answer to requestViewHtml() — hand it to whoever is waiting and
+            // keep the fact in the trace ("did the frame answer?" is part of the
+            // diagnosis when a copy comes back empty).
+            const html = String(data.html || '');
+            if (typeof bridge.pendingHtml === 'function') bridge.pendingHtml(html);
+            traceApp(bridge, { dir: 'view', kind: 'html', text: `${html.length}B` });
+            return;
+        }
+        if (data?.type === MCP_APP_NETWORK_TYPE) {
+            // Debug mode only (the shell wraps fetch/XMLHttpRequest on request).
+            // Firefox's network panel cannot show a sandboxed frame's requests at
+            // all, so the frame's traffic is only ever visible here — metadata
+            // only: which request, which status, how long, never a body.
+            const method = String(data.method || 'GET');
+            const status = Number(data.status) || 0;
+            const ok = data.ok !== false;
+            const ms = Number(data.ms) || 0;
+            const detail = `${method} ${String(data.url || '')} ${status || (ok ? '' : 'FAILED')} ${ms}ms${data.error ? ` (${data.error})` : ''}`.replace(/\s+/g, ' ').trim();
+            traceApp(bridge, { dir: 'view', kind: 'network', method, ok, text: detail });
+            const meta = `[MCP Apps · ${bridge.tool}]`;
+            if (ok) console.log(meta, detail);
+            else console.warn(meta, detail);
             return;
         }
 
@@ -2298,12 +2572,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Malformed frames are refused loudly-but-harmlessly: logged with a
             // reason and never half-handled (an app must not break the page).
             console.warn('[MCP Apps] ignored app message:', parsed.reason);
+            traceApp(bridge, { dir: 'view', kind: 'refused', ok: false, text: `ignored app message: ${parsed.reason}` });
             return;
         }
         try {
             await handleMcpAppMessage(bridge, parsed.msg);
         } catch (e) {
             console.warn('[MCP Apps] failed to handle app message:', e);
+            traceApp(bridge, { dir: 'view', kind: parsed.msg.method, method: parsed.msg.method, ok: false, text: String(e?.message || e) });
             if (parsed.msg.id !== null) {
                 postToApp(bridge, {
                     jsonrpc: '2.0',
@@ -2329,6 +2605,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // The view is alive and talking: the "script never started" watchdog
             // has done its job.
             clearTimeout(bridge.initTimer);
+            traceApp(bridge, { dir: 'view', kind: 'request', method, text: `protocolVersion=${params.protocolVersion || '?'}` });
             const result = buildInitResult({
                 toolName: bridge.tool,
                 toolInput: bridge.args,
@@ -2347,12 +2624,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             });
             if (id !== null) postToApp(bridge, { jsonrpc: '2.0', id, result });
+            traceApp(bridge, { dir: 'host', kind: 'response', method, text: `protocolVersion=${result.protocolVersion}` });
             return;
         }
 
         if (method === MCP_APP_METHODS.INITIALIZED) {
             if (bridge.initialized) return;
             bridge.initialized = true;
+            traceApp(bridge, { dir: 'view', kind: 'notification', method });
             // Hand over the data the view exists for — twice, in fact: also in the
             // initialize result, so an app that never subscribes to notifications
             // still renders (see buildInitResult).
@@ -2380,6 +2659,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (Number.isFinite(height) && height > 0) {
                 bridge.frame.style.height = `${Math.max(MCP_APP_FRAME_MIN, Math.min(MCP_APP_FRAME_MAX, Math.round(height)))}px`;
             }
+            traceApp(bridge, { dir: 'view', kind: 'notification', method, text: `height=${height}` });
             return;
         }
 
@@ -2395,6 +2675,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 setMcpAppNotice(bridge, 'mcpAppLinkBlocked', 'Blocked an unsafe link from the app');
                 console.warn(`[MCP Apps] refused app link: ${String(url).slice(0, 120)}`);
             }
+            traceApp(bridge, { dir: 'view', kind: 'request', method, ok: allowed, text: String(url || '') });
             return;
         }
 
@@ -2402,6 +2683,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const text = String(params.content ?? params.text ?? '').trim();
             const delivered = Boolean(text && msgInput);
             if (id !== null) postToApp(bridge, { jsonrpc: '2.0', id, result: delivered ? { delivered: true } : { delivered: false, isError: true } });
+            traceApp(bridge, { dir: 'view', kind: 'request', method, ok: delivered, text: text.slice(0, 120) });
             if (!text || !msgInput) return;
             // P0: prefill only. An app must not be able to spend a model call on
             // its own — the user reads the request and presses send.
@@ -2417,6 +2699,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         console.warn(`[MCP Apps] unsupported method from app: ${method}`);
+        traceApp(bridge, { dir: 'view', kind: 'request', method, ok: false, text: 'method not supported by this host' });
         if (id !== null) {
             postToApp(bridge, { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not supported: ${method}` } });
         }
@@ -2476,7 +2759,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const deny = (message) => {
             fail(message);
             ctx.onStep({ tool: rawName || 'app-tool', ok: false, denied: true, error: message });
+            traceApp(bridge, { dir: 'view', kind: 'request', method: 'tools/call', ok: false, text: `${rawName}: ${message}` });
         };
+        traceApp(bridge, { dir: 'view', kind: 'request', method: 'tools/call', text: `${rawName} ${JSON.stringify(args).slice(0, 120)}` });
 
         try {
             // Apps name tools the way their server does ("add_point"); the
@@ -2501,8 +2786,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     result: { content: [{ type: 'text', text: clampPayload(output) }] }
                 });
             }
+            traceApp(bridge, { dir: 'host', kind: 'response', method: 'tools/call', text: String(output).slice(0, 120) });
         } catch (e) {
             fail(String(e?.message || e));
+            traceApp(bridge, { dir: 'host', kind: 'response', method: 'tools/call', ok: false, text: String(e?.message || e) });
         } finally {
             await finishSkillRun(run);
             bridge.busy = false;
@@ -4310,6 +4597,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // visit): reopening a conversation must honour the switch as it is now.
         try {
             mcpAppAutoRender = await loadMcpAppAutoRender();
+            mcpAppDebug = await loadMcpAppDebug();
         } catch (e) {
             console.warn('Failed to read the MCP App rendering preference:', e);
         }
@@ -4835,8 +5123,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Read the MCP Apps rendering preference BEFORE the first history load: a
     // restored conversation mounts its views right there, so reading it later
     // (as refreshSkills() does) would let the default win and make the switch
-    // look like it does nothing on reload.
+    // look like it does nothing on reload. Same for the debug switch — it decides
+    // whether a restored view gets its console mirrored.
     mcpAppAutoRender = await loadMcpAppAutoRender();
+    mcpAppDebug = await loadMcpAppDebug();
 
     await loadHistory();
     await initializeModelSelection();
@@ -4997,8 +5287,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     // The MCP App rendering preference can be changed on the Skills page while
     // this chat stays open (see §7.13).
     browser.storage.onChanged.addListener((changes, area) => {
-        if (area !== 'local' || !changes[DB_KEY.mcpAppAutoRender]) return;
-        mcpAppAutoRender = changes[DB_KEY.mcpAppAutoRender].newValue !== false;
+        if (area !== 'local') return;
+        if (changes[DB_KEY.mcpAppAutoRender]) {
+            mcpAppAutoRender = changes[DB_KEY.mcpAppAutoRender].newValue !== false;
+        }
+        if (changes[DB_KEY.mcpAppDebug]) {
+            mcpAppDebug = changes[DB_KEY.mcpAppDebug].newValue === true;
+            // The switch also decides whether the diagnostics block is shown on
+            // views that are *not* failing, so re-render what is on screen.
+            for (const bridge of mcpAppBridges) {
+                if (mcpAppDebug) {
+                    renderAppDiagnostics(bridge);
+                } else if (bridge.diagEl) {
+                    bridge.diagEl.remove?.();
+                    bridge.diagEl = null;
+                }
+            }
+        }
     });
     // Same for chat scenarios created through save_chat_scenario.
     browser.storage.onChanged.addListener(handleScenarioStorageChange);

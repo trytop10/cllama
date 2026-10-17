@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "앱의 안전하지 않은 링크를 차단했습니다"
     },
+    "mcpAppDebug": {
+        "message": "대화형 앱 디버그"
+    },
+    "mcpAppDebugHint": {
+        "message": "각 앱의 콘솔을 이 페이지로 미러링하고 카드에 핸드셰이크 타임라인을 표시합니다. 아무 반응이 없는 뷰의 이유를 알 수 있습니다. 켜져 있는 동안 뷰의 로그가 콘솔에 표시됩니다."
+    },
+    "mcpAppDebugPage": {
+        "message": "MCP App 디버거 열기"
+    },
+    "mcpAppDiagnostics": {
+        "message": "진단"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "진단 정보 복사"
+    },
+    "skillRunViewFailed": {
+        "message": "대화형 앱 실패"
+    },
+    "mcpAppCopyHtml": {
+        "message": "뷰 HTML 복사"
+    },
     "skillRunApp": {
         "message": "앱"
     },

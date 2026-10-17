@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "アプリからの安全でないリンクをブロックしました"
     },
+    "mcpAppDebug": {
+        "message": "インタラクティブアプリをデバッグ"
+    },
+    "mcpAppDebugHint": {
+        "message": "各アプリ自身のコンソールをこのページにミラーし、カードにハンドシェイクのタイムラインを表示します。「何も起きない」ビューの理由が分かります。有効な間はビューのログがコンソールに表示されます。"
+    },
+    "mcpAppDebugPage": {
+        "message": "MCP App デバッガーを開く"
+    },
+    "mcpAppDiagnostics": {
+        "message": "診断"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "診断情報をコピー"
+    },
+    "skillRunViewFailed": {
+        "message": "インタラクティブアプリの失敗"
+    },
+    "mcpAppCopyHtml": {
+        "message": "ビューの HTML をコピー"
+    },
     "skillRunApp": {
         "message": "アプリ"
     },

@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Đã chặn liên kết không an toàn từ ứng dụng"
     },
+    "mcpAppDebug": {
+        "message": "Gỡ lỗi ứng dụng tương tác"
+    },
+    "mcpAppDebugHint": {
+        "message": "Phản chiếu bảng điều khiển của từng ứng dụng vào trang này và hiển thị dòng thời gian bắt tay trên thẻ, để chế độ xem không làm gì có thể nói rõ lý do. Khi bật, nhật ký của chế độ xem xuất hiện trong bảng điều khiển."
+    },
+    "mcpAppDebugPage": {
+        "message": "Mở trình gỡ lỗi MCP App"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Chẩn đoán"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Sao chép chẩn đoán"
+    },
+    "skillRunViewFailed": {
+        "message": "Ứng dụng tương tác gặp lỗi"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Sao chép HTML của chế độ xem"
+    },
     "skillRunApp": {
         "message": "Ứng dụng"
     },

@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Ein unsicherer Link der App wurde blockiert"
     },
+    "mcpAppDebug": {
+        "message": "Interaktive Apps debuggen"
+    },
+    "mcpAppDebugHint": {
+        "message": "Spiegelt die eigene Konsole jeder App in diese Seite und zeigt den Handshake-Verlauf auf der Karte – so kann eine Ansicht, die nichts tut, den Grund nennen. Währenddessen erscheinen die Logzeilen der Ansicht in der Konsole."
+    },
+    "mcpAppDebugPage": {
+        "message": "MCP-App-Debugger öffnen"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnose"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Diagnose kopieren"
+    },
+    "skillRunViewFailed": {
+        "message": "Interaktive App fehlgeschlagen"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Ansicht-HTML kopieren"
+    },
     "skillRunApp": {
         "message": "App"
     },

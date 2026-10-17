@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Foi bloqueada uma ligação não segura da aplicação"
     },
+    "mcpAppDebug": {
+        "message": "Depurar aplicações interativas"
+    },
+    "mcpAppDebugHint": {
+        "message": "Espelha a consola de cada aplicação nesta página e mostra a cronologia do handshake no cartão, para que uma vista que não faz nada explique porquê. Enquanto está ativo, os registos da vista aparecem na consola."
+    },
+    "mcpAppDebugPage": {
+        "message": "Abrir o depurador de MCP Apps"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnóstico"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Copiar diagnóstico"
+    },
+    "skillRunViewFailed": {
+        "message": "A aplicação interativa falhou"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Copiar o HTML da vista"
+    },
     "skillRunApp": {
         "message": "Aplicação"
     },

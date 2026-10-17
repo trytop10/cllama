@@ -1,4 +1,4 @@
-import { i18n, DB_KEY, loadSkills, saveSkills, loadSkillRuns, clearSkillRuns, filterSkillRuns, getRuntimeConfig, loadMcpAppAutoRender, setMcpAppAutoRender } from "../js/cllama.js";
+import { i18n, DB_KEY, loadSkills, saveSkills, loadSkillRuns, clearSkillRuns, filterSkillRuns, getRuntimeConfig, loadMcpAppAutoRender, setMcpAppAutoRender, loadMcpAppDebug, setMcpAppDebug } from "../js/cllama.js";
 import { listTools } from "../js/skill-tools.mjs";
 import { loadMcpServers, saveMcpServers, listMcpTools, initMcpTools } from "../js/mcp.mjs";
 import { balert } from "../js/dialog.mjs";
@@ -59,6 +59,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoRenderBox.checked = await loadMcpAppAutoRender();
     autoRenderBox.addEventListener('change', () => setMcpAppAutoRender(autoRenderBox.checked));
   }
+
+  // MCP App debugging: mirror each view's console into the chat page and show
+  // its handshake timeline on the card (see AGENTS.md §7.13).
+  const appDebugBox = document.getElementById('mcpAppDebug');
+  if (appDebugBox) {
+    appDebugBox.checked = await loadMcpAppDebug();
+    appDebugBox.addEventListener('change', () => setMcpAppDebug(appDebugBox.checked));
+  }
+  document.getElementById('b_open_app_debug')?.addEventListener('click', () => {
+    browser.tabs.create({ url: browser.runtime.getURL('viewer/mcp-app-debug.html') });
+  });
   await initSkillList();
   await renderSkillRuns();
   i18n();
@@ -108,7 +119,8 @@ function runActionLabel(entry = {}) {
     import: 'artifactImport',
     import_overwrite: 'artifactImportOverwrite',
     cancel: 'artifactCancel',
-    card_stale: 'skillRunCardStale'
+    card_stale: 'skillRunCardStale',
+    view_failed: 'skillRunViewFailed'
   }[action];
   return (key && browser.i18n.getMessage(key)) || action || 'unknown';
 }

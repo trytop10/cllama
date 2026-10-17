@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "已阻止应用打开不安全的链接"
     },
+    "mcpAppDebug": {
+        "message": "调试交互式应用"
+    },
+    "mcpAppDebugHint": {
+        "message": "把每个应用自己的控制台镜像到本页，并在卡片上显示握手时间线，这样“什么都没发生”的视图能说明原因。开启期间视图的日志会出现在控制台里。"
+    },
+    "mcpAppDebugPage": {
+        "message": "打开 MCP App 调试器"
+    },
+    "mcpAppDiagnostics": {
+        "message": "诊断"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "复制诊断信息"
+    },
+    "skillRunViewFailed": {
+        "message": "交互式应用失败"
+    },
+    "mcpAppCopyHtml": {
+        "message": "复制视图 HTML"
+    },
     "skillRunApp": {
         "message": "应用"
     },

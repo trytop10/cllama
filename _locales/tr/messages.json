@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Uygulamadan gelen güvenli olmayan bağlantı engellendi"
     },
+    "mcpAppDebug": {
+        "message": "Etkileşimli uygulamalarda hata ayıkla"
+    },
+    "mcpAppDebugHint": {
+        "message": "Her uygulamanın kendi konsolunu bu sayfaya yansıtır ve kartta el sıkışma zaman çizelgesini gösterir; böylece hiçbir şey yapmayan görünüm nedenini söyleyebilir. Açıkken görünümün günlükleri konsolda görünür."
+    },
+    "mcpAppDebugPage": {
+        "message": "MCP App hata ayıklayıcısını aç"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Tanılama"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Tanılamayı kopyala"
+    },
+    "skillRunViewFailed": {
+        "message": "Etkileşimli uygulama başarısız oldu"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Görünüm HTML'ini kopyala"
+    },
     "skillRunApp": {
         "message": "Uygulama"
     },

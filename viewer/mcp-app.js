@@ -26,10 +26,28 @@ const RENDER_TYPE = 'cllama:mcp-app:render';
 const RENDERED_TYPE = 'cllama:mcp-app:rendered';
 /** A view that throws on its own (load-time dependency errors, mostly). */
 const VIEW_ERROR_TYPE = 'cllama:mcp-app:view-error';
+/** A console line from the view (debugging only). */
+const CONSOLE_TYPE = 'cllama:mcp-app:console';
+/** Host asks for the current HTML of the view (Firefox has no DOM inspector
+    for a sandboxed frame, and the host cannot read it itself). */
+const GET_HTML_TYPE = 'cllama:mcp-app:get-html';
+/** The answer: the live DOM of the view. */
+const HTML_TYPE = 'cllama:mcp-app:html';
+/** One request the view made (debugging only; metadata, never bodies). */
+const NETWORK_TYPE = 'cllama:mcp-app:network';
 const ERROR_TYPE = 'cllama:mcp-app:error';
 
 /** Upper bound for a UI resource (see MCP_APP_HTML_MAX in js/mcp-apps.mjs). */
 const HTML_MAX = 2 * 1024 * 1024;
+
+/** Debugging only: how many console lines one view may forward. */
+const CONSOLE_MAX = 200;
+
+/** Debugging only: how many network entries one view may forward. */
+const NETWORK_MAX = 200;
+
+/** Debugging only: how much of a request URL is kept. */
+const URL_MAX = 300;
 
 /**
  * Can this document execute inline scripts at all?
@@ -142,6 +160,176 @@ function registerWindowListeners() {
 registerWindowListeners();
 
 /**
+ * The current HTML of the view's document.
+ *
+ * Read from the DOM (so it reflects what the view's own scripts did), never from
+ * the HTML we were handed. Empty until a view was actually written, so the host
+ * can fall back to the injected source instead of copying this shell.
+ * @returns {string} Serialized markup, capped at HTML_MAX
+ */
+function viewHtml() {
+  if (!window.__cllamaViewWritten) return '';
+  try {
+    return document.documentElement ? document.documentElement.outerHTML.slice(0, HTML_MAX) : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/** Append one console line to a postMessage payload, safely and bounded. */
+function stringifyConsoleArgs(args) {
+  return args.map((a) => {
+    if (typeof a === 'string') return a;
+    try {
+      return JSON.stringify(a);
+    } catch (e) {
+      return String(a);
+    }
+  }).join(' ');
+}
+
+/**
+ * Mirror the view's `console.*` into the host (only when the chat page asked for
+ * it: the render message carries `debug: true`).
+ *
+ * Why this works without touching the view's HTML: `document.open()` keeps the
+ * window object (it only drops its event listeners — that is why the handlers
+ * above are re-registered around the write), so the view's scripts resolve the
+ * very same `console`. Debugging is opt-in because it wraps three globals inside
+ * someone else's document; when it is off we never touch them.
+ */
+function enableConsoleForwarding() {
+  if (window.__cllamaConsoleForwarding) return;
+  window.__cllamaConsoleForwarding = true;
+  let sent = 0;
+  const forward = (level, original) => function (...args) {
+    // The view's own console must keep working exactly as before, whatever
+    // happens to the forwarding.
+    try {
+      if (typeof original === 'function') original.apply(console, args);
+    } catch (e) { /* ignore */ }
+    if (sent >= CONSOLE_MAX) return;
+    sent++;
+    try {
+      window.parent.postMessage({ type: CONSOLE_TYPE, level, text: stringifyConsoleArgs(args) }, '*');
+    } catch (e) { /* ignore */ }
+  };
+  console.log = forward('log', console.log);
+  console.info = forward('info', console.info);
+  console.warn = forward('warn', console.warn);
+  console.error = forward('error', console.error);
+}
+
+/** A request URL as a string, whatever shape `fetch` was handed. */
+function urlOf(input) {
+  try {
+    if (typeof input === 'string') return input.slice(0, URL_MAX);
+    if (input && typeof input.url === 'string') return input.url.slice(0, URL_MAX);
+    return String(input).slice(0, URL_MAX);
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
+ * Report one request the view made (metadata only: no bodies, no headers).
+ * @param {Object} info - { method, url, status?, ok, ms, error? }
+ */
+function reportNetwork(info) {
+  try {
+    window.parent.postMessage({
+      type: NETWORK_TYPE,
+      method: String(info.method || 'GET').slice(0, 10),
+      url: String(info.url || '').slice(0, URL_MAX),
+      status: Number(info.status) || 0,
+      ok: info.ok !== false,
+      ms: Number(info.ms) || 0,
+      error: info.error ? String(info.error).slice(0, 120) : ''
+    }, '*');
+  } catch (e) { /* ignore */ }
+}
+
+/**
+ * Mirror the view's network activity into the host (debugging only).
+ *
+ * Firefox cannot show a sandboxed frame's requests in its network panel, and the
+ * frame's origin is opaque, so neither browser gives the host a usable view of
+ * them. Wrapping `fetch` and `XMLHttpRequest` in the document the view runs in is
+ * the only place where the answer exists — and it is the same trick as the
+ * console mirroring above: we are inside the window the view uses.
+ *
+ * What is forwarded is deliberately *metadata* (which request, which status, how
+ * long) — never a body — matching how the audit trail treats tool arguments.
+ * Both wrappers preserve the original behaviour exactly and never throw.
+ */
+function enableNetworkForwarding() {
+  if (window.__cllamaNetworkForwarding) return;
+  window.__cllamaNetworkForwarding = true;
+  let sent = 0;
+  const budget = () => (sent < NETWORK_MAX ? (sent++, true) : false);
+
+  try {
+    const originalFetch = window.fetch;
+    if (typeof originalFetch === 'function') {
+      window.fetch = function (input, init) {
+        const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+        const url = urlOf(input);
+        const started = Date.now();
+        const promise = originalFetch.apply(this, arguments);
+        try {
+          return promise.then(
+            (response) => {
+              if (budget()) reportNetwork({ method, url, status: response && response.status, ok: !(response && response.ok === false), ms: Date.now() - started });
+              return response;
+            },
+            (error) => {
+              if (budget()) reportNetwork({ method, url, ok: false, ms: Date.now() - started, error: (error && error.message) || 'failed' });
+              throw error;
+            }
+          );
+        } catch (e) {
+          return promise;
+        }
+      };
+    }
+  } catch (e) { /* ignore */ }
+
+  try {
+    const XHR = window.XMLHttpRequest;
+    if (XHR && XHR.prototype) {
+      const originalOpen = XHR.prototype.open;
+      const originalSend = XHR.prototype.send;
+      XHR.prototype.open = function (method, url) {
+        try {
+          this.__cllamaRequest = { method: String(method || 'GET').toUpperCase(), url: urlOf(url), at: Date.now() };
+        } catch (e) { /* ignore */ }
+        return originalOpen.apply(this, arguments);
+      };
+      XHR.prototype.send = function () {
+        try {
+          const request = this.__cllamaRequest || { method: 'GET', url: '', at: Date.now() };
+          const report = (kind) => {
+            if (!budget()) return;
+            const status = Number(this.status) || 0;
+            reportNetwork({
+              method: request.method, url: request.url, status,
+              ok: kind === 'load' && status >= 200 && status < 400,
+              ms: Date.now() - request.at,
+              error: kind === 'load' ? '' : kind
+            });
+          };
+          this.addEventListener('load', () => report('load'));
+          this.addEventListener('error', () => report('error'));
+          this.addEventListener('abort', () => report('abort'));
+          this.addEventListener('timeout', () => report('timeout'));
+        } catch (e) { /* ignore */ }
+        return originalSend.apply(this, arguments);
+      };
+    }
+  } catch (e) { /* ignore */ }
+}
+
+/**
  * Receive a UI document and become it.
  *
  * `document.write` after load replaces the document but keeps this window (and
@@ -153,6 +341,11 @@ registerWindowListeners();
 function onMessage(event) {
   if (event.source !== window.parent) return;
   const data = event.data;
+  // Debugging aid: hand the live DOM over on request (the host cannot read it).
+  if (data && data.type === GET_HTML_TYPE) {
+    window.parent.postMessage({ type: HTML_TYPE, html: viewHtml() }, '*');
+    return;
+  }
   if (!data || data.type !== RENDER_TYPE) return;
 
   const html = typeof data.html === 'string' ? data.html : '';
@@ -173,8 +366,13 @@ function onMessage(event) {
     // only the post-write registration the synchronous throw was lost, while
     // the async ones survived).
     registerWindowListeners();
+    if (data.debug === true) {
+      enableConsoleForwarding();
+      enableNetworkForwarding();
+    }
     document.write(html);
     document.close();
+    window.__cllamaViewWritten = true;
     window.parent.postMessage({ type: RENDERED_TYPE, remoteScripts: findRemoteScripts() }, '*');
     registerWindowListeners();
     window.removeEventListener('message', onMessage);

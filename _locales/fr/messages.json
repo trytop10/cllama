@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Un lien non sûr provenant de l'application a été bloqué"
     },
+    "mcpAppDebug": {
+        "message": "Déboguer les applications interactives"
+    },
+    "mcpAppDebugHint": {
+        "message": "Reflète la console propre de chaque application dans cette page et affiche la chronologie de la poignée de main sur la carte, pour qu'une vue inerte puisse expliquer pourquoi. Tant que c'est actif, les journaux de la vue apparaissent dans la console."
+    },
+    "mcpAppDebugPage": {
+        "message": "Ouvrir le débogueur MCP App"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnostic"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Copier le diagnostic"
+    },
+    "skillRunViewFailed": {
+        "message": "Échec de l'application interactive"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Copier le HTML de la vue"
+    },
     "skillRunApp": {
         "message": "Application"
     },

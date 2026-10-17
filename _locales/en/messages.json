@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Blocked an unsafe link from the app"
     },
+    "mcpAppDebug": {
+        "message": "Debug interactive apps"
+    },
+    "mcpAppDebugHint": {
+        "message": "Mirrors each app's own console into this page and shows its handshake timeline on the card, so a view that does nothing can say why. The view's log lines appear in the console while this is on."
+    },
+    "mcpAppDebugPage": {
+        "message": "Open the MCP App debugger"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnostics"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Copy diagnostics"
+    },
+    "skillRunViewFailed": {
+        "message": "Interactive app failed"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Copy view HTML"
+    },
     "skillRunApp": {
         "message": "App"
     },

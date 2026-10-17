@@ -937,6 +937,27 @@
     "mcpAppLinkBlocked": {
         "message": "Tautan tidak aman dari aplikasi diblokir"
     },
+    "mcpAppDebug": {
+        "message": "Debug aplikasi interaktif"
+    },
+    "mcpAppDebugHint": {
+        "message": "Mencerminkan konsol aplikasi ke halaman ini dan menampilkan linimasa handshake pada kartu, agar tampilan yang tidak melakukan apa pun bisa menjelaskan alasannya. Selama aktif, log tampilan muncul di konsol."
+    },
+    "mcpAppDebugPage": {
+        "message": "Buka debugger MCP App"
+    },
+    "mcpAppDiagnostics": {
+        "message": "Diagnostik"
+    },
+    "mcpAppDiagnosticsCopy": {
+        "message": "Salin diagnostik"
+    },
+    "skillRunViewFailed": {
+        "message": "Aplikasi interaktif gagal"
+    },
+    "mcpAppCopyHtml": {
+        "message": "Salin HTML tampilan"
+    },
     "skillRunApp": {
         "message": "Aplikasi"
     },

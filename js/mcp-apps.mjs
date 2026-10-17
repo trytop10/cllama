@@ -58,6 +58,33 @@ export const MCP_APP_RENDERED_TYPE = 'cllama:mcp-app:rendered';
  * script never started.
  */
 export const MCP_APP_VIEW_ERROR_TYPE = 'cllama:mcp-app:view-error';
+/**
+ * Host → shell: "give me the current HTML of the view".
+ *
+ * Only the shell can answer: the frame has an opaque origin, so the chat page
+ * cannot read its `contentDocument` at all. Chrome's DevTools can show a
+ * sandboxed frame's DOM, Firefox's cannot — this is the portable substitute,
+ * and it is the LIVE DOM (after the view's own scripts ran), not the source.
+ */
+export const MCP_APP_GET_HTML_TYPE = 'cllama:mcp-app:get-html';
+/** Shell → host: the answer to the above. */
+export const MCP_APP_HTML_TYPE = 'cllama:mcp-app:html';
+/**
+ * One network request the view made (only while debugging is on).
+ *
+ * Firefox's network panel does not show requests made from a sandboxed frame,
+ * and neither browser shows them for an opaque-origin document in a useful way —
+ * so the shell instruments `fetch` / `XMLHttpRequest` and reports METADATA only
+ * (method, URL, status, duration): never request or response bodies.
+ */
+export const MCP_APP_NETWORK_TYPE = 'cllama:mcp-app:network';
+/**
+ * A `console.*` call made by the view (only while debugging is on — see
+ * DB_KEY.mcpAppDebug). The frame's own console is unreadable from the chat page,
+ * and context-switching DevTools to a sandboxed frame is exactly the friction
+ * this removes.
+ */
+export const MCP_APP_CONSOLE_TYPE = 'cllama:mcp-app:console';
 export const MCP_APP_ERROR_TYPE = 'cllama:mcp-app:error';
 
 /** How long the shell may take to say "I'm alive" before we give up on it. */
@@ -333,6 +360,119 @@ export function clampPayload(text, max = MCP_APP_PAYLOAD_MAX) {
   }
   if (typeof s !== 'string') return '';
   return s.length > max ? `${s.slice(0, max)}\n…[truncated]` : s;
+}
+
+// ------------------- diagnostics: trace + report (see AGENTS.md §7.13) -------------------
+// "The app doesn't work" is nearly always a question about the *conversation*
+// between host and view — which the browser cannot show, because every message
+// is a postMessage. These helpers turn that conversation into something a card
+// can display and a user can paste into a bug report. Pure: no browser APIs, so
+// the whole thing is unit-testable in Node.
+
+/** Max trace entries kept per view. */
+export const MCP_APP_TRACE_LIMIT = 50;
+/** Max characters kept of one trace entry / one console line. */
+export const MCP_APP_TRACE_TEXT_MAX = 300;
+
+/**
+ * Per-view ring buffer of what happened, newest last.
+ *
+ * Kept for every view (it is cheap and bounded) even when debugging is off: it
+ * is what makes a failure explain itself, and it is the only record of the
+ * handshake that survives a reload of the card.
+ * @param {number} [limit] - Max entries (defaults to MCP_APP_TRACE_LIMIT)
+ * @returns {{push: Function, list: Function, clear: Function, size: Function}}
+ */
+export function createAppTrace(limit = MCP_APP_TRACE_LIMIT) {
+  const max = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : MCP_APP_TRACE_LIMIT;
+  let entries = [];
+  return {
+    /**
+     * @param {Object} entry - { dir: 'host'|'view', kind, method?, ok?, text?, at? }
+     * @returns {Object} The stored entry
+     */
+    push(entry) {
+      const item = {
+        at: Number(entry?.at) || Date.now(),
+        dir: entry?.dir === 'view' ? 'view' : 'host',
+        kind: String(entry?.kind || 'event'),
+        method: entry?.method ? String(entry.method) : '',
+        ok: entry?.ok !== false,
+        text: clampPayload(entry?.text ?? '', MCP_APP_TRACE_TEXT_MAX)
+      };
+      entries.push(item);
+      if (entries.length > max) entries = entries.slice(-max);
+      return item;
+    },
+    list() {
+      return entries.slice();
+    },
+    clear() {
+      entries = [];
+    },
+    size() {
+      return entries.length;
+    }
+  };
+}
+
+/**
+ * One trace line, stable and greppable: `HH:MM:SS.mmm  →  ui/initialize  ok  detail`.
+ * @param {Object} entry - An entry from createAppTrace
+ * @returns {string}
+ */
+export function formatTraceEntry(entry) {
+  const at = new Date(Number(entry?.at) || 0);
+  const time = at.toISOString().slice(11, 23);
+  const arrow = entry?.dir === 'view' ? '←' : '→';
+  const method = String(entry?.method || entry?.kind || '');
+  const status = entry?.ok === false ? 'FAIL' : 'ok';
+  const text = String(entry?.text || '');
+  return `${time}  ${arrow}  ${method}  ${status}${text ? `  ${text}` : ''}`;
+}
+
+/**
+ * The full diagnostic report for one view: the facts first, then the timeline.
+ * This is what the card's "copy diagnostics" button puts on the clipboard — a
+ * bug report that does not require the reporter to know what to look for.
+ * @param {Object} info - View facts
+ * @param {Array<Object>} [entries] - Trace entries
+ * @returns {string}
+ */
+export function buildAppDiagnostics(info = {}, entries = []) {
+  const lines = [
+    'cllama — MCP App diagnostics',
+    `tool: ${info.tool || '?'}`,
+    `server: ${info.serverName || '?'}`,
+    `resource: ${info.resourceUri || '?'}`,
+    `protocolVersion: ${info.protocolVersion || MCP_APP_PROTOCOL_VERSION}`,
+    `sandbox: ${info.sandboxSupported ? 'yes' : 'NO (no manifest sandbox support)'}`,
+    `host capabilities: ${JSON.stringify(info.hostCapabilities || {})}`,
+    `remote scripts: ${(info.remoteScripts || []).join(', ') || 'none'}`,
+    `view error: ${info.viewError?.message ? `${info.viewError.message} (${info.viewError.source || '?'}:${info.viewError.line || 0})` : 'none'}`,
+    `initialized: ${info.initialized ? 'yes' : 'no'}`,
+    `user agent: ${info.userAgent || '?'}`,
+    '',
+    `--- trace (${entries.length}) ---`
+  ];
+  if (!entries.length) lines.push('(empty)');
+  for (const entry of entries) lines.push(formatTraceEntry(entry));
+  return lines.join('\n');
+}
+
+/**
+ * What to copy for "copy view HTML": the live DOM the frame reported, or — when
+ * the frame did not answer — the source we injected (better than nothing, and for
+ * a view that never started the source *is* the whole story).
+ * @param {string} liveHtml - HTML the shell reported for the current document
+ * @param {string} sourceHtml - The UI resource the host injected
+ * @param {number} [max] - Cap (defaults to MCP_APP_HTML_MAX)
+ * @returns {{ text: string, live: boolean }}
+ */
+export function pickViewHtml(liveHtml, sourceHtml, max = MCP_APP_HTML_MAX) {
+  const live = typeof liveHtml === 'string' ? liveHtml.trim() : '';
+  if (live) return { text: clampPayload(live, max), live: true };
+  return { text: clampPayload(typeof sourceHtml === 'string' ? sourceHtml : '', max), live: false };
 }
 
 // ------------------- stored view references (see AGENTS.md §7.13) -------------------
