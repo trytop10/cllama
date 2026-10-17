@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const skillBar = document.getElementById("skillBar");
     const skillNameSpan = document.getElementById("skillName");
     const bSkillSettings = document.getElementById("b_skillSettings");
+    const bSkillRuns = document.getElementById("b_skillRuns");
     const bSearch = document.getElementById("b_search");
     const searchBar = document.getElementById("chatSearch");
     const searchInput = document.getElementById("searchInput");
@@ -55,6 +56,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.preventDefault();
             const ccId = getQueryParam("id");
             location.href = ccId ? `./skills.html?id=${ccId}` : './skills.html';
+        });
+    }
+    if (bSkillRuns) {
+        // The audit trail lives on its own page so the Skill configuration page
+        // stays about configuration (see AGENTS.md §7.7).
+        bSkillRuns.addEventListener('click', (e) => {
+            e.preventDefault();
+            const ccId = getQueryParam("id");
+            location.href = ccId ? `./skill-runs.html?id=${ccId}` : './skill-runs.html';
         });
     }
     

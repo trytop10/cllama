@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="/css/cllama.css">
+  <link rel="stylesheet" type="text/css" href="skills.css">
+  <script src="/js/bootstrap.min.js"></script>
+  <title>Skill run history</title>
+</head>
+<body>
+  <!-- Breadcrumb: always a way back to the chat page -->
+  <nav aria-label="breadcrumb" class="skill-page-breadcrumb px-3 pt-2">
+    <ol class="breadcrumb mb-1">
+      <li class="breadcrumb-item"><a href="#" id="crumbChat"></a></li>
+      <li class="breadcrumb-item active i18n" aria-current="page">skillRuns</li>
+    </ol>
+  </nav>
+
+  <div class="opane">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="i18n mb-0">skillRuns</h5>
+      <button id="b_clear_runs" class="btn btn-sm btn-compact btn-outline-danger i18n">clearRuns</button>
+    </div>
+    <!-- Filters: source / status / skill / free text. Kept in view (not hidden
+         behind an "advanced" toggle) because "why did that fail?" is the most
+         common question about this list. -->
+    <div id="skillRunFilters" class="skill-run-filters mb-2">
+      <select class="form-select form-select-sm w-auto" id="runFilterOrigin">
+        <option value="all" class="i18n">skillRunFilterAll</option>
+        <option value="model" class="i18n">skillRunFilterModel</option>
+        <option value="user" class="i18n">skillRunFilterUser</option>
+        <option value="page" class="i18n">skillRunFilterPage</option>
+        <option value="app" class="i18n">skillRunFilterApp</option>
+      </select>
+      <select class="form-select form-select-sm w-auto" id="runFilterStatus">
+        <option value="all" class="i18n">skillRunFilterAll</option>
+        <option value="ok" class="i18n">skillRunFilterOk</option>
+        <option value="failed" class="i18n">skillRunFilterFailed</option>
+      </select>
+      <select class="form-select form-select-sm w-auto" id="runFilterSkill"></select>
+      <input type="search" class="form-control form-control-sm skill-run-search i18n" id="runFilterSearch" i18n="placeholder" placeholder="skillRunFilterSearch">
+      <button type="button" class="btn btn-sm btn-compact btn-outline-secondary i18n" id="b_reset_run_filters">skillRunFilterReset</button>
+      <span class="text-muted small ms-auto" id="runFilterCount"></span>
+    </div>
+    <div id="skillRunsContainer" class="mb-4"></div>
+  </div>
+
+  <script src="skill-runs.js" type="module"></script>
+</body>
+</html>

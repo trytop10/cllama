@@ -1057,25 +1057,33 @@ code.language-markdown {
     font-weight: 600;
 }
 
-/* ── Skill toolbar: unified look for the picker bar and the settings button ── */
-#b_skillSettings {
+/* ── Skill toolbar: unified look for the picker bar, the settings button and
+      the run-history button next to it ── */
+#b_skillSettings,
+#b_skillRuns {
     display: flex;
     align-items: center;
     background: var(--bs-tertiary-bg);
     border: 1px solid var(--bs-border-color);
     border-bottom: 0;
     border-left: 0;
-    border-radius: 0 0.25rem 0 0;
+    border-radius: 0;
     color: var(--bs-secondary-color);
     padding: 0 0.6rem;
 }
 
-#b_skillSettings:hover {
+#b_skillRuns {
+    border-radius: 0 0.25rem 0 0;
+}
+
+#b_skillSettings:hover,
+#b_skillRuns:hover {
     color: var(--bs-body-color);
     background: var(--bs-secondary-bg);
 }
 
-[data-bs-theme="dark"] #b_skillSettings svg {
+[data-bs-theme="dark"] #b_skillSettings svg,
+[data-bs-theme="dark"] #b_skillRuns svg {
     fill: var(--bs-body-color);
 }
 

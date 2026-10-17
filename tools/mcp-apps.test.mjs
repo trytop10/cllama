@@ -528,7 +528,7 @@ check('a failing view explains itself and leaves a record', () => {
   assert.match(chat, /recordAppViewEvent\(\{[\s\S]{0,200}action: 'view_failed'/);
   assert.equal((chat.match(/auditAppFailure\(bridge/g) || []).length >= 4, true);
   assert.match(read('../js/cllama.js'), /export async function recordAppViewEvent/);
-  assert.match(read('../chat/skills.js'), /view_failed: 'skillRunViewFailed'/);
+  assert.match(read('../chat/skill-runs.js'), /view_failed: 'skillRunViewFailed'/);
 });
 
 check('the standalone debugger reuses the host protocol instead of copying it', () => {
@@ -649,9 +649,9 @@ check('the MCP Apps / app-origin labels exist in every locale', () => {
 });
 
 check('the audit filter offers the app origin', () => {
-  const html = read('../chat/skills.html');
+  const html = read('../chat/skill-runs.html');
   assert.match(html, /<option value="app" class="i18n">skillRunFilterApp<\/option>/);
-  const js = read('../chat/skills.js');
+  const js = read('../chat/skill-runs.js');
   assert.match(js, /app: 'skillRunApp'/);
 });
 

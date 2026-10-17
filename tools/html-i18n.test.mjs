@@ -67,7 +67,7 @@ const messages = Object.fromEntries(locales.map(locale => [
 const pages = collectPages('.');
 // A floor per page and overall: if the scanner regex ever stops matching, this
 // test must fail loudly instead of reporting "0 problems" forever.
-const FLOORS = { 'chat/chat.html': 15, 'chat/skills.html': 25, 'option/options.html': 20 };
+const FLOORS = { 'chat/chat.html': 15, 'chat/skills.html': 20, 'chat/skill-runs.html': 10, 'option/options.html': 20 };
 
 let passed = 0;
 let referenced = 0;
