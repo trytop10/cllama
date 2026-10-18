@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "한국어"
-    },
     "browserActionTitle": {
         "message": "스마트 브라우징 도우미 - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "아직 도구가 없습니다. 도구 추가를 클릭하세요."
     },
-    "skillDefaultCalculator": {
-        "message": "계산기"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "add_numbers 도구로 계산합니다."
-    },
     "skillDefaultGeneralHelper": {
         "message": "페이지 Q&A"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "설정"
     },
-    "ollamaHostLabel": {
-        "message": "API URL"
-    },
-    "modelNameLabel": {
-        "message": "모델 이름"
-    },
-    "tranPromptLabel": {
-        "message": "번역 프롬프트"
-    },
     "expBaseData": {
         "message": "기본 구성"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "가져오기 실패"
     },
-    "getModuleListFailMessage": {
-        "message": "모델 목록 가져오기 실패"
-    },
-    "tranPrompt": {
-        "message": "사용자가 제공한 문장이나 단어를 다시 작성하십시오. 사용자가 {localLanguage} 이외의 다른 언어로 제공한 경우 사용자가 제공한 내용을 {localLanguage} 로 다시 작성하고, 그렇지 않으면 영어로 다시 작성하십시오. 참고: 다시 작성할 때 원본 의미를 존중해야 합니다."
-    },
-    "translateWaitMessage": {
-        "message": "번역 중입니다. 잠시 기다려 주십시오..."
-    },
     "cllamaError": {
         "message": "죄송합니다. 문제가 발생했습니다. 나중에 다시 시도하거나 cllama 구성 정보가 올바른지 확인하십시오."
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "이 페이지 정보를 처리할 수 없습니다. 페이지에 문제가 없음을 확인한 경우 새로 고침하고 다시 시도하십시오."
-    },
-    "summarizer": {
-        "message": "요약"
-    },
-    "summaryPrompt": {
-        "message": "제공된 페이지 정보 내용을 기반으로 짧은 요약을 생성하십시오. 요구 사항: 1. 최대 300자. 2. 항상 {localLanguage} 로 요약 정보를 생성하십시오."
     },
     "requiredError": {
         "message": "필수 항목은 비워 둘 수 없습니다."
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "통찰 AI"
-    },
-    "tranServiceLabel": {
-        "message": "번역 AI"
-    },
-    "TestDesc": {
-        "message": "테스트용이며 속도와 안정성은 보장되지 않습니다."
-    },
-    "OtherDesc": {
-        "message": "OpenAI API 프로토콜과 호환되는 API 인터페이스 서비스를 지원합니다."
     },
     "language": {
         "message": "언어"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "현재 날짜, 시간, 요일 관련 질문에 답합니다."
     },
-    "skillAutoMode": {
-        "message": "자동"
-    },
     "skillManualOnly": {
         "message": "수동 전용"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "성공: {count}개의 도구를 찾았습니다."
-    },
-    "mcpTestFail": {
-        "message": "연결 실패"
     },
     "mcpDisabled": {
         "message": "사용 안 함"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "도구"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "이 도구를 사용할 때(선택) — 예: 기존 항목 수정, 새 항목은 create 사용"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "이 도구는 데이터를 변경하거나 삭제할 수 있습니다."
+    },
+    "apiProvidersTitle": {
+        "message": "API 제공자"
+    },
+    "apiProvidersDesc": {
+        "message": "하나 이상의 AI 제공자를 구성합니다. 채팅이나 인사이트 레시피에서 다른 제공자를 선택하지 않으면 기본 제공자가 사용됩니다."
+    },
+    "apiAddProvider": {
+        "message": "제공자 추가"
+    },
+    "apiEmptyProviders": {
+        "message": "아직 구성된 제공자가 없습니다. 하나를 추가하여 AI 기능을 사용하세요."
+    },
+    "apiDefaultBadge": {
+        "message": "기본"
+    },
+    "apiSetDefault": {
+        "message": "기본으로 설정"
+    },
+    "apiEditProvider": {
+        "message": "제공자 편집"
+    },
+    "apiDeleteProvider": {
+        "message": "제공자 삭제"
+    },
+    "apiAddProviderTitle": {
+        "message": "API 제공자 추가"
+    },
+    "apiEditProviderTitle": {
+        "message": "API 제공자 편집"
+    },
+    "apiProviderLabel": {
+        "message": "API 제공자"
+    },
+    "apiEndpointLabel": {
+        "message": "API 엔드포인트"
+    },
+    "apiKeyLabel": {
+        "message": "API 키"
+    },
+    "apiModelLabel": {
+        "message": "모델"
+    },
+    "apiModelPlaceholder": {
+        "message": "모델 이름을 선택하거나 입력"
+    },
+    "apiFetchModels": {
+        "message": "모델 불러오기"
+    },
+    "apiModelsLoading": {
+        "message": "모델 불러오는 중…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count}개 모델을 불러왔습니다"
+    },
+    "apiModelsFailed": {
+        "message": "모델 목록을 불러올 수 없습니다. 모델 이름을 직접 입력하세요."
+    },
+    "apiModelTypeLabel": {
+        "message": "모델 유형"
+    },
+    "modelTypeImage": {
+        "message": "이미지 생성 모델"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama(로컬)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "OpenAI 호환 API"
+    },
+    "apiUseDefaultProvider": {
+        "message": "기본과 동일"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "제공자 \"{name}\"을(를) 삭제할까요?"
+    },
+    "modelTypeDecision": {
+        "message": "의사 결정 모델"
+    },
+    "modelTypeText": {
+        "message": "텍스트 생성 모델"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "기능"
+    },
+    "apiMultimodal": {
+        "message": "멀티모달(첨부 파일)"
+    },
+    "apiSupportsTools": {
+        "message": "도구"
+    },
+    "multimodalUnsupported": {
+        "message": "선택한 모델은 첨부 파일을 지원하지 않습니다. 다른 모델을 선택하거나 API 설정에서 멀티모달 입력을 활성화하세요."
     }
-
 }

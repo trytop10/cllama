@@ -1,5 +1,6 @@
 import { GoogleGenAI } from './gemini.mjs';
 import { normalizeGeminiUsage } from '../token-usage.mjs';
+import { toGeminiGenerationConfig, toGeminiFunctionDeclarations } from '../request-options.mjs';
 
 export class GeminiClient {
     constructor(config) {
@@ -54,29 +55,29 @@ export class GeminiClient {
             throw new Error('GeminiClient: model must be specified or a defaultModel must be configured.');
         }
 
-        const generationConfig = {
-            temperature: options.temperature,
-            maxOutputTokens: options.maxOutputTokens, // Assuming this is a valid option
-            stopSequences: options.stopSequences, // Assuming this is a valid option
-            topP: options.topP, // Assuming this is a valid option
-            topK: options.topK, // Assuming this is a valid option
-            // Add other options from AI_SDK_SPEC.md if they map directly to Gemini API
-        };
-
-        // Filter out undefined values from generationConfig
-        Object.keys(generationConfig).forEach(key => generationConfig[key] === undefined && delete generationConfig[key]);
-
         const requestParams = {
             model: model,
             contents: messages.map(msg => ({ role: msg.role, parts: msg.parts || [{ text: msg.content }] })),
             config: {
-                ...options.options, // Pass backend-specific options
-                ...generationConfig,
+                ...toGeminiGenerationConfig(options),
                 httpOptions: {
                     abortSignal: abortController.signal,
                 },
             },
         };
+
+        // Native system instruction: chat() merges the scenario prompt and the
+        // active Skill into one block and passes it here.
+        if (typeof options.systemInstruction === 'string' && options.systemInstruction.trim()) {
+            requestParams.config.systemInstruction = options.systemInstruction;
+        }
+
+        // Native function declarations. `parametersJsonSchema` accepts the same
+        // JSON Schema the registry already uses (including MCP input schemas).
+        const functionDeclarations = toGeminiFunctionDeclarations(options.tools);
+        if (functionDeclarations.length) {
+            requestParams.config.tools = [{ functionDeclarations }];
+        }
 
         if (options.onStart) {
             options.onStart(sessionId);

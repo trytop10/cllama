@@ -242,10 +242,16 @@ export function mcpUiGroupSkillId(serverId, uri) {
 /**
  * Build the English prompt of a derived Skill: the tool list IS the content, so
  * the model sees exactly which names it may call and what they do.
+ *
+ * This variant is only used for the **text protocol**. When native tools are
+ * declared, an MCP-derived Skill injects nothing at all (see
+ * `nativePrompt` in buildSkillVariant): the definitions already live in the
+ * request's `tools` field, so any text here would be a second, competing copy.
+ *
  * @param {string} serverName - MCP server name
  * @param {Array<{name:string,description:string}>} allowed - Callable tools
  * @param {Array<{name:string,description:string}>} sensitive - Tools that may change data
- * @param {Object} [options] - { appLabel } when this Skill covers one UI group
+ * @param {Object} [options] - { appLabel }
  * @returns {string} Prompt text
  */
 export function buildMcpSkillPrompt(serverName, allowed, sensitive, options = {}) {
@@ -300,6 +306,12 @@ function buildSkillVariant({ serverId, serverName, own, id, name, appLabel }) {
   if (omitted > 0) {
     prompt += `\n\n(${omitted} more tool${omitted === 1 ? '' : 's'} of this server are available but not listed; call list_tools if you need their exact names.)`;
   }
+  // Nothing is injected when the request declares the tools natively: the whole
+  // content of this Skill's prompt is the tool list, which already lives in
+  // `tools`. A separate sentence of guidance is not worth a second message —
+  // and repeating tool information is what makes models answer in the text
+  // protocol instead of calling the tool.
+  const nativePrompt = '';
 
   const names = allowed.slice(0, MCP_SKILL_DESC_TOOLS_MAX).map((t) => t.name);
   const more = allowed.length > names.length ? ', …' : '';
@@ -313,6 +325,9 @@ function buildSkillVariant({ serverId, serverName, own, id, name, appLabel }) {
     name,
     description,
     prompt,
+    // Empty on purpose: when tools are declared natively this Skill injects no
+    // text at all (the tool list is already in the request — see §7.15).
+    nativePrompt,
     // Tools of this variant; destructive/write ones are blocked by default.
     tools: serialized,
     // User-only invocation (Auto mode never injects it) — see the module doc.

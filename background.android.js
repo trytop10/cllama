@@ -1,6 +1,7 @@
 import { processInsightForBackground, DB_KEY } from './js/cllama.js';
-import { browser, isFirefox } from './js/browser.mjs';
+import { browser } from './js/browser.mjs';
 import { sendToContentScript } from './js/util.js';
+import { handleViewerMessage } from './js/viewer-bridge.mjs';
 
 
 
@@ -72,7 +73,7 @@ function importAIdirActions(sd) {
  * @param {function} sendResponse Function to call to send a response.
  * @returns {boolean} True to indicate an asynchronous response.
  */
-async function handleMessage(request, sender, sendResponse) {
+function handleMessage(request, sender, sendResponse) {
 
   if (request.action === 'process-insight') {
     const { prompt, doc, msgId } = request;
@@ -151,75 +152,12 @@ async function handleMessage(request, sender, sendResponse) {
     return true;
   }
 
-  if (request.action === 'openHtmlInNewTab') {
-    const { htmlString, title } = request.data;
+  if (handleViewerMessage(request, sender)) return true;
 
-    // Firefox has limitations with large data URLs, so we use a viewer page.
-    if (isFirefox) {
-      browser.tabs.create({ url: browser.runtime.getURL('viewer/viewer.html') }, (newTab) => {
-        if (browser.runtime.lastError) {
-          console.error(`Failed to create viewer tab: ${browser.runtime.lastError.message}`);
-          return;
-        }
-        // Temporarily store the HTML content for the viewer page to retrieve.
-        const dataToStore = { [`viewer_data_${newTab.id}`]: { htmlString, title } };
-        browser.storage.local.set(dataToStore);
-      });
-    } else {
-      // For Chrome, use a data URL which is simpler.
-      const fullHtml = `<!DOCTYPE html><html><head><title>${title}</title></head><body>${htmlString}</body></html>`;
-      const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`;
-      browser.tabs.create({ url: dataUrl });
-    }
-    return true;
-  }
-
-  if (request.action === 'viewerReady') {
-    // This is only for the Firefox viewer page.
-    if (isFirefox) {
-      const tabId = sender.tab.id;
-      const storageKey = `viewer_data_${tabId}`;
-      browser.storage.local.get(storageKey, (result) => {
-        const storedData = result[storageKey];
-        if (storedData && storedData.htmlString) {
-          browser.tabs.sendMessage(tabId, {
-            action: "displayHtml",
-            data: storedData
-          });
-          // Clean up the temporary storage.
-          browser.storage.local.remove(storageKey);
-        }
-      });
-    }
-    return true;
-  }
-
-  // Fallback for other message types.
-  if (typeof request === 'string') {
-    sendResponse({ received: true, originalMessage: request });
-  } else if (request.type === 'userAction') {
-    console.log(`User action: ${request.action} on ${request.elementId}`);
-    sendResponse({ status: 'processed', action: request.action });
-  }
-  
   return true; // Indicates an asynchronous response.
-}
-
-/**
- * Handles the onInstalled event.
- * @param {object} details Details about the installation or update.
- */
-async function handleInstalled(details) {
-  if (details.reason === "install") {
-    // Actions to perform on first installation.
-  } else if (details.reason === "update") {
-    // Actions to perform on update.
-  }
 }
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleMessage(request, sender, sendResponse);
     return true;
 });
-
-browser.runtime.onInstalled.addListener(handleInstalled);

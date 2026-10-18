@@ -1,8 +1,6 @@
 import { DB_KEY, loadDefaultActions } from './js/cllama.js';
 import { browser, isFirefox } from './js/browser.mjs';
-
-// Determine if the current browser is Firefox
-
+import { handleViewerMessage } from './js/viewer-bridge.mjs';
 
 const INSIGHT_MENU_ID = 'cllama-insight';
 const INSIGHT_ACTION_PREFIX = 'cllama-insight-action-';
@@ -103,65 +101,14 @@ browser.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-function handleMessage(request, sender, sendResponse) {
-  if (request.action === 'openHtmlInNewTab') {
-    const { htmlString, title } = request.data;
+function handleMessage(request, sender) {
+  if (handleViewerMessage(request, sender)) return true;
 
-    if (isFirefox) {
-      // Firefox (MV2) specific logic: Use viewer/viewer.html and sendMessage
-      browser.tabs.create({ url: browser.runtime.getURL('viewer/viewer.html') }, (newTab) => {
-        if (browser.runtime.lastError) {
-          console.error(`Failed to create viewer tab. Error: ${browser.runtime.lastError.message}`);
-          return;
-        }
-        const dataToStore = {};
-        dataToStore[`viewer_data_${newTab.id}`] = { htmlString, title };
-        browser.storage.local.set(dataToStore);
-      });
-    } else {
-      // Chrome (MV3) specific logic: Use a data URL. This is a last resort as executeScript is failing.
-      // Note: Inline scripts in data URLs may be blocked by browser's default CSP.
-      const fullHtml = `<!DOCTYPE html><html><head><title>${title}</title></head><body>${htmlString}</body></html>`;
-      const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`;
-      
-      browser.tabs.create({ url: dataUrl });
-    }
-    return true;
-  }
-
-  if (request.action === 'viewerReady') {
-    // This message is only sent by viewer.js (Firefox path)
-    if (isFirefox) {
-      const tabId = sender.tab.id;
-      const storageKey = `viewer_data_${tabId}`;
-      browser.storage.local.get(storageKey, (data) => {
-        if (data[storageKey] && data[storageKey].htmlString) {
-          browser.tabs.sendMessage(tabId, {
-            action: "displayHtml",
-            data: data[storageKey]
-          });
-          browser.storage.local.remove(storageKey);
-        }
-      });
-    }
-    return true;
-  }
-
-  if (typeof request === 'string') {
-    sendResponse({ received: true, originalMessage: request });
-  } else if (request.type === 'userAction') {
-    console.log(`User action: ${request.action} on ${request.elementId}`);
-    sendResponse({ status: 'processed', action: request.action });
-  }
   return false;
 }
 
-async function handleInstalled(details) {
-  if (details.reason === "install") {
-    initContextMenu();
-  } else if (details.reason === "update") {
-    initContextMenu();
-  }
+function handleInstalled() {
+  initContextMenu();
 }
 
 browser.runtime.onMessage.addListener(handleMessage);

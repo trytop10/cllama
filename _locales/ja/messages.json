@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "日本語"
-    },
     "browserActionTitle": {
         "message": "スマートブラウジングアシスタント - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "ツールがまだありません。「ツールを追加」をクリックしてください。"
     },
-    "skillDefaultCalculator": {
-        "message": "計算機"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "add_numbers ツールで計算を行います。"
-    },
     "skillDefaultGeneralHelper": {
         "message": "ページQA"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "設定"
     },
-    "ollamaHostLabel": {
-        "message": "API URL"
-    },
-    "modelNameLabel": {
-        "message": "モデル名"
-    },
-    "tranPromptLabel": {
-        "message": "翻訳プロンプト"
-    },
     "expBaseData": {
         "message": "基本設定"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "インポートに失敗しました"
     },
-    "getModuleListFailMessage": {
-        "message": "モデルリストの取得に失敗しました"
-    },
-    "tranPrompt": {
-        "message": "ユーザーから与えられた文章や単語を書き換えてください。ユーザーが{localLanguage}以外の言語を提供した場合は{localLanguage}で書き換え、それ以外の場合は英語で書き換えてください。注意：書き換え時には元の意味を尊重する必要があります。"
-    },
-    "translateWaitMessage": {
-        "message": "翻訳中です。少々お待ちください..."
-    },
     "cllamaError": {
         "message": "申し訳ありませんが、問題が発生しました。後でもう一度試すか、cllamaの設定情報が正しいか確認してください。"
     },
@@ -236,12 +209,6 @@
     },
     "insightifyPageError2": {
         "message": "このページ情報を処理できません。ページに問題がないことを確認した場合は、更新してもう一度試してください。"
-    },
-    "summarizer": {
-        "message": "要約"
-    },
-    "summaryPrompt": {
-        "message": "指定されたページ情報の内容に基づいて簡潔な要約を生成してください。要件：1. 最大300文字。2. 常に{localLanguage}で要約情報を生成します。"
     },
     "requiredError": {
         "message": "必須項目は空にできません"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "インサイトAI"
-    },
-    "tranServiceLabel": {
-        "message": "翻訳AI"
-    },
-    "TestDesc": {
-        "message": "テスト専用です。速度と安定性は保証されません。"
-    },
-    "OtherDesc": {
-        "message": "OpenAI APIプロトコルと互換性のあるAPIインターフェースサービスをサポートします。"
     },
     "language": {
         "message": "言語"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "現在の日付・時刻・曜日に関する質問に答えます。"
     },
-    "skillAutoMode": {
-        "message": "自動"
-    },
     "skillManualOnly": {
         "message": "手動のみ"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "OK：{count} 個のツールが見つかりました。"
-    },
-    "mcpTestFail": {
-        "message": "接続に失敗しました"
     },
     "mcpDisabled": {
         "message": "無効"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "ツール"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "このツールを使う場面（任意）— 例：既存項目の更新。新規作成には create を使用"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "このツールはデータを変更または削除する可能性があります。"
+    },
+    "apiProvidersTitle": {
+        "message": "APIプロバイダー"
+    },
+    "apiProvidersDesc": {
+        "message": "1つ以上のAIプロバイダーを設定します。チャットやインサイトレシピで別のプロバイダーを選ばない限り、デフォルトのプロバイダーが使われます。"
+    },
+    "apiAddProvider": {
+        "message": "プロバイダーを追加"
+    },
+    "apiEmptyProviders": {
+        "message": "プロバイダーがまだ設定されていません。追加してAI機能を使い始めてください。"
+    },
+    "apiDefaultBadge": {
+        "message": "デフォルト"
+    },
+    "apiSetDefault": {
+        "message": "デフォルトに設定"
+    },
+    "apiEditProvider": {
+        "message": "プロバイダーを編集"
+    },
+    "apiDeleteProvider": {
+        "message": "プロバイダーを削除"
+    },
+    "apiAddProviderTitle": {
+        "message": "APIプロバイダーを追加"
+    },
+    "apiEditProviderTitle": {
+        "message": "APIプロバイダーを編集"
+    },
+    "apiProviderLabel": {
+        "message": "APIプロバイダー"
+    },
+    "apiEndpointLabel": {
+        "message": "APIエンドポイント"
+    },
+    "apiKeyLabel": {
+        "message": "APIキー"
+    },
+    "apiModelLabel": {
+        "message": "モデル"
+    },
+    "apiModelPlaceholder": {
+        "message": "モデル名を選択または入力"
+    },
+    "apiFetchModels": {
+        "message": "モデルを読み込む"
+    },
+    "apiModelsLoading": {
+        "message": "モデルを読み込み中…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count} 件のモデルを読み込みました"
+    },
+    "apiModelsFailed": {
+        "message": "モデル一覧を読み込めませんでした。モデル名を手動で入力してください。"
+    },
+    "apiModelTypeLabel": {
+        "message": "モデル種別"
+    },
+    "modelTypeImage": {
+        "message": "画像生成モデル"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama（ローカル）"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "OpenAI互換API"
+    },
+    "apiUseDefaultProvider": {
+        "message": "デフォルトと同じ"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "プロバイダー「{name}」を削除しますか？"
+    },
+    "modelTypeDecision": {
+        "message": "意思決定モデル"
+    },
+    "modelTypeText": {
+        "message": "テキスト生成モデル"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "機能"
+    },
+    "apiMultimodal": {
+        "message": "マルチモーダル（添付ファイル）"
+    },
+    "apiSupportsTools": {
+        "message": "ツール"
+    },
+    "multimodalUnsupported": {
+        "message": "選択したモデルは添付ファイルに対応していません。別のモデルを選ぶか、API 設定でマルチモーダル入力を有効にしてください。"
     }
-
 }

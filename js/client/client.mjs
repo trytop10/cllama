@@ -53,9 +53,11 @@ function createClient(config) {
  * @returns {Object} The client instance.
  */
 export function getServiceInstance(runtimeConfig) {
-    // Generate a unique cache key combining service name and endpoint.
-    // This prevents collisions if the same service name is used with different URLs.
-    const cacheKey = `${runtimeConfig.service}|${runtimeConfig.apiUrl}`;
+    // Cache by the actual connection parameters. Including the API key keeps
+    // two configurations of the same provider/endpoint from sharing the wrong
+    // client, while base and dsList entries that point at the same endpoint
+    // still share one instance (and its native-tools capability cache).
+    const cacheKey = `${runtimeConfig.service}|${runtimeConfig.apiUrl}|${runtimeConfig.apiKey || ''}`;
 
     // Return cached instance if it exists
     if (serviceCache.has(cacheKey)) {

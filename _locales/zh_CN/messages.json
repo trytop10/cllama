@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "中文"
-    },
     "browserActionTitle": {
         "message": "智能浏览助手-cllama"
     },
@@ -93,12 +90,6 @@
     "skillPickerNoMatch": {
         "message": "没有匹配的技能。"
     },
-    "skillDefaultCalculator": {
-        "message": "计算器"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "使用 add_numbers 工具做算术。"
-    },
     "skillDefaultGeneralHelper": {
         "message": "网页问答"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "设置"
     },
-    "ollamaHostLabel": {
-        "message": "API网址"
-    },
-    "modelNameLabel": {
-        "message": "模型名称"
-    },
-    "tranPromptLabel": {
-        "message": "翻译Prompt"
-    },
     "expBaseData": {
         "message": "基础配置"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "导入失败"
     },
-    "getModuleListFailMessage": {
-        "message": "获取模型列表失败"
-    },
-    "tranPrompt": {
-        "message": "请重写用户给定的句子或单词，如果用户给出的是{localLanguage}之外的其他语言则用{localLanguage}重写用户给定的内容，否则用英文重写。注意：重写时必须尊重原意。"
-    },
-    "translateWaitMessage": {
-        "message": "正在翻译，请稍候..."
-    },
     "cllamaError": {
         "message": "很抱歉，我遇到了一些问题，请稍后再试或者检查一下您的cllama配置信息是否正确。"
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "无法处理该页面信息，如确认页面没有问题可刷新重试。"
-    },
-    "summarizer": {
-        "message": "摘要"
-    },
-    "summaryPrompt": {
-        "message": "请根据给定页面信息内容生成简短摘要，要求：1、最多300字。2、一律用{localLanguage}生成摘要信息。"
     },
     "requiredError": {
         "message": "必输项不能为空"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "洞察AI"
-    },
-    "tranServiceLabel": {
-        "message": "翻译AI"
-    },
-    "TestDesc": {
-        "message": "仅供测试用，不保证速度和稳定性。"
-    },
-    "OtherDesc": {
-        "message": "支持兼容OpenAI API协议的API接口服务。"
     },
     "language": {
         "message": "语言"
@@ -448,9 +406,6 @@
     "skillAutoSelect": {
         "message": "自动选择 Skill"
     },
-    "skillAutoMode": {
-        "message": "自动选择"
-    },
     "skillDefaultDateTime": {
         "message": "日期与时间"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "连接成功：发现 {count} 个工具。"
-    },
-    "mcpTestFail": {
-        "message": "连接失败"
     },
     "mcpDisabled": {
         "message": "已停用"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "工具"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "何时使用该工具（可选）——例如：修改已有条目；新建请用 create"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "该工具可能修改或删除数据。"
+    },
+    "apiProvidersTitle": {
+        "message": "API 提供商"
+    },
+    "apiProvidersDesc": {
+        "message": "配置一个或多个 AI 提供商。聊天或洞察配方未另行选择时，将使用默认提供商。"
+    },
+    "apiAddProvider": {
+        "message": "添加提供商"
+    },
+    "apiEmptyProviders": {
+        "message": "尚未配置任何提供商。添加一个即可开始使用 AI 功能。"
+    },
+    "apiDefaultBadge": {
+        "message": "默认"
+    },
+    "apiSetDefault": {
+        "message": "设为默认"
+    },
+    "apiEditProvider": {
+        "message": "编辑提供商"
+    },
+    "apiDeleteProvider": {
+        "message": "删除提供商"
+    },
+    "apiAddProviderTitle": {
+        "message": "添加 API 提供商"
+    },
+    "apiEditProviderTitle": {
+        "message": "编辑 API 提供商"
+    },
+    "apiProviderLabel": {
+        "message": "API 提供商"
+    },
+    "apiEndpointLabel": {
+        "message": "API 地址"
+    },
+    "apiKeyLabel": {
+        "message": "API Key"
+    },
+    "apiModelLabel": {
+        "message": "模型"
+    },
+    "apiModelPlaceholder": {
+        "message": "选择或输入模型名称"
+    },
+    "apiFetchModels": {
+        "message": "获取模型"
+    },
+    "apiModelsLoading": {
+        "message": "正在获取模型…"
+    },
+    "apiModelsLoaded": {
+        "message": "已获取 {count} 个模型"
+    },
+    "apiModelsFailed": {
+        "message": "无法获取模型列表，可手动输入模型名称。"
+    },
+    "apiModelTypeLabel": {
+        "message": "模型类型"
+    },
+    "modelTypeImage": {
+        "message": "生图模型"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama（本地）"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "智谱 AI"
+    },
+    "apiProviderCompatible": {
+        "message": "OpenAI 兼容协议"
+    },
+    "apiUseDefaultProvider": {
+        "message": "与默认提供商相同"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "删除提供商“{name}”？"
+    },
+    "modelTypeDecision": {
+        "message": "决策模型"
+    },
+    "modelTypeText": {
+        "message": "文本生成模型"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "能力"
+    },
+    "apiMultimodal": {
+        "message": "多模态（附件输入）"
+    },
+    "apiSupportsTools": {
+        "message": "tools"
+    },
+    "multimodalUnsupported": {
+        "message": "当前模型不支持附件上传，请切换模型或在 API 设置中启用多模态。"
     }
-
 }

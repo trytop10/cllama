@@ -626,15 +626,6 @@ export function parseToolCallsDetailed(text) {
 }
 
 /**
- * Extract tool call blocks from a model response.
- * @param {string} text - Model response text
- * @returns {Array<{name:string, args:Object}>}
- */
-export function parseToolCalls(text) {
-  return parseToolCallsDetailed(text).calls;
-}
-
-/**
  * Remove the tool call blocks from text intended for display. Only blocks that
  * are actually executable are removed: an unrecognized block is left visible so
  * the user (and the logs) can see what the model really emitted instead of the
@@ -694,10 +685,26 @@ export function skillToolHint(entry) {
 
 /**
  * Build the tool-calling instructions appended to a skill's system prompt.
+ *
+ * When the tools are also declared through the service's native tool interface
+ * (`options.native`), the complete definitions (name, description, parameters)
+ * already live in the request's `tools` field. Any tool text injected here is a
+ * second, competing description: some models then answer with the textual
+ * `<tool_call>` protocol (or hesitate between the two) instead of calling the
+ * tool — which is what made "a Skill/MCP was selected but no tool ran" happen
+ * on Ollama models. Therefore nothing is injected in that case.
+ *
+ * If the endpoint rejects the `tools` field, `chat()` switches to the text
+ * protocol and rebuilds the injection with this function's default path, so the
+ * fallback (full descriptions + `<tool_call>` syntax) is still available exactly
+ * when it is needed.
+ *
  * @param {Object} activeSkill - The active skill { name, tools: string[] }
- * @returns {string} Empty string if the skill declares no tools.
+ * @param {Object} [options]
+ * @param {boolean} [options.native] - Tools are declared natively as well
+ * @returns {string} Empty string if the skill declares no tools or native tools are used.
  */
-export function buildToolInstructions(activeSkill) {
+export function buildToolInstructions(activeSkill, options = {}) {
   const entries = Array.isArray(activeSkill?.tools) ? activeSkill.tools : [];
   const tools = [];
   for (const entry of entries) {
@@ -709,6 +716,10 @@ export function buildToolInstructions(activeSkill) {
     tools.push({ tool, args, hint: skillToolHint(entry) });
   }
   if (!tools.length) return '';
+
+  // Native `tools` already describe everything. Adding names/syntax here only
+  // creates a competing protocol (see the doc comment above).
+  if (options.native === true) return '';
 
   const lines = tools.map(({ tool, args, hint }) => {
     let line = `- ${tool.name}: ${tool.description}`;
@@ -731,14 +742,25 @@ export function buildToolInstructions(activeSkill) {
 
 /**
  * Build the full system message (skill prompt + tool instructions) for an active skill.
+ *
+ * A Skill may carry `nativePrompt`: the variant used when the request declares
+ * tools natively. An empty string (MCP-derived Skills) means "inject nothing at
+ * all" — their prompt is just the tool list, which is already in `tools`.
+ * User-authored Skills have no `nativePrompt` and keep their prompt.
+ *
  * @param {Object} activeSkill - Active skill
+ * @param {Object} [options] - Forwarded to buildToolInstructions
+ * @param {boolean} [options.native] - Tools are declared natively as well
  * @returns {string}
  */
-export function buildSkillSystemMessage(activeSkill) {
+export function buildSkillSystemMessage(activeSkill, options = {}) {
   if (!activeSkill) return '';
-  const toolPart = buildToolInstructions(activeSkill);
+  const toolPart = buildToolInstructions(activeSkill, options);
   const parts = [];
-  if (activeSkill.prompt) parts.push(activeSkill.prompt);
+  const prompt = options.native === true && typeof activeSkill.nativePrompt === 'string'
+    ? activeSkill.nativePrompt
+    : activeSkill.prompt;
+  if (prompt) parts.push(prompt);
   if (toolPart) parts.push(toolPart);
   return parts.join('\n\n---\n\n');
 }

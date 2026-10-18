@@ -705,14 +705,18 @@ check('the chosen Skill is remembered per conversation only', () => {
   assert.match(cllama, /export async function removeSkillSelection\(sessionKey\)/);
   assert.match(chat, /function currentSkillSelection\(\)/);
   assert.match(chat, /saveSkillSelection\(sessionKey\(\), currentSkillSelection\(\)\)/);
-  assert.match(chat, /async function applyStoredSkillSelection\(\{ skillsReady = false \} = \{\}\)/);
+  assert.match(chat, /async function applyStoredSkillSelection\(\{ skillsReady = false, force = false \} = \{\}\)/);
+  // An explicit choice must survive an in-flight refreshSkills() whose storage
+  // read predates that choice; only a conversation switch may override it.
+  assert.match(chat, /if \(skillSelectionDirty && !force\) return;/);
+  assert.match(chat, /skillSelectionDirty = true;/);
   // A conversation with no memory resets to "No Skill" instead of inheriting the
   // selection of the conversation that was on screen before.
   assert.match(chat, /if \(!entry\) \{[\s\S]{0,900}skillDisabled = true;/);
   // Persisted on every explicit choice (fixed Skill, Auto, off)...
   assert.equal((chat.match(/persistSkillSelection\(\);/g) || []).length >= 3, true);
   // ...restored when a conversation is shown and once the Skill list is ready...
-  assert.match(chat, /applyStoredSkillSelection\(\{ skillsReady: skills\.length > 0 \}\)/);
+  assert.match(chat, /applyStoredSkillSelection\(\{ skillsReady: skills\.length > 0, force: true \}\)/);
   assert.match(chat, /await applyStoredSkillSelection\(\{ skillsReady: true \}\)/);
   // ...and cleaned up when the conversation is deleted.
   assert.match(chat, /removeSkillSelection\(`\$\{ccId \|\| '0'\}:\$\{scenarioData\.currentId\}`\)/);

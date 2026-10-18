@@ -5,9 +5,10 @@ import { marked } from './marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
 import { getServiceInstance } from './client/client.mjs';
+import { resolveApiEntry, normalizeApiList, normalizeModelType, migrateLegacyReferences } from './api-providers.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags, withUiLanguageDirective } from './util.js';
 import { hasUsage, makeEstimatedUsage, mergeUsage } from './token-usage.mjs';
-import { parseToolCalls, parseToolCallsDetailed, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, listTools, registerTool, getTool, previewToolArgs, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
+import { parseToolCallsDetailed, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, listTools, registerTool, getTool, previewToolArgs, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
 import { dedupeLessons, normalizeLesson } from './scenario-learn.mjs';
 import { MAX_BOOKMARKS, addBookmark, bookmarkId, isBookmarked, makeBookmark, normalizeBookmarks, removeBookmark } from './chat-bookmarks.mjs';
 
@@ -15,11 +16,6 @@ import { MAX_BOOKMARKS, addBookmark, bookmarkId, isBookmarked, makeBookmark, nor
 // Default configuration
 
 export const defaultSettings = {
-  maxTokens: 30000,
-  tranPrompt: browser.i18n.getMessage("tranPrompt").replaceAll("{localLanguage}", browser.i18n.getMessage("localLanguage")),
-  tranThink: false,
-  tranTemperature: 0.7,
-  tranTopP: 0.9,
   insightThink: false,
   insightTemperature: 0.7,
   insightTopP: 0.9
@@ -27,12 +23,6 @@ export const defaultSettings = {
 
 let runtimeConfig = { ...defaultSettings }, chatClient;
 let _configManuallySet = false;
-
-// Per-model cache: whether injecting a skill as a "system" message is usable.
-// undefined/absent => assume usable; set to false after a failed attempt, so
-// that model falls back to user injection without re-triggering EOF.
-const skillSystemCache = new Map();
-let _skillCacheLoaded = false;
 
 // Native function definition for the model to adopt a Skill on demand. Only
 // offered in "Auto" mode on backends with native function calling.
@@ -50,20 +40,62 @@ const USE_SKILL_TOOL = {
 };
 
 /**
+ * Auto-mode `use_skill` declaration with the available names as an enum, so a
+ * native-tool model cannot invent a Skill name.
+ * @param {Array<string>} names - Available Skill names
+ * @returns {Object} Tool definition
+ */
+function buildUseSkillTool(names = []) {
+  const values = Array.isArray(names) ? names.filter(Boolean).map(String) : [];
+  return {
+    ...USE_SKILL_TOOL,
+    function: {
+      ...USE_SKILL_TOOL.function,
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            ...(values.length ? { enum: values } : {}),
+            description: 'The exact name of the Skill to activate'
+          }
+        },
+        required: ['name']
+      }
+    }
+  };
+}
+
+/**
  * Loads configuration from browser storage
  * @returns {Promise<void>}
  */
 async function loadConfiguration() {
   return new Promise(resolve => {
-    browser.storage.local.get([DB_KEY.base, DB_KEY.dsList], data => {
+    browser.storage.local.get([DB_KEY.base, DB_KEY.dsList, DB_KEY.skillList], data => {
       const conf = data[DB_KEY.base];
+      const rawList = data[DB_KEY.dsList] || [];
+      const rawSkills = data[DB_KEY.skillList];
+      // One-time upgrade of the old name/service based references to entry ids
+      // (then the legacy `name` field is dropped). Idempotent, so it costs
+      // nothing after the first run.
+      const migration = migrateLegacyReferences({ base: conf, dsList: rawList, skillList: rawSkills });
       if (conf) {
-        runtimeConfig = { ...defaultSettings, ...conf };
+        runtimeConfig = { ...defaultSettings, ...(migration.base || conf) };
       } else {
         runtimeConfig = { ...defaultSettings };
         browser.storage.local.set({ [DB_KEY.base]: defaultSettings });
       }
-      runtimeConfig.dsList = data[DB_KEY.dsList] || [];
+      runtimeConfig.dsList = normalizeApiList(migration.dsList);
+      const writes = {};
+      if (migration.changed.dsList) writes[DB_KEY.dsList] = runtimeConfig.dsList;
+      if (migration.changed.base && migration.base) writes[DB_KEY.base] = migration.base;
+      if (migration.changed.skillList && Array.isArray(migration.skillList)) writes[DB_KEY.skillList] = migration.skillList;
+      if (Object.keys(writes).length) browser.storage.local.set(writes);
+      runtimeConfig.modelType = normalizeModelType(runtimeConfig.modelType);
+      runtimeConfig.multimodal = runtimeConfig.multimodal === true;
+      if (runtimeConfig.supportsTools === true) runtimeConfig.supportsTools = true;
+      else delete runtimeConfig.supportsTools;
       resolve();
     });
   });
@@ -84,6 +116,14 @@ export function setRuntimeConfig(config) {
   runtimeConfig.apiUrl = config.apiUrl;
   runtimeConfig.apiKey = config.apiKey || "-";
   runtimeConfig.modelName = config.modelName || runtimeConfig.modelName;
+  // Identity of the selected configuration (the list may hold several entries
+  // for the same provider type).
+  runtimeConfig.dsId = config.id || config.dsId || null;
+  // Model kind is kept for future routing (text generation / decision / image).
+  runtimeConfig.modelType = config.modelType || 'text';
+  runtimeConfig.multimodal = config.multimodal === true;
+  if (config.supportsTools === true) runtimeConfig.supportsTools = true;
+  else delete runtimeConfig.supportsTools;
   // Reset the cached client so it will be re-initialized
   chatClient = null;
   _configManuallySet = true;
@@ -136,11 +176,75 @@ function estimateMessagesTokens(messages) {
 }
 
 /**
- * Renders markdown content with debouncing
+ * Whether an error looks like the endpoint refusing the `tools` field. Used to
+ * retry a turn without native tools (text protocol) instead of failing: some
+ * OpenAI-compatible gateways reject the field with 400/422.
+ * @param {Error|string} err - Error raised by the client
+ * @returns {boolean} True when the request should be retried without `tools`
  */
-function renderWithDebounce(element, content) {
+function looksLikeToolRejection(err) {
+  const message = String((err && err.message) || err || '');
+  const status = /status (400|422)\b/i.test(message) || /\b(400|422)\b/.test(message);
+  if (!status) return false;
+  return /tool|function|unsupported|unknown|invalid|unexpected|not support/i.test(message);
+}
+
+/**
+ * Whether an error looks like the connection/stream dying mid-request rather
+ * than the endpoint rejecting the payload. Ollama reports this as `EOF` when a
+ * model cannot handle a request (a very common cause is a chat template that
+ * breaks on the `tools` field). Retrying once without native tools is far more
+ * useful than surfacing a bare "EOF" to the user.
+ * @param {Error|string} err - Error raised by the client
+ * @returns {boolean} True when the request was cut off
+ */
+function looksLikeTransportBreak(err) {
+  if (!err || err.name === 'AbortError') return false;
+  const message = String(err.message || err);
+  return /\bEOF\b|socket hang up|ECONNRESET|unexpected end of|connection (was )?reset/i.test(message);
+}
+
+/**
+ * Whether an answer only *claims* that a tool ran, without emitting any call.
+ * A model that ignores the tool protocol sometimes writes "已为您调用工具 X…"
+ * and stops; without this guard the user sees a confident sentence and no tool
+ * ever runs. Both a claim phrase and a tool name must be present, so ordinary
+ * prose that merely mentions a tool does not trigger a retry.
+ * @param {string} text - Model answer
+ * @param {string[]} toolNames - Tools the active Skill allows
+ * @returns {boolean} True when the answer looks like an unfulfilled tool claim
+ */
+function looksLikeToolClaim(text, toolNames) {
+  const value = String(text || '');
+  if (!value.trim() || !Array.isArray(toolNames) || !toolNames.length) return false;
+  // A real call block is handled by the parser; never treat it as a claim.
+  if (value.includes('<tool_call>')) return false;
+  const lower = value.toLowerCase();
+  const mentionsTool = toolNames.some((name) => name && lower.includes(String(name).toLowerCase()));
+  if (!mentionsTool) return false;
+  return /已(经)?(为(您|你))?.{0,4}(调用|執行|执行|使用)/.test(value)
+    || /(调用|執行|执行)了?.{0,6}(工具|tool)/i.test(value)
+    || /\b(i\s+(have\s+)?(called|invoked|used)|calling|invoking)\b/i.test(value);
+}
+
+/**
+ * Renders markdown content and enables copy/collapse controls on it.
+ */
+function renderMarkdown(element, content) {
   replaceElementContent(element, marked.parse(replaceThinkTags(content)));
   copyToClipboard(element);
+}
+
+/**
+ * The sampling options shared by both insight entry points.
+ * @returns {Object} Options passed to the service client
+ */
+function insightRequestOptions() {
+  return {
+    temperature: runtimeConfig.insightTemperature,
+    top_p: runtimeConfig.insightTopP,
+    think: runtimeConfig.insightThink
+  };
 }
 
 /**
@@ -155,7 +259,7 @@ async function _getInsightClientAndData(prompt, doc) {
   let serviceConfig = runtimeConfig;
 
   if (insightServiceName && runtimeConfig.dsList) {
-    const foundConfig = runtimeConfig.dsList.find(item => item.service === insightServiceName);
+    const foundConfig = resolveApiEntry(runtimeConfig.dsList, insightServiceName);
     if (foundConfig) {
       clientService = getServiceInstance(foundConfig);
       serviceConfig = foundConfig;
@@ -193,7 +297,7 @@ async function _getInsightClientAndData(prompt, doc) {
  */
 export async function processInsightForBackground(prompt, doc, options) {
   const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
-  const ops = { temperature: runtimeConfig.insightTemperature, top_p: runtimeConfig.insightTopP, think: runtimeConfig.insightThink };
+  const ops = insightRequestOptions();
   clientService.sendRequest(msgData, {
     options: ops,
     onStream: options.onStream,
@@ -217,13 +321,13 @@ export async function processInsight(prompt, doc, msgId, options) {
   }
 
   const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
-  const ops = { temperature: runtimeConfig.insightTemperature, top_p: runtimeConfig.insightTopP, think: runtimeConfig.insightThink };
+  const ops = insightRequestOptions();
 
   clientService.sendRequest(msgData, {
     options: ops,
-    onStream: (chunk, full) => renderWithDebounce(target, full),
+    onStream: (chunk, full) => renderMarkdown(target, full),
     onComplete: (fullResponse, id) => {
-      renderWithDebounce(target, fullResponse);
+      renderMarkdown(target, fullResponse);
       typeof options?.finish === 'function' && options.finish(fullResponse);
     },
     onError: (error, id) => typeof options?.error === 'function' && options.error(error, id)
@@ -270,27 +374,57 @@ export async function chat(historyMessages, options) {
   }
 
   let msgs = [];
-  const isOllama = runtimeConfig.service == "ollama";
-  const isGoogle = isGemini(runtimeConfig);
+
+  // Per-turn data source: options.dsService (the "@name" prefix) or the Skill's
+  // own dsService. Resolve it BEFORE formatting the messages and before testing
+  // native tool support: those decisions must follow the service that actually
+  // answers this turn, not the global default. With several provider entries of
+  // different types (see the API provider list), a Skill bound to one of them
+  // used to be formatted / gated as if it ran on the default provider — the
+  // model then never received its tools and the Skill appeared "not to run".
+  const activeSkill = withUiLanguageRule(options?.activeSkill || null);
+  const dsOverrideName = options?.dsService || activeSkill?.dsService || null;
+  let turnConfig = runtimeConfig;
+  let turnEntry = null;
+  if (dsOverrideName) {
+    const entry = resolveApiEntry(runtimeConfig.dsList || [], dsOverrideName);
+    if (entry) {
+      turnEntry = entry;
+      turnConfig = { ...runtimeConfig, ...entry, dsId: entry.id || runtimeConfig.dsId };
+      // Capability flags belong to the entry that answers this turn: a default
+      // provider that declares tool support must not leak into an override that
+      // never claimed it (some gateways reject an unknown `tools` field).
+      if (entry.supportsTools !== true) delete turnConfig.supportsTools;
+    } else {
+      console.warn(`Per-call model override "${dsOverrideName}" not found in dsList.`);
+    }
+  }
+
+  const isOllama = turnConfig.service == "ollama";
+  const isGoogle = isGemini(turnConfig);
+
+  // System instructions are collected into ONE block. `options.systemPrompt`
+  // carries the scenario prompt (and learned notes) from the chat page; any
+  // legacy system message already in the history is folded in as well. Keeping
+  // a single system block avoids two competing system messages on strict
+  // backends and lets Gemini use its native `systemInstruction` field.
+  const systemParts = [];
+  if (typeof options?.systemPrompt === 'string' && options.systemPrompt.trim()) {
+    systemParts.push(options.systemPrompt.trim());
+  }
 
   // Format messages based on service type
   if (isGoogle) {
-    let systemContentBuffer = '';
     const tempMsgs = [];
 
     for (const m of historyMessages) {
       if (m.role === 'system') {
-        systemContentBuffer += (systemContentBuffer ? '\n\n' : '') + removeThinkTags(m.content);
+        systemParts.push(removeThinkTags(m.content));
         continue;
       }
 
       let role = m.role === 'assistant' ? 'model' : m.role;
       let content = removeThinkTags(m.content);
-      
-      if (role === 'user' && systemContentBuffer) {
-        content = systemContentBuffer + '\n\n' + content;
-        systemContentBuffer = '';
-      }
 
       tempMsgs.push({ role, content, images: m.images });
     }
@@ -337,6 +471,10 @@ export async function chat(historyMessages, options) {
   } else {
     // OpenAI/Ollama format
     historyMessages.forEach(m => {
+      if (m.role === 'system') {
+        systemParts.push(removeThinkTags(m.content));
+        return;
+      }
       const msg = { role: m.role, content: removeThinkTags(m.content) };
       if (m.images) {
         if (isOllama) {
@@ -358,19 +496,14 @@ export async function chat(historyMessages, options) {
   // page, but a per-call / per-Skill data-source override replaces it (below).
   let modelKey = options?.model || runtimeConfig.modelName || 'default';
   let requestModel = options?.model;
-  // Load persisted "system disabled" model list into the in-memory cache once.
-  await loadSkillSystemCache();
-  let skillUsedSystem = false;
 
   // Decide the skill mode and tool-calling strategy.
   // - activeSkill set             => user forced that one Skill (use it only).
   // - activeSkill null & skills[] => "Auto": the model may call use_skill() to
   //   adopt a Skill on demand — via native function-calling on Ollama, or via
   //   the text <tool_call> protocol on any other backend (adoptedSkill below).
-  // A Skill that opted into uiLanguage gets the interface-language directive
-  // appended before it reaches the model (artifact text follows the user's UI
-  // language, not the language of the conversation or of a quoted page).
-  const activeSkill = withUiLanguageRule(options?.activeSkill || null);
+  // `activeSkill` itself was resolved above (before the messages were formatted)
+  // together with the per-turn data source it may be bound to.
   let adoptedSkill = null; // Skill the model adopts mid-turn in Auto mode
   // Auto mode skills: exclude skills flagged manualOnly (user-only invocation,
   // mirroring Claude's disable-model-invocation). They can still be picked via
@@ -379,31 +512,24 @@ export async function chat(historyMessages, options) {
   const autoSkills = autoSkillPool.length ? autoSkillPool : null;
   const skillHasTools = activeSkill && Array.isArray(activeSkill.tools) && activeSkill.tools.length;
 
-  // Per-call / per-Skill model override: options.dsService (set by the chat
-  // page, e.g. an inline "@<service> " prefix) or the Skill's own dsService
-  // field select a data source for this turn only — the global configuration
-  // is untouched. Falls back to the default client when the name is unknown.
+  // The per-turn data source was already resolved (and its configuration
+  // merged into `turnConfig`) before the messages were formatted. Only the
+  // client instance and model name are set here, so the request is sent to the
+  // endpoint that actually owns the model.
   let turnService = null;
-  const dsOverrideName = options?.dsService || activeSkill?.dsService || null;
-  if (dsOverrideName) {
-    const entry = (runtimeConfig.dsList || []).find((d) =>
-      String(d.service) === String(dsOverrideName) || String(d.name || '') === String(dsOverrideName));
-    if (entry) {
-      try {
-        clientService = await getServiceInstance(entry);
-        turnService = entry.service;
-        // The model name belongs to its own service: reusing the chat page's
-        // model (which may belong to a *different* service) makes the request
-        // fail with "model not found". Use the data source's model, or null so
-        // the client falls back to its own default model.
-        requestModel = entry.modelName || null;
-        if (requestModel) modelKey = requestModel;
-        else modelKey = entry.service || modelKey;
-      } catch (e) {
-        console.warn(`Per-call model override "${dsOverrideName}" failed, using default:`, e);
-      }
-    } else {
-      console.warn(`Per-call model override "${dsOverrideName}" not found in dsList.`);
+  if (turnEntry) {
+    try {
+      clientService = await getServiceInstance(turnEntry);
+      turnService = turnEntry.service;
+      // The model name belongs to its own service: reusing the chat page's
+      // model (which may belong to a *different* service) makes the request
+      // fail with "model not found". Use the data source's model, or null so
+      // the client falls back to its own default model.
+      requestModel = turnEntry.modelName || null;
+      if (requestModel) modelKey = requestModel;
+      else modelKey = turnEntry.service || modelKey;
+    } catch (e) {
+      console.warn(`Per-call model override "${dsOverrideName}" failed, using default:`, e);
     }
   }
 
@@ -449,7 +575,7 @@ export async function chat(historyMessages, options) {
     if (auditRun) auditRun.skillName = skill.name;
     let output = `Skill activated: ${skill.name}.`;
     if (skill.prompt) output += `\n\nInstructions:\n${skill.prompt}`;
-    const toolsPart = buildToolInstructions(skill);
+    const toolsPart = buildToolInstructions(skill, { native: useNativeTools });
     if (toolsPart) output += `\n\n${toolsPart}`;
     return output;
   };
@@ -474,56 +600,109 @@ export async function chat(historyMessages, options) {
 
   let useNativeTools = false;
   let nativeTools = [];
-  if (runtimeConfig.service === 'ollama' && typeof clientService.hasNativeTools === 'function') {
-    if (skillHasTools || autoSkills) {
+  // Declare tools natively when the service actually supports them:
+  // - Ollama: only when the model advertises the `tools` capability (probe).
+  // - OpenAI-compatible endpoints: only when the provider entry explicitly says
+  //   it supports tools (`supportsTools`, ticked in the API provider editor).
+  //   The field is opt-in precisely because some gateways reject an unknown
+  //   `tools` field; when it is on, declaring them makes Skill / MCP execution
+  //   far more reliable than the textual <tool_call> protocol.
+  // Everything else keeps the text protocol (plus opportunistic native calls).
+  if (skillHasTools || autoSkills) {
+    if (turnConfig.service === 'ollama' && typeof clientService.hasNativeTools === 'function') {
       useNativeTools = await clientService.hasNativeTools(requestModel);
-      if (useNativeTools) {
-        // Auto exposes only use_skill first; a forced Skill exposes its tools.
-        nativeTools = activeSkill ? buildNativeTools(activeSkill) : [USE_SKILL_TOOL];
-      }
+    } else if (turnConfig.supportsTools === true) {
+      useNativeTools = true;
+    }
+    if (useNativeTools) {
+      // Auto exposes only use_skill first; a forced Skill exposes its tools.
+      nativeTools = activeSkill
+        ? buildNativeTools(activeSkill)
+        : [buildUseSkillTool(autoSkills.map(s => s.name))];
+      // A whitelist may name tools that are not registered (yet). Declaring an
+      // empty `tools` array is rejected by some gateways and, worse, the model
+      // would receive no tool instructions at all — fall back to the text
+      // protocol, which tells it how to call the tools.
+      if (!nativeTools.length) useNativeTools = false;
     }
   }
 
-  // Build the text to inject. Prefer a real "system" message only when a skill
-  // is forced and the model tolerates system; Auto always merges into a user
-  // message to avoid EOF on qwen3-style models.
-  let injectText = '';
-  // Prefer a real "system" message on non-Google backends when the model is
-  // known to tolerate it; otherwise merge into the first user message. We
-  // default to system and only fall back to user per-model (cache) or after a
-  // failed attempt (see catch) — including in Auto mode.
-  const allowSystemForInject = !isGoogle && skillSystemCache.get(modelKey) !== false;
-  if (activeSkill) {
-    injectText = useNativeTools ? (activeSkill.prompt || '') : buildSkillSystemMessage(activeSkill);
-  } else if (autoSkills) {
+  // Build the text to inject. A fixed Skill gets its prompt; its tool section is
+  // omitted entirely while native `tools` are in the request, because the full
+  // definitions are already there. Duplicating them (even only names + syntax)
+  // made models answer with the textual <tool_call> protocol instead of calling
+  // the tool. If the endpoint rejects `tools`, `refreshInjectText()` rebuilds
+  // this with the text protocol, which does carry the full instructions.
+  const autoSkillsText = (native) => {
     const lines = autoSkills.map(s => `- ${s.name}: ${s.description || ''}`).join('\n');
-    if (useNativeTools) {
-      injectText = 'Available Skills:\n' + lines + '\n\nTo use a Skill, call the use_skill tool with its exact name, then follow its instructions and call its tools.';
-    } else {
-      // Text-protocol Auto mode (non-Ollama backends or models without native
-      // tools): tell the model how to adopt a Skill through <tool_call> syntax.
-      injectText = 'Available Skills:\n' + lines +
-        '\n\nIf one of the Skills above is relevant to the user request, do not answer yet. ' +
-        'Instead reply with exactly one line:\n' +
-        '<tool_call><tool_name>use_skill</tool_name><args>{"name":"EXACT_SKILL_NAME"}</args></tool_call>\n' +
-        'Then STOP and wait for the result, and follow the Skill instructions it returns.';
+    if (native) {
+      // `use_skill` is declared in the request's `tools` field, so do not repeat
+      // its textual fallback syntax here (see buildToolInstructions). The tool's
+      // `name` enum carries the authoritative list of valid names.
+      return 'Available Skills:\n' + lines +
+        '\n\nTo use a Skill, call the use_skill tool with its exact name, then follow its instructions and call its tools.';
     }
-  }
-  if (injectText) {
+    // Text-protocol Auto mode (non-Ollama backends or models without native
+    // tools): the index is data, so it is given as JSON; the instructions that
+    // follow it are prose.
+    const index = JSON.stringify(
+      autoSkills.map(s => ({ name: s.name, description: s.description || '' })),
+      null,
+      2
+    );
+    return 'Available Skills (JSON):\n' + index +
+      '\n\nIf one of the Skills above is relevant to the user request, do not answer yet. ' +
+      'Instead reply with exactly one line:\n' +
+      '<tool_call><tool_name>use_skill</tool_name><args>{"name":"EXACT_SKILL_NAME"}</args></tool_call>\n' +
+      'Then STOP and wait for the result, and follow the Skill instructions it returns.';
+  };
+  const buildInjectText = () => {
+    if (activeSkill) return buildSkillSystemMessage(activeSkill, { native: useNativeTools });
+    if (autoSkills) return autoSkillsText(useNativeTools);
+    return '';
+  };
+  let injectText = buildInjectText();
+  // The complete system block: scenario instructions first, then the active
+  // Skill (and, in text mode only, the tool list). Non-Google services get one
+  // `system` message; Gemini gets a native `systemInstruction` instead.
+  let systemIndex = -1;
+  let systemInstructionText = '';
+  const buildSystemText = () =>
+    [...systemParts.filter(Boolean), injectText].filter(Boolean).join('\n\n---\n\n');
+
+  const applySystemText = () => {
+    const text = buildSystemText();
     if (isGoogle) {
-      msgs.unshift({ role: 'user', parts: [{ text: injectText }] });
-    } else if (allowSystemForInject) {
-      msgs.unshift({ role: 'system', content: injectText });
-      skillUsedSystem = true;
-    } else {
-      const firstUser = msgs.findIndex(m => m.role === 'user' && typeof m.content === 'string');
-      if (firstUser >= 0) {
-        msgs[firstUser] = { ...msgs[firstUser], content: injectText + '\n\n' + msgs[firstUser].content };
-      } else {
-        msgs.unshift({ role: 'user', content: injectText });
-      }
+      systemInstructionText = text;
+      return;
     }
-  }
+    if (!text) {
+      if (systemIndex >= 0) {
+        msgs.splice(systemIndex, 1);
+        systemIndex = -1;
+      }
+      return;
+    }
+    if (systemIndex >= 0) {
+      msgs[systemIndex] = { ...msgs[systemIndex], content: text };
+    } else {
+      msgs.unshift({ role: 'system', content: text });
+      systemIndex = 0;
+    }
+  };
+  applySystemText();
+
+  /**
+   * Rewrites the system block after the tool strategy changed — e.g. native
+   * tools were rejected, so the text protocol with the full tool list has to be
+   * injected now. An MCP-derived Skill has no text at all while native tools are
+   * active, so the block may consist only of the scenario instructions.
+   * @returns {void}
+   */
+  const refreshInjectText = () => {
+    injectText = buildInjectText();
+    applySystemText();
+  };
 
   // Tool-call loop: send a request, and if the model requests tools, execute
   // them and feed the results back until we get a final answer.
@@ -537,6 +716,8 @@ export async function chat(historyMessages, options) {
   // Only re-prompt once for a malformed tool call, so a model that never gets the
   // syntax right cannot loop forever.
   let toolSyntaxRetried = false;
+  // Only retry once without the declared `tools` field (see the catch below).
+  let toolsFallbackTried = false;
   for (let step = 0; step <= SKILL_TOOL_MAX_ITER; step++) {
     let full = '';
     let lastToolCalls = null;
@@ -548,6 +729,7 @@ export async function chat(historyMessages, options) {
         model: requestModel,
         options: ops,
         tools: useNativeTools ? nativeTools : undefined,
+        ...(systemInstructionText ? { systemInstruction: systemInstructionText } : {}),
         onStart: () => {
           typeof options?.start === 'function' && options.start();
         },
@@ -558,7 +740,7 @@ export async function chat(historyMessages, options) {
             full = text;
             return;
           }
-          renderWithDebounce(msgDiv, stripToolCalls(text));
+          renderMarkdown(msgDiv, stripToolCalls(text));
           if (!options?.stopScroll())
             messages.scrollTop = messages.scrollHeight;
           // Live (estimated) output counter: recompute only every ~40 characters
@@ -573,7 +755,7 @@ export async function chat(historyMessages, options) {
           }
         },
         onComplete: (text, id, toolCalls, usage) => {
-          renderWithDebounce(msgDiv, stripToolCalls(text));
+          renderMarkdown(msgDiv, stripToolCalls(text));
           thinkCollapseExpanded(msgDiv);
           full = text;
           lastToolCalls = toolCalls || null;
@@ -586,15 +768,21 @@ export async function chat(historyMessages, options) {
       });
       await requestPromise;
     } catch (err) {
-      // First request failed while the skill was injected as a "system" message:
-      // fall back to user injection for this model and retry once (some
-      // Ollama/qwen3 models return EOF on an independent system message).
-      if (step === 0 && skillUsedSystem && skillSystemCache.get(modelKey) !== false) {
-        skillSystemCache.set(modelKey, false);
-        persistSkillDisabled();
-        console.warn(`[skill] system injection failed for "${modelKey}", retrying as user:`, err);
-        await closeAuditRun('aborted');
-        return chat(historyMessages, options);
+      // Retry once without the declared `tools` field, using the text protocol.
+      // Two cases land here:
+      //  - the endpoint rejected `tools` (400/422, some OpenAI-compatible gateways);
+      //  - the stream died / Ollama answered `EOF` (its chat template could not
+      //    handle the request, most often because of `tools`).
+      // The retry is what turns a bare "EOF" into a usable answer, and it also
+      // lets an MCP-derived Skill (no injected text at all while native) inject
+      // its tool list into the system message right before resending.
+      const toolPayloadFailed = looksLikeToolRejection(err) || looksLikeTransportBreak(err);
+      if (step === 0 && useNativeTools && !toolsFallbackTried && toolPayloadFailed) {
+        toolsFallbackTried = true;
+        useNativeTools = false;
+        refreshInjectText();
+        console.warn('[tools] native tools request failed, retrying with the text protocol:', err);
+        continue;
       }
       // A transport/stream error (e.g. Ollama "ResponseError: EOF"). Show an
       // error and stop gracefully instead of throwing an uncaught promise.
@@ -609,7 +797,8 @@ export async function chat(historyMessages, options) {
     // If the request was stopped mid-stream, do not continue the tool loop.
     if (options.stop()) break;
 
-    // Native function-calling path (Ollama models with tools capability).
+    // Native function-calling path (Ollama models with tools capability,
+    // OpenAI-compatible entries with supportsTools, and Gemini).
     if (useNativeTools && lastToolCalls && lastToolCalls.length && step < SKILL_TOOL_MAX_ITER) {
       const results = [];
       for (const tc of lastToolCalls) {
@@ -627,10 +816,11 @@ export async function chat(historyMessages, options) {
           const matched = autoSkills.find(s => String(s.name).toLowerCase() === wanted.toLowerCase());
           if (matched) {
             nativeTools = buildNativeTools(matched);
-            results.push({ tool_name: 'use_skill', content: `${adoptSkill(matched)}\nYou may now use its tools.` });
+            results.push({ tool_name: 'use_skill', tool_call_id: tc.id, content: `${adoptSkill(matched)}\nYou may now use its tools.` });
           } else {
             results.push({
               tool_name: 'use_skill',
+              tool_call_id: tc.id,
               content: `Unknown Skill "${wanted}". Available: ${autoSkills.map(s => s.name).join(', ')}.`
             });
           }
@@ -638,11 +828,43 @@ export async function chat(historyMessages, options) {
         }
 
         replaceElementContent(msgDiv, `🔧 running ${fname}...`);
-        const resultText = await runTool(fname, fargs || {}, activeSkill, toolCtx);
-        results.push({ tool_name: fname, content: resultText });
+        const resultText = await runTool(fname, fargs || {}, activeSkill || adoptedSkill, toolCtx);
+        results.push({ tool_name: fname, tool_call_id: tc.id, content: resultText });
       }
-      msgs.push({ role: 'assistant', content: full, tool_calls: lastToolCalls });
-      for (const r of results) msgs.push({ role: 'tool', content: r.content, tool_name: r.tool_name });
+      if (isGoogle) {
+        // Gemini expects the model turn to carry the original functionCall parts
+        // and the answer to come back as functionResponse parts.
+        const modelParts = [];
+        if (full) modelParts.push({ text: full });
+        for (const tc of lastToolCalls) {
+          const name = tc.function?.name;
+          if (!name) continue;
+          let args = tc.function?.arguments;
+          if (typeof args === 'string') {
+            try { args = JSON.parse(args); } catch (e) { args = {}; }
+          }
+          modelParts.push({ functionCall: { name, args: args || {} } });
+        }
+        msgs.push({ role: 'model', parts: modelParts });
+        msgs.push({
+          role: 'user',
+          parts: results.map(r => ({
+            functionResponse: {
+              name: r.tool_name,
+              response: { result: r.content }
+            }
+          }))
+        });
+      } else {
+        msgs.push({ role: 'assistant', content: full, tool_calls: lastToolCalls });
+        for (const r of results) {
+          // OpenAI-compatible endpoints require the id of the call a tool message
+          // answers; Ollama ignores the extra field, so always carry it through.
+          const toolMessage = { role: 'tool', content: r.content, tool_name: r.tool_name };
+          if (r.tool_call_id) toolMessage.tool_call_id = r.tool_call_id;
+          msgs.push(toolMessage);
+        }
+      }
       continue;
     }
 
@@ -688,10 +910,12 @@ export async function chat(historyMessages, options) {
       continue;
     }
 
-    // Text-protocol path (models without native tools). Enabled whenever a Skill
-    // is forced, or in Auto mode (where the model may first call use_skill to
-    // adopt a Skill, then call that Skill's tools).
-    const canTextTools = !useNativeTools && (activeSkill || autoSkills);
+    // Text-protocol path. It also runs when native tools were declared: models
+    // can answer with a textual <tool_call> even then (prompt-following models,
+    // gateways that silently ignore `tools`). Such a call used to be stripped
+    // from the answer and never executed — the Skill then looked like it had not
+    // run at all.
+    const canTextTools = Boolean(activeSkill || autoSkills);
     const parsedCalls = canTextTools ? parseToolCallsDetailed(full) : { calls: [], malformed: [] };
     const calls = parsedCalls.calls;
 
@@ -730,6 +954,11 @@ export async function chat(historyMessages, options) {
           const wanted = String(call.args?.name || '').trim();
           const matched = autoSkills.find(s => String(s.name).toLowerCase() === wanted.toLowerCase());
           if (matched) {
+            // Keep the declared tools in sync when native tools are active (the
+            // model chose the *text* protocol this round): the next request
+            // must expose the adopted Skill's tools, otherwise the compact
+            // injection would promise tools that are not declared.
+            if (useNativeTools) nativeTools = buildNativeTools(matched);
             resultText = wrapToolResult('use_skill', adoptSkill(matched));
           } else {
             const avail = autoSkills.map(s => s.name).join(', ');
@@ -1159,45 +1388,6 @@ export function saveSkills(skills) {
   });
 }
 
-/**
- * Find a skill by id.
- * @param {string} id - Skill id
- * @returns {Promise<Object|null>}
- */
-export async function getSkillById(id) {
-  const skills = await loadSkills();
-  return skills.find((s) => String(s.id) === String(id)) || null;
-}
-
-/**
- * Load the persisted list of models for which system injection is disabled into
- * the in-memory skillSystemCache. Runs at most once per module load.
- * @returns {Promise<void>}
- */
-async function loadSkillSystemCache() {
-  if (_skillCacheLoaded) return;
-  _skillCacheLoaded = true;
-  try {
-    const d = await browser.storage.local.get(DB_KEY.skillSystemDisabled);
-    const arr = d[DB_KEY.skillSystemDisabled];
-    if (Array.isArray(arr)) {
-      skillSystemCache.clear();
-      arr.forEach((k) => skillSystemCache.set(k, false));
-    }
-  } catch (e) {
-    // Ignore: fall back to empty in-memory cache.
-  }
-}
-
-/**
- * Persist the current "system disabled" model list to storage so the decision
- * survives page reloads / Service Worker restarts.
- */
-function persistSkillDisabled() {
-  const arr = Array.from(skillSystemCache.keys());
-  browser.storage.local.set({ [DB_KEY.skillSystemDisabled]: arr });
-}
-
 // Browser storage keys
 export const DB_KEY = {
   base: "base",
@@ -1210,7 +1400,6 @@ export const DB_KEY = {
   fishIconActive: "fishIconActive",
   pendingInsight: "pendingInsight",
   skillList: "skillList",
-  skillSystemDisabled: "skillSystemDisabled",
   skillDefaultRemoved: "skillDefaultRemoved",
   pendingArtifact: "pendingArtifact",
   pendingChoice: "pendingChoice",
@@ -1391,16 +1580,6 @@ export async function loadSkillRuns() {
  */
 export async function clearSkillRuns() {
   await browser.storage.local.set({ [DB_KEY.skillRuns]: [] });
-}
-
-/**
- * Remove a single audit record.
- * @param {string|number} id - Run id
- * @returns {Promise<void>}
- */
-export async function removeSkillRun(id) {
-  const runs = await loadSkillRuns();
-  await browser.storage.local.set({ [DB_KEY.skillRuns]: runs.filter((r) => String(r.id) !== String(id)) });
 }
 
 /**

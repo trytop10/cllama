@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "Русский"
-    },
     "browserActionTitle": {
         "message": "Умный помощник для браузера - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "Пока нет инструментов. Нажмите Добавить инструмент."
     },
-    "skillDefaultCalculator": {
-        "message": "Калькулятор"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "Выполнение вычислений с помощью инструмента add_numbers."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Вопросы по странице"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Настройки"
     },
-    "ollamaHostLabel": {
-        "message": "URL API"
-    },
-    "modelNameLabel": {
-        "message": "Название модели"
-    },
-    "tranPromptLabel": {
-        "message": "Промт для перевода"
-    },
     "expBaseData": {
         "message": "Основные настройки"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "Ошибка импорта"
     },
-    "getModuleListFailMessage": {
-        "message": "Не удалось получить список моделей"
-    },
-    "tranPrompt": {
-        "message": "Пожалуйста, перефразируйте предложение или слово, данное пользователем. Если пользователь предоставил язык, отличный от {localLanguage}, перефразируйте содержимое на {localLanguage}, в противном случае перефразируйте на английском. Примечание: При перефразировании необходимо сохранять исходный смысл."
-    },
-    "translateWaitMessage": {
-        "message": "Идет перевод, пожалуйста, подождите..."
-    },
     "cllamaError": {
         "message": "Извините, я столкнулся с некоторыми проблемами. Пожалуйста, попробуйте позже или проверьте правильность настроек cllama."
     },
@@ -236,12 +209,6 @@
     },
     "insightifyPageError2": {
         "message": "Не удалось обработать информацию на странице. Если вы уверены, что страница в порядке, обновите и попробуйте снова."
-    },
-    "summarizer": {
-        "message": "Резюме"
-    },
-    "summaryPrompt": {
-        "message": "Пожалуйста, создайте краткое резюме на основе предоставленной информации о содержимом страницы. Требования: 1. Максимум 300 слов. 2. Всегда генерируйте информацию резюме на {localLanguage}."
     },
     "requiredError": {
         "message": "Обязательное поле не может быть пустым"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "ИИ для анализа"
-    },
-    "tranServiceLabel": {
-        "message": "ИИ для перевода"
-    },
-    "TestDesc": {
-        "message": "Только для тестирования, скорость и стабильность не гарантируются."
-    },
-    "OtherDesc": {
-        "message": "Поддерживает сервисы API-интерфейсов, совместимые с протоколом OpenAI API."
     },
     "language": {
         "message": "Язык"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "Отвечает на вопросы о текущих дате, времени и дне недели."
     },
-    "skillAutoMode": {
-        "message": "Авто"
-    },
     "skillManualOnly": {
         "message": "Только вручную"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "ОК: найдено инструментов: {count}."
-    },
-    "mcpTestFail": {
-        "message": "Сбой подключения"
     },
     "mcpDisabled": {
         "message": "отключён"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Инструменты"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "Когда использовать этот инструмент (необязательно) — например, изменить существующий элемент; для нового используйте create"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "Этот инструмент может изменить или удалить данные."
+    },
+    "apiProvidersTitle": {
+        "message": "Поставщики API"
+    },
+    "apiProvidersDesc": {
+        "message": "Настройте одного или нескольких поставщиков ИИ. Поставщик по умолчанию используется, если чат или рецепт Insight не выбрал другого."
+    },
+    "apiAddProvider": {
+        "message": "Добавить поставщика"
+    },
+    "apiEmptyProviders": {
+        "message": "Поставщики ещё не настроены. Добавьте одного, чтобы начать использовать функции ИИ."
+    },
+    "apiDefaultBadge": {
+        "message": "По умолчанию"
+    },
+    "apiSetDefault": {
+        "message": "Сделать по умолчанию"
+    },
+    "apiEditProvider": {
+        "message": "Изменить поставщика"
+    },
+    "apiDeleteProvider": {
+        "message": "Удалить поставщика"
+    },
+    "apiAddProviderTitle": {
+        "message": "Добавить поставщика API"
+    },
+    "apiEditProviderTitle": {
+        "message": "Изменить поставщика API"
+    },
+    "apiProviderLabel": {
+        "message": "Поставщик API"
+    },
+    "apiEndpointLabel": {
+        "message": "Конечная точка API"
+    },
+    "apiKeyLabel": {
+        "message": "Ключ API"
+    },
+    "apiModelLabel": {
+        "message": "Модель"
+    },
+    "apiModelPlaceholder": {
+        "message": "Выберите или введите имя модели"
+    },
+    "apiFetchModels": {
+        "message": "Загрузить модели"
+    },
+    "apiModelsLoading": {
+        "message": "Загрузка моделей…"
+    },
+    "apiModelsLoaded": {
+        "message": "Загружено моделей: {count}"
+    },
+    "apiModelsFailed": {
+        "message": "Не удалось загрузить список моделей. Введите имя модели вручную."
+    },
+    "apiModelTypeLabel": {
+        "message": "Тип модели"
+    },
+    "modelTypeImage": {
+        "message": "Модель генерации изображений"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (локально)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "API, совместимый с OpenAI"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Как по умолчанию"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "Удалить поставщика \"{name}\"?"
+    },
+    "modelTypeDecision": {
+        "message": "Модель принятия решений"
+    },
+    "modelTypeText": {
+        "message": "Модель генерации текста"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Возможности"
+    },
+    "apiMultimodal": {
+        "message": "Мультимодальность (вложения)"
+    },
+    "apiSupportsTools": {
+        "message": "Инструменты"
+    },
+    "multimodalUnsupported": {
+        "message": "Выбранная модель не поддерживает вложения. Выберите другую модель или включите мультимодальный ввод в настройках API."
     }
-
 }

@@ -62,15 +62,6 @@ export function saveMcpServers(servers) {
 
 /**
  * Send a JSON-RPC request (or notification) to an MCP server.
- * Handles both plain-JSON and SSE-framed responses, and propagates the
- * `mcp-session-id` header when the server issues one.
- * @param {Object} server - { url, headers }
- * @param {Object} payload - JSON-RPC message
- * @param {string} [sessionId] - Current MCP session id
- * @returns {Promise<{result:Object|null, sessionId:string|null}>}
- */
-/**
- * Send a JSON-RPC request (or notification) to an MCP server.
  * Handles both plain-JSON and SSE-framed responses, propagates the
  * `mcp-session-id` header when the server issues one, and declares the
  * negotiated protocol version via the `MCP-Protocol-Version` header

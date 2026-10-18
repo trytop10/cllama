@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "English"
-    },
     "browserActionTitle": {
         "message": "Smart Browsing Assistant - cllama"
     },
@@ -93,12 +90,6 @@
     "skillPickerNoMatch": {
         "message": "No matching skill."
     },
-    "skillDefaultCalculator": {
-        "message": "Calculator"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "Do arithmetic using the add_numbers tool."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Page Q&A"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Settings"
     },
-    "ollamaHostLabel": {
-        "message": "API URL"
-    },
-    "modelNameLabel": {
-        "message": "Model Name"
-    },
-    "tranPromptLabel": {
-        "message": "Translation Prompt"
-    },
     "expBaseData": {
         "message": "Basic Configuration"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "Import failed"
     },
-    "getModuleListFailMessage": {
-        "message": "Failed to get model list"
-    },
-    "tranPrompt": {
-        "message": "Rewrite the user-supplied sentences or words to make them simpler. Note: the original meaning must be respected when rewriting."
-    },
-    "translateWaitMessage": {
-        "message": "Translating, please wait..."
-    },
     "cllamaError": {
         "message": "Sorry, I encountered some problems. Please try again later or check if your cllama configuration information is correct."
     },
@@ -236,12 +209,6 @@
     },
     "insightifyPageError2": {
         "message": "Unable to process this page information. If you confirm the page is fine, please refresh and try again."
-    },
-    "summarizer": {
-        "message": "Summary"
-    },
-    "summaryPrompt": {
-        "message": "Please generate a brief summary based on the given page content. Requirements: 1. Maximum 300 words. 2. Always generate summary information in {localLanguage}."
     },
     "requiredError": {
         "message": "Required field cannot be empty"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "Insight AI"
-    },
-    "tranServiceLabel": {
-        "message": "Translate AI"
-    },
-    "TestDesc": {
-        "message": "For testing only, speed and stability are not guaranteed."
-    },
-    "OtherDesc": {
-        "message": "Supports API interface services compatible with the OpenAI API protocol."
     },
     "language": {
         "message": "Language"
@@ -448,9 +406,6 @@
     "skillAutoSelect": {
         "message": "Auto-select Skill"
     },
-    "skillAutoMode": {
-        "message": "Auto"
-    },
     "skillDefaultDateTime": {
         "message": "Date & Time"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "OK: {count} tools found."
-    },
-    "mcpTestFail": {
-        "message": "Connection failed"
     },
     "mcpDisabled": {
         "message": "disabled"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Tools"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "When to use this tool (optional) — e.g. edit an existing item; use create for new ones"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "This tool may change or delete data."
+    },
+    "apiProvidersTitle": {
+        "message": "API providers"
+    },
+    "apiProvidersDesc": {
+        "message": "Configure one or more AI providers. The default provider is used unless a chat or an insight recipe chooses another one."
+    },
+    "apiAddProvider": {
+        "message": "Add provider"
+    },
+    "apiEmptyProviders": {
+        "message": "No provider configured yet. Add one to start using AI features."
+    },
+    "apiDefaultBadge": {
+        "message": "Default"
+    },
+    "apiSetDefault": {
+        "message": "Set as default"
+    },
+    "apiEditProvider": {
+        "message": "Edit provider"
+    },
+    "apiDeleteProvider": {
+        "message": "Delete provider"
+    },
+    "apiAddProviderTitle": {
+        "message": "Add API provider"
+    },
+    "apiEditProviderTitle": {
+        "message": "Edit API provider"
+    },
+    "apiProviderLabel": {
+        "message": "API provider"
+    },
+    "apiEndpointLabel": {
+        "message": "API endpoint"
+    },
+    "apiKeyLabel": {
+        "message": "API key"
+    },
+    "apiModelLabel": {
+        "message": "Model"
+    },
+    "apiModelPlaceholder": {
+        "message": "Select or type a model name"
+    },
+    "apiFetchModels": {
+        "message": "Load models"
+    },
+    "apiModelsLoading": {
+        "message": "Loading models…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count} models loaded"
+    },
+    "apiModelsFailed": {
+        "message": "Could not load the model list. Type the model name manually."
+    },
+    "apiModelTypeLabel": {
+        "message": "Model type"
+    },
+    "modelTypeImage": {
+        "message": "Image generation model"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (local)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "OpenAI-compatible API"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Same as default"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "Delete provider \"{name}\"?"
+    },
+    "modelTypeDecision": {
+        "message": "Decision model"
+    },
+    "modelTypeText": {
+        "message": "Text generation model"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Capabilities"
+    },
+    "apiMultimodal": {
+        "message": "Multimodal (attachments)"
+    },
+    "apiSupportsTools": {
+        "message": "Tools"
+    },
+    "multimodalUnsupported": {
+        "message": "The selected model does not support attachments. Choose another model or enable multimodal input in the API settings."
     }
-
 }

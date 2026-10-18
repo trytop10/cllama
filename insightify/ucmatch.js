@@ -1,6 +1,5 @@
 import { i18n, DB_KEY } from '../js/cllama.js';
 import { browser } from '../js/browser.mjs';
-import { replaceElementContent } from '../js/util.js';
 
 document.addEventListener('DOMContentLoaded', function () {
 

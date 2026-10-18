@@ -1,5 +1,4 @@
 import { browser, isFirefox } from './browser.mjs';
-import { TextProcessor } from "./text-processor.mjs";
 
 /**
  * Sends a message to the content script in the active tab
@@ -129,62 +128,17 @@ export function replaceElementContent(target, content) {
 }
 
 /**
- * Adjusts message array to fit within token limit by removing or truncating messages
- * @param {Array} messages - Array of message objects with role and content
- * @param {number} maxTokens - Maximum allowed tokens
- * @returns {Array} Adjusted messages array
+ * Escapes text for safe interpolation into HTML.
+ * @param {*} text - Raw text
+ * @returns {string} Escaped text
  */
-export function adjustMessagesToTokenLimit(messages, maxTokens) {
-  const calculateTotalTokens = (msgs) => {
-    return msgs.reduce((total, msg) => {
-      return total + TextProcessor.estimateTokens(`${msg.role}\n${msg.content}`);
-    }, 0);
-  };
-
-  const adjustedMessages = [...messages];
-  let totalTokens = calculateTotalTokens(adjustedMessages);
-
-  if (totalTokens <= maxTokens) {
-    return adjustedMessages;
-  }
-
-  const hasSystemFirst = adjustedMessages[0]?.role === 'system';
-  const minMessagesToKeep = hasSystemFirst ? 2 : 1;
-
-  // Remove oldest messages until within limit
-  while (totalTokens > maxTokens && adjustedMessages.length > minMessagesToKeep) {
-    const removeIndex = hasSystemFirst ? 1 : 0;
-    const removed = adjustedMessages.splice(removeIndex, 1)[0];
-    totalTokens -= TextProcessor.estimateTokens(`${removed.role}\n${removed.content}`);
-  }
-
-  // Truncate last message if still over limit
-  if (totalTokens > maxTokens && adjustedMessages.length >= minMessagesToKeep) {
-    const lastMsg = adjustedMessages[adjustedMessages.length - 1];
-    const lastMsgTokenCount = TextProcessor.estimateTokens(`${lastMsg.role}\n${lastMsg.content}`);
-    const availableTokens = maxTokens - (totalTokens - lastMsgTokenCount);
-
-    if (availableTokens > 0) {
-      const roleTokenCount = TextProcessor.estimateTokens(`${lastMsg.role}\n`);
-      const contentMaxTokens = Math.max(1, availableTokens - roleTokenCount);
-      lastMsg.content = TextProcessor.truncateToTokens(lastMsg.content, contentMaxTokens);
-      return adjustedMessages;
-    }
-  }
-
-  return adjustedMessages.length >= minMessagesToKeep ? adjustedMessages : [];
-}
-
-/**
- * Escapes HTML special characters in a string
- * @param {string} html - String to escape
- * @returns {string} Escaped HTML string
- */
-export function htmlEncode(html) {
-  const temp = document.createElement("div");
-  temp.textContent = html;
-  const output = temp.innerHTML;
-  return output;
+export function escapeHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**

@@ -811,6 +811,15 @@ hr {
     height: 1.3em;
   }
 
+  /* The attachment button is disabled entirely when the effective model does
+     not advertise multimodal input. Keep it clickable (aria-disabled, not the
+     Bootstrap .disabled class) so the click can explain why. */
+  .function-icons .btn.attachment-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(1);
+  }
+
   /* About menu: two icon-only links, so it is a compact row instead of the
      default 10rem-wide list. The flex display is scoped to `.show` on purpose —
      styling the idle menu with `display: flex` would beat Bootstrap's

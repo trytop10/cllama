@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "Bahasa Indonesia"
-    },
     "browserActionTitle": {
         "message": "Asisten Penjelajahan Cerdas - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "Belum ada alat. Klik Tambah Alat."
     },
-    "skillDefaultCalculator": {
-        "message": "Kalkulator"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "Menghitung menggunakan alat add_numbers."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Tanya Halaman"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Pengaturan"
     },
-    "ollamaHostLabel": {
-        "message": "URL API"
-    },
-    "modelNameLabel": {
-        "message": "Nama Model"
-    },
-    "tranPromptLabel": {
-        "message": "Prompt Terjemahan"
-    },
     "expBaseData": {
         "message": "Konfigurasi Dasar"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "Gagal mengimpor"
     },
-    "getModuleListFailMessage": {
-        "message": "Gagal mendapatkan daftar model"
-    },
-    "tranPrompt": {
-        "message": "Harap tulis ulang kalimat atau kata yang diberikan oleh pengguna. Jika pengguna memberikan dalam bahasa selain {localLanguage}, tulis ulang konten yang diberikan oleh pengguna dalam {localLanguage}, jika tidak, tulis ulang dalam bahasa Inggris. Catatan: Saat menulis ulang, makna asli harus dihormati."
-    },
-    "translateWaitMessage": {
-        "message": "Sedang menerjemahkan, harap tunggu..."
-    },
     "cllamaError": {
         "message": "Maaf, saya mengalami beberapa masalah, silakan coba lagi nanti atau periksa apakah informasi konfigurasi cllama Anda benar."
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "Tidak dapat memproses informasi halaman ini, jika Anda mengonfirmasi bahwa halaman tidak ada masalah, Anda dapat menyegarkan dan mencoba lagi."
-    },
-    "summarizer": {
-        "message": "Ringkasan"
-    },
-    "summaryPrompt": {
-        "message": "Harap buat ringkasan singkat berdasarkan konten informasi halaman yang diberikan, persyaratan: 1. Maksimal 300 kata. 2. Selalu buat informasi ringkasan dalam {localLanguage}."
     },
     "requiredError": {
         "message": "Item yang wajib diisi tidak boleh kosong"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "AI Wawasan"
-    },
-    "tranServiceLabel": {
-        "message": "Terjemahkan AI"
-    },
-    "TestDesc": {
-        "message": "Hanya untuk pengujian, kecepatan dan stabilitas tidak dijamin."
-    },
-    "OtherDesc": {
-        "message": "Mendukung layanan antarmuka API yang kompatibel dengan protokol API OpenAI."
     },
     "language": {
         "message": "Bahasa"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "Menjawab pertanyaan tentang tanggal, waktu, dan hari saat ini."
     },
-    "skillAutoMode": {
-        "message": "Otomatis"
-    },
     "skillManualOnly": {
         "message": "Hanya manual"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "OK: {count} alat ditemukan."
-    },
-    "mcpTestFail": {
-        "message": "Koneksi gagal"
     },
     "mcpDisabled": {
         "message": "nonaktif"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Alat"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "Kapan memakai alat ini (opsional) — mis. mengubah item yang ada; untuk item baru gunakan create"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "Alat ini dapat mengubah atau menghapus data."
+    },
+    "apiProvidersTitle": {
+        "message": "Penyedia API"
+    },
+    "apiProvidersDesc": {
+        "message": "Konfigurasikan satu atau beberapa penyedia AI. Penyedia default digunakan kecuali chat atau resep Insight memilih yang lain."
+    },
+    "apiAddProvider": {
+        "message": "Tambah penyedia"
+    },
+    "apiEmptyProviders": {
+        "message": "Belum ada penyedia yang dikonfigurasi. Tambahkan satu untuk mulai menggunakan fitur AI."
+    },
+    "apiDefaultBadge": {
+        "message": "Default"
+    },
+    "apiSetDefault": {
+        "message": "Jadikan default"
+    },
+    "apiEditProvider": {
+        "message": "Edit penyedia"
+    },
+    "apiDeleteProvider": {
+        "message": "Hapus penyedia"
+    },
+    "apiAddProviderTitle": {
+        "message": "Tambah penyedia API"
+    },
+    "apiEditProviderTitle": {
+        "message": "Edit penyedia API"
+    },
+    "apiProviderLabel": {
+        "message": "Penyedia API"
+    },
+    "apiEndpointLabel": {
+        "message": "Endpoint API"
+    },
+    "apiKeyLabel": {
+        "message": "Kunci API"
+    },
+    "apiModelLabel": {
+        "message": "Model"
+    },
+    "apiModelPlaceholder": {
+        "message": "Pilih atau ketik nama model"
+    },
+    "apiFetchModels": {
+        "message": "Muat model"
+    },
+    "apiModelsLoading": {
+        "message": "Memuat model…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count} model dimuat"
+    },
+    "apiModelsFailed": {
+        "message": "Tidak dapat memuat daftar model. Ketik nama model secara manual."
+    },
+    "apiModelTypeLabel": {
+        "message": "Jenis model"
+    },
+    "modelTypeImage": {
+        "message": "Model pembuatan gambar"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (lokal)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "API kompatibel OpenAI"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Sama seperti default"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "Hapus penyedia \"{name}\"?"
+    },
+    "modelTypeDecision": {
+        "message": "Model keputusan"
+    },
+    "modelTypeText": {
+        "message": "Model pembuatan teks"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Kemampuan"
+    },
+    "apiMultimodal": {
+        "message": "Multimodal (lampiran)"
+    },
+    "apiSupportsTools": {
+        "message": "Alat"
+    },
+    "multimodalUnsupported": {
+        "message": "Model yang dipilih tidak mendukung lampiran. Pilih model lain atau aktifkan input multimodal di pengaturan API."
     }
-
 }

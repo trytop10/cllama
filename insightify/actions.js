@@ -1,7 +1,6 @@
 import { i18n, DB_KEY } from '../js/cllama.js';
-import { marked } from '../js/marked.mjs';
 import { browser, isFirefox } from '../js/browser.mjs';
-import { getLanguageCode, htmlEncode, replaceElementContent } from '../js/util.js';
+import { escapeHtml, getLanguageCode, replaceElementContent } from '../js/util.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -102,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn btn-sm btn-outline-secondary" data-action="edit">✍</button>
               </div>
             </div>
-            <div class="card-text card-cust-height text-muted markdown-body">${htmlEncode(item.prompt)}</div>
+            <div class="card-text card-cust-height text-muted markdown-body">${escapeHtml(item.prompt)}</div>
           </div>
         </div>
       </div>

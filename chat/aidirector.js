@@ -1,7 +1,6 @@
 import { i18n, DB_KEY } from '../js/cllama.js';
-import { marked } from '../js/marked.mjs';
 import { browser, isFirefox } from '../js/browser.mjs';
-import { getLanguageCode, htmlEncode, replaceElementContent } from '../js/util.js';
+import { escapeHtml, getLanguageCode, replaceElementContent } from '../js/util.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -28,13 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', updateCounter);
             updateCounter();
         });
-    }
-
-    /**
-     * Truncate text to specified length
-     */
-    function truncatePrompt(text, maxLength = 100) {
-        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     }
 
     /**
@@ -143,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <button class="btn btn-sm btn-outline-secondary">✍</button>
                             </div>
                         </div>
-                        <div class="card-text text-muted card-cust-height markdown-body">${htmlEncode(item.prompt)}</div>
+                        <div class="card-text text-muted card-cust-height markdown-body">${escapeHtml(item.prompt)}</div>
                         <div class="card-sample">${sample}</div>
                     </div>
                 </div>

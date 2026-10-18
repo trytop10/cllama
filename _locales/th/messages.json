@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "ไทย"
-    },
     "browserActionTitle": {
         "message": "ผู้ช่วยการเรียกดูอัจฉริยะ - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "ยังไม่มีเครื่องมือ คลิกเพิ่มเครื่องมือ"
     },
-    "skillDefaultCalculator": {
-        "message": "เครื่องคิดเลข"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "คำนวณโดยใช้เครื่องมือ add_numbers"
-    },
     "skillDefaultGeneralHelper": {
         "message": "ถาม-ตอบหน้าเว็บ"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "การตั้งค่า"
     },
-    "ollamaHostLabel": {
-        "message": "URL API"
-    },
-    "modelNameLabel": {
-        "message": "ชื่อโมเดล"
-    },
-    "tranPromptLabel": {
-        "message": "พร้อมท์การแปล"
-    },
     "expBaseData": {
         "message": "การกำหนดค่าพื้นฐาน"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "นำเข้าล้มเหลว"
     },
-    "getModuleListFailMessage": {
-        "message": "ไม่สามารถรับรายการโมเดลได้"
-    },
-    "tranPrompt": {
-        "message": "โปรดเขียนประโยคหรือคำที่ผู้ใช้ให้มาใหม่ หากผู้ใช้ให้มาเป็นภาษาอื่นที่ไม่ใช่ {localLanguage} ให้เขียนเนื้อหาที่ผู้ใช้ให้มาใหม่เป็น {localLanguage} มิฉะนั้นให้เขียนใหม่เป็นภาษาอังกฤษ หมายเหตุ: ต้องเคารพความหมายเดิมเมื่อเขียนใหม่"
-    },
-    "translateWaitMessage": {
-        "message": "กำลังแปล โปรดรอสักครู่..."
-    },
     "cllamaError": {
         "message": "ขออภัย ฉันพบปัญหาบางอย่ง โปรดลองอีกครั้งในภายหลัง หรือตรวจสอบว่าข้อมูลการกำหนดค่า cllama ของคุณถูกต้องหรือไม่"
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "ไม่สามารถประมวลผลข้อมูลหน้านี้ได้ หากคุณยืนยันว่าหน้าเว็บไม่มีปัญหา โปรดรีเฟรชและลองอีกครั้ง"
-    },
-    "summarizer": {
-        "message": "สรุป"
-    },
-    "summaryPrompt": {
-        "message": "โปรดสร้างสรุปสั้นๆ ตามเนื้อหาข้อมูลหน้าเว็บที่ให้มา ข้อกำหนด: 1. ไม่เกิน 300 คำ 2. สร้างข้อมูลสรุปเป็น {localLanguage} เสมอ"
     },
     "requiredError": {
         "message": "รายการที่จำเป็นต้องไม่ว่างเปล่า"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "AI เชิงลึก"
-    },
-    "tranServiceLabel": {
-        "message": "AI การแปล"
-    },
-    "TestDesc": {
-        "message": "สำหรับทดสอบเท่านั้น ไม่รับประกันความเร็วและความเสถียร"
-    },
-    "OtherDesc": {
-        "message": "รองรับบริการอินเทอร์เฟซ API ที่เข้ากันได้กับโปรโตคอล OpenAI API"
     },
     "language": {
         "message": "ภาษา"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "ตอบคำถามเกี่ยวกับวันที่ เวลา และวันปัจจุบัน"
     },
-    "skillAutoMode": {
-        "message": "อัตโนมัติ"
-    },
     "skillManualOnly": {
         "message": "เรียกใช้เองเท่านั้น"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "สำเร็จ: พบเครื่องมือ {count} รายการ"
-    },
-    "mcpTestFail": {
-        "message": "การเชื่อมต่อล้มเหลว"
     },
     "mcpDisabled": {
         "message": "ปิดใช้งาน"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "เครื่องมือ"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "ใช้เครื่องมือนี้เมื่อใด (ไม่บังคับ) — เช่น แก้ไขรายการที่มีอยู่ ใช้ create สำหรับรายการใหม่"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "เครื่องมือนี้สามารถเปลี่ยนหรือลบข้อมูลได้"
+    },
+    "apiProvidersTitle": {
+        "message": "ผู้ให้บริการ API"
+    },
+    "apiProvidersDesc": {
+        "message": "กำหนดค่าผู้ให้บริการ AI หนึ่งรายขึ้นไป ผู้ให้บริการเริ่มต้นจะถูกใช้เว้นแต่แชทหรือสูตร Insight จะเลือกผู้ให้บริการอื่น"
+    },
+    "apiAddProvider": {
+        "message": "เพิ่มผู้ให้บริการ"
+    },
+    "apiEmptyProviders": {
+        "message": "ยังไม่ได้กำหนดค่าผู้ให้บริการ เพิ่มรายการเพื่อเริ่มใช้ฟีเจอร์ AI"
+    },
+    "apiDefaultBadge": {
+        "message": "ค่าเริ่มต้น"
+    },
+    "apiSetDefault": {
+        "message": "ตั้งเป็นค่าเริ่มต้น"
+    },
+    "apiEditProvider": {
+        "message": "แก้ไขผู้ให้บริการ"
+    },
+    "apiDeleteProvider": {
+        "message": "ลบผู้ให้บริการ"
+    },
+    "apiAddProviderTitle": {
+        "message": "เพิ่มผู้ให้บริการ API"
+    },
+    "apiEditProviderTitle": {
+        "message": "แก้ไขผู้ให้บริการ API"
+    },
+    "apiProviderLabel": {
+        "message": "ผู้ให้บริการ API"
+    },
+    "apiEndpointLabel": {
+        "message": "ปลายทาง API"
+    },
+    "apiKeyLabel": {
+        "message": "คีย์ API"
+    },
+    "apiModelLabel": {
+        "message": "โมเดล"
+    },
+    "apiModelPlaceholder": {
+        "message": "เลือกหรือพิมพ์ชื่อโมเดล"
+    },
+    "apiFetchModels": {
+        "message": "โหลดโมเดล"
+    },
+    "apiModelsLoading": {
+        "message": "กำลังโหลดโมเดล…"
+    },
+    "apiModelsLoaded": {
+        "message": "โหลดแล้ว {count} โมเดล"
+    },
+    "apiModelsFailed": {
+        "message": "ไม่สามารถโหลดรายการโมเดลได้ กรุณาพิมพ์ชื่อโมเดลด้วยตนเอง"
+    },
+    "apiModelTypeLabel": {
+        "message": "ประเภทโมเดล"
+    },
+    "modelTypeImage": {
+        "message": "โมเดลสร้างภาพ"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (ในเครื่อง)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "API ที่เข้ากันได้กับ OpenAI"
+    },
+    "apiUseDefaultProvider": {
+        "message": "เหมือนค่าเริ่มต้น"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "ลบผู้ให้บริการ \"{name}\" หรือไม่?"
+    },
+    "modelTypeDecision": {
+        "message": "โมเดลการตัดสินใจ"
+    },
+    "modelTypeText": {
+        "message": "โมเดลสร้างข้อความ"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "ความสามารถ"
+    },
+    "apiMultimodal": {
+        "message": "หลายรูปแบบ (ไฟล์แนบ)"
+    },
+    "apiSupportsTools": {
+        "message": "เครื่องมือ"
+    },
+    "multimodalUnsupported": {
+        "message": "โมเดลที่เลือกไม่รองรับไฟล์แนบ โปรดเลือกโมเดลอื่นหรือเปิดใช้การป้อนข้อมูลหลายรูปแบบในการตั้งค่า API"
     }
-
 }

@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "Tiếng Việt"
-    },
     "browserActionTitle": {
         "message": "Trợ lý duyệt web thông minh - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "Chưa có công cụ nào. Nhấp Thêm công cụ."
     },
-    "skillDefaultCalculator": {
-        "message": "Máy tính"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "Thực hiện phép tính bằng công cụ add_numbers."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Hỏi đáp trang"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Cài đặt"
     },
-    "ollamaHostLabel": {
-        "message": "URL API"
-    },
-    "modelNameLabel": {
-        "message": "Tên mô hình"
-    },
-    "tranPromptLabel": {
-        "message": "Lời nhắc dịch"
-    },
     "expBaseData": {
         "message": "Cấu hình cơ bản"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "Nhập thất bại"
     },
-    "getModuleListFailMessage": {
-        "message": "Không thể lấy danh sách mô hình"
-    },
-    "tranPrompt": {
-        "message": "Vui lòng viết lại câu hoặc từ do người dùng cung cấp. Nếu người dùng cung cấp bằng ngôn ngữ khác ngoài {localLanguage}, hãy viết lại nội dung do người dùng cung cấp bằng {localLanguage}, nếu không hãy viết lại bằng tiếng Anh. Lưu ý: Khi viết lại phải tôn trọng ý nghĩa gốc."
-    },
-    "translateWaitMessage": {
-        "message": "Đang dịch, vui lòng chờ..."
-    },
     "cllamaError": {
         "message": "Xin lỗi, tôi gặp một số vấn đề, vui lòng thử lại sau hoặc kiểm tra xem thông tin cấu hình cllama của bạn có chính xác không."
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "Không thể xử lý thông tin trang này, nếu xác nhận trang không có vấn đề, có thể làm mới và thử lại."
-    },
-    "summarizer": {
-        "message": "Tóm tắt"
-    },
-    "summaryPrompt": {
-        "message": "Vui lòng tạo bản tóm tắt ngắn gọn dựa trên nội dung thông tin trang được cung cấp, yêu cầu: 1. Tối đa 300 từ. 2. Luôn tạo thông tin tóm tắt bằng {localLanguage}."
     },
     "requiredError": {
         "message": "Mục bắt buộc không được để trống"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "AI thông tin chi tiết"
-    },
-    "tranServiceLabel": {
-        "message": "AI dịch"
-    },
-    "TestDesc": {
-        "message": "Chỉ dành cho mục đích thử nghiệm, tốc độ và độ ổn định không được đảm bảo."
-    },
-    "OtherDesc": {
-        "message": "Hỗ trợ các dịch vụ giao diện API tương thích với giao thức OpenAI API."
     },
     "language": {
         "message": "Ngôn ngữ"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "Trả lời câu hỏi về ngày, giờ và thứ hiện tại."
     },
-    "skillAutoMode": {
-        "message": "Tự động"
-    },
     "skillManualOnly": {
         "message": "Chỉ thủ công"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "OK: tìm thấy {count} công cụ."
-    },
-    "mcpTestFail": {
-        "message": "Kết nối thất bại"
     },
     "mcpDisabled": {
         "message": "đã tắt"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Công cụ"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "Khi nào dùng công cụ này (tùy chọn) — ví dụ sửa mục đã có; dùng create cho mục mới"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "Công cụ này có thể thay đổi hoặc xóa dữ liệu."
+    },
+    "apiProvidersTitle": {
+        "message": "Nhà cung cấp API"
+    },
+    "apiProvidersDesc": {
+        "message": "Cấu hình một hoặc nhiều nhà cung cấp AI. Nhà cung cấp mặc định được dùng trừ khi cuộc trò chuyện hoặc công thức Insight chọn nhà cung cấp khác."
+    },
+    "apiAddProvider": {
+        "message": "Thêm nhà cung cấp"
+    },
+    "apiEmptyProviders": {
+        "message": "Chưa có nhà cung cấp nào được cấu hình. Hãy thêm một nhà cung cấp để bắt đầu dùng các tính năng AI."
+    },
+    "apiDefaultBadge": {
+        "message": "Mặc định"
+    },
+    "apiSetDefault": {
+        "message": "Đặt làm mặc định"
+    },
+    "apiEditProvider": {
+        "message": "Sửa nhà cung cấp"
+    },
+    "apiDeleteProvider": {
+        "message": "Xóa nhà cung cấp"
+    },
+    "apiAddProviderTitle": {
+        "message": "Thêm nhà cung cấp API"
+    },
+    "apiEditProviderTitle": {
+        "message": "Sửa nhà cung cấp API"
+    },
+    "apiProviderLabel": {
+        "message": "Nhà cung cấp API"
+    },
+    "apiEndpointLabel": {
+        "message": "Điểm cuối API"
+    },
+    "apiKeyLabel": {
+        "message": "Khóa API"
+    },
+    "apiModelLabel": {
+        "message": "Mô hình"
+    },
+    "apiModelPlaceholder": {
+        "message": "Chọn hoặc nhập tên mô hình"
+    },
+    "apiFetchModels": {
+        "message": "Tải mô hình"
+    },
+    "apiModelsLoading": {
+        "message": "Đang tải mô hình…"
+    },
+    "apiModelsLoaded": {
+        "message": "Đã tải {count} mô hình"
+    },
+    "apiModelsFailed": {
+        "message": "Không thể tải danh sách mô hình. Hãy nhập tên mô hình thủ công."
+    },
+    "apiModelTypeLabel": {
+        "message": "Loại mô hình"
+    },
+    "modelTypeImage": {
+        "message": "Mô hình tạo ảnh"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (cục bộ)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "API tương thích OpenAI"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Giống mặc định"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "Xóa nhà cung cấp \"{name}\"?"
+    },
+    "modelTypeDecision": {
+        "message": "Mô hình ra quyết định"
+    },
+    "modelTypeText": {
+        "message": "Mô hình tạo văn bản"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Khả năng"
+    },
+    "apiMultimodal": {
+        "message": "Đa phương thức (tệp đính kèm)"
+    },
+    "apiSupportsTools": {
+        "message": "Công cụ"
+    },
+    "multimodalUnsupported": {
+        "message": "Mô hình đã chọn không hỗ trợ tệp đính kèm. Hãy chọn mô hình khác hoặc bật đầu vào đa phương thức trong cài đặt API."
     }
-
 }

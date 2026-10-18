@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "Português"
-    },
     "browserActionTitle": {
         "message": "Assistente Inteligente de Navegação - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "Ainda não há ferramentas. Clique em Adicionar Ferramenta."
     },
-    "skillDefaultCalculator": {
-        "message": "Calculadora"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "Fazer cálculos com a ferramenta add_numbers."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Perguntas da página"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Configurações"
     },
-    "ollamaHostLabel": {
-        "message": "URL da API"
-    },
-    "modelNameLabel": {
-        "message": "Nome do Modelo"
-    },
-    "tranPromptLabel": {
-        "message": "Prompt de Tradução"
-    },
     "expBaseData": {
         "message": "Configuração Básica"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "Falha ao importar"
     },
-    "getModuleListFailMessage": {
-        "message": "Falha ao obter lista de modelos"
-    },
-    "tranPrompt": {
-        "message": "Por favor, reescreva a frase ou palavra fornecida pelo usuário. Se o usuário fornecer um idioma diferente de {localLanguage}, reescreva o conteúdo em {localLanguage}; caso contrário, reescreva em inglês. Nota: Ao reescrever, o significado original deve ser respeitado."
-    },
-    "translateWaitMessage": {
-        "message": "Traduzindo, por favor aguarde..."
-    },
     "cllamaError": {
         "message": "Desculpe, encontrei alguns problemas. Por favor, tente novamente mais tarde ou verifique se suas informações de configuração do cllama estão corretas."
     },
@@ -236,12 +209,6 @@
     },
     "insightifyPageError2": {
         "message": "Não foi possível processar as informações desta página. Se confirmar que a página está correta, atualize e tente novamente."
-    },
-    "summarizer": {
-        "message": "Resumo"
-    },
-    "summaryPrompt": {
-        "message": "Por favor, gere um breve resumo com base nas informações de conteúdo da página fornecida. Requisitos: 1. Máximo de 300 palavras. 2. Sempre gere as informações de resumo em {localLanguage}."
     },
     "requiredError": {
         "message": "Campo obrigatório não pode estar vazio"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "IA de Insight"
-    },
-    "tranServiceLabel": {
-        "message": "IA de Tradução"
-    },
-    "TestDesc": {
-        "message": "Apenas para testes, velocidade e estabilidade não são garantidas."
-    },
-    "OtherDesc": {
-        "message": "Suporta serviços de interface API compatíveis com o protocolo API OpenAI."
     },
     "language": {
         "message": "Idioma"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "Responde a perguntas sobre a data, hora e dia da semana atuais."
     },
-    "skillAutoMode": {
-        "message": "Automático"
-    },
     "skillManualOnly": {
         "message": "Apenas manual"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "OK: {count} ferramentas encontradas."
-    },
-    "mcpTestFail": {
-        "message": "Falha na conexão"
     },
     "mcpDisabled": {
         "message": "desativado"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Ferramentas"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "Quando usar esta ferramenta (opcional) — ex.: editar um item existente; para um novo, use create"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "Esta ferramenta pode alterar ou excluir dados."
+    },
+    "apiProvidersTitle": {
+        "message": "Provedores de API"
+    },
+    "apiProvidersDesc": {
+        "message": "Configure um ou mais provedores de IA. O provedor padrão é usado, a menos que um chat ou uma receita de Insight escolha outro."
+    },
+    "apiAddProvider": {
+        "message": "Adicionar provedor"
+    },
+    "apiEmptyProviders": {
+        "message": "Nenhum provedor configurado ainda. Adicione um para começar a usar os recursos de IA."
+    },
+    "apiDefaultBadge": {
+        "message": "Padrão"
+    },
+    "apiSetDefault": {
+        "message": "Definir como padrão"
+    },
+    "apiEditProvider": {
+        "message": "Editar provedor"
+    },
+    "apiDeleteProvider": {
+        "message": "Excluir provedor"
+    },
+    "apiAddProviderTitle": {
+        "message": "Adicionar provedor de API"
+    },
+    "apiEditProviderTitle": {
+        "message": "Editar provedor de API"
+    },
+    "apiProviderLabel": {
+        "message": "Provedor de API"
+    },
+    "apiEndpointLabel": {
+        "message": "Endpoint da API"
+    },
+    "apiKeyLabel": {
+        "message": "Chave de API"
+    },
+    "apiModelLabel": {
+        "message": "Modelo"
+    },
+    "apiModelPlaceholder": {
+        "message": "Selecione ou digite um nome de modelo"
+    },
+    "apiFetchModels": {
+        "message": "Carregar modelos"
+    },
+    "apiModelsLoading": {
+        "message": "Carregando modelos…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count} modelos carregados"
+    },
+    "apiModelsFailed": {
+        "message": "Não foi possível carregar a lista de modelos. Digite o nome do modelo manualmente."
+    },
+    "apiModelTypeLabel": {
+        "message": "Tipo de modelo"
+    },
+    "modelTypeImage": {
+        "message": "Modelo de geração de imagens"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (local)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "API compatível com OpenAI"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Igual ao padrão"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "Excluir o provedor \"{name}\"?"
+    },
+    "modelTypeDecision": {
+        "message": "Modelo de decisão"
+    },
+    "modelTypeText": {
+        "message": "Modelo de geração de texto"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Recursos"
+    },
+    "apiMultimodal": {
+        "message": "Multimodal (anexos)"
+    },
+    "apiSupportsTools": {
+        "message": "Ferramentas"
+    },
+    "multimodalUnsupported": {
+        "message": "O modelo selecionado não aceita anexos. Escolha outro modelo ou ative a entrada multimodal nas configurações de API."
     }
-
 }

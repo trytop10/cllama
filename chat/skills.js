@@ -1,9 +1,10 @@
 import { i18n, loadSkills, saveSkills, getRuntimeConfig, loadMcpAppAutoRender, setMcpAppAutoRender, loadMcpAppDebug, setMcpAppDebug } from "../js/cllama.js";
+import { providerLabel, apiEntryId, apiEntryDisplay, resolveApiEntry } from "../js/api-providers.mjs";
 import { listTools } from "../js/skill-tools.mjs";
 import { loadMcpServers, saveMcpServers, listMcpTools, initMcpTools } from "../js/mcp.mjs";
 import { balert } from "../js/dialog.mjs";
 import { browser } from '../js/browser.mjs';
-import { getQueryParam } from "../js/util.js";
+import { escapeHtml, getQueryParam } from "../js/util.js";
 
 let skillConfigurations = [];
 let skillModal = null;
@@ -11,6 +12,7 @@ let editingTools = []; // [{ name, args }] rows being edited in the modal
 let mcpConfigurations = [];
 let mcpModal = null;
 let mcpToolsModal = null;
+let serviceEntries = []; // Data sources currently offered in the Skill editor
 // Last successful "Test connection" result, kept for the copy button.
 let lastMcpToolsPreview = null;
 
@@ -74,6 +76,7 @@ async function buildServiceOptions() {
   if (!select) return;
   const config = await getRuntimeConfig();
   const list = config?.dsList || [];
+  serviceEntries = list;
   select.innerHTML = '';
   const none = document.createElement('option');
   none.value = '';
@@ -81,8 +84,9 @@ async function buildServiceOptions() {
   select.appendChild(none);
   list.forEach((d) => {
     const opt = document.createElement('option');
-    opt.value = d.name || d.service;
-    opt.textContent = `${d.name || d.service} (${d.modelName || d.service})`;
+    opt.value = apiEntryId(d) || d.service;
+    opt.textContent = apiEntryDisplay(d, (key) => browser.i18n.getMessage(key))
+      || `${providerLabel(d.service, (key) => browser.i18n.getMessage(key)) || d.service} (${d.modelName || d.service})`;
     select.appendChild(opt);
   });
 }
@@ -370,10 +374,14 @@ function showSkillForm(skill) {
 
   const serviceInput = document.getElementById('skillServiceInput');
   if (serviceInput) {
-    const wanted = skill ? (skill.dsService || '') : '';
+    const stored = skill ? (skill.dsService || '') : '';
+    // Old Skills store the service key (or a display name); new ones store the
+    // entry id. Resolve old values so the dropdown highlights the right entry.
+    const resolved = stored ? resolveApiEntry(serviceEntries, stored) : null;
+    const wanted = resolved ? apiEntryId(resolved) : stored;
     serviceInput.value = wanted;
     // The stored data source may no longer exist: keep the value selectable.
-    if (serviceInput.value !== wanted) {
+    if (serviceInput.value !== wanted && wanted) {
       const opt = document.createElement('option');
       opt.value = wanted;
       opt.textContent = wanted;
@@ -457,21 +465,6 @@ function ensureMcpModal() {
     mcpModal = new bootstrap.Modal(document.getElementById('mcpModal'));
   }
   return mcpModal;
-}
-
-/**
- * Escape text before it is interpolated into HTML (server-provided tool names
- * and descriptions are untrusted input).
- * @param {string} text - Raw text
- * @returns {string} HTML-safe text
- */
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 /**

@@ -1,4 +1,5 @@
 import { getService } from '../js/client/client.mjs';
+import { providerLabel, apiEntryLabel, apiEntryId, resolveApiEntry } from '../js/api-providers.mjs';
 import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
@@ -13,7 +14,7 @@ import { buildChatHtml, buildExportFileName } from '../js/chat-export.mjs';
 import { findMatches, searchHistoryStore } from '../js/chat-search.mjs';
 import { formatUsage } from '../js/token-usage.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from '../js/marked/copy.mjs';
-import { exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, openPrintView, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
+import { escapeHtml, exportFile, findMatchingParentNode, formatTimestamp, getQueryParam, openPrintView, replaceElementContent, replaceThinkTags, sendToContentScript } from '../js/util.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // API configuration settings
@@ -30,6 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sendButton = document.getElementById("sendBtn");
     const cancelButton = document.getElementById("cancelBtn");
     const bFish = document.getElementById("b_fish");
+    const bImage = document.getElementById("b_image");
+    const bImageUpload = document.getElementById("imageUpload");
     const bCollapseAll = document.getElementById("b_collapseAll");
     const bExpandAll = document.getElementById("b_expandAll");
     const skillPicker = document.getElementById("skillPicker");
@@ -193,6 +196,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     let activeSkill = null;    // Currently fixed skill (or null)
     let activeSkillArgs = '';  // Argument string captured when "/skill args..." ran
     let skillDisabled = true; // true => "No Skill (off)" mode: no Skill injection. This is the default state.
+    // Set as soon as the user picks / clears a Skill explicitly. An in-flight
+    // refreshSkills() must not overwrite that choice with the value it read from
+    // storage before the (async) save landed — that race made a freshly selected
+    // Skill silently fall back to "No Skill", so the next turn ran without it.
+    let skillSelectionDirty = false;
     let skills = [];           // All available skills
     // Server ids that currently qualify for an automatic MCP Skill (enabled +
     // autoSkill). Used to tell "still probing" from "server was removed" when a
@@ -254,10 +262,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         uiLanguage: true
     };
 
-    function generateMsgId(msgId) {
-        return `msg_${msgId}`;
-    }
-
     /**
      * Identity of the conversation on screen: "<scenarioId>:<sessionId>". Pending
      * cards (option lists, draft confirmations) are stamped with it, so a list the
@@ -278,6 +282,51 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function belongsToThisSession(pending) {
         return !pending?.sessionKey || pending.sessionKey === sessionKey();
+    }
+
+    /**
+     * The data-source configuration that will answer the next message. A typed
+     * "@name" prefix wins for that single message, then a Skill bound to a
+     * specific source, and finally the source selected in the toolbar.
+     * @param {string|null} [overrideId] - Already-resolved override entry id
+     * @returns {Object|null} Data-source entry (or the base config)
+     */
+    function effectiveServiceConfig(overrideId = null) {
+        let key = overrideId;
+        if (!key) {
+            const typed = parseServiceOverride(msgInput?.value || '');
+            key = typed?.id || activeSkill?.dsService || null;
+        }
+        if (key) {
+            const entry = resolveApiEntry(dsListCache, key);
+            if (entry) return entry;
+        }
+        return currentServiceConfig;
+    }
+
+    /**
+     * Whether the next message may carry attachments at all. `multimodal` is the
+     * single capability switch for images, PDF, audio and video.
+     * @param {string|null} [overrideId] - Already-resolved override entry id
+     * @returns {boolean}
+     */
+    function supportsAttachments(overrideId = null) {
+        return effectiveServiceConfig(overrideId)?.multimodal === true;
+    }
+
+    /**
+     * Enable or disable the attachment button for the effective model. The whole
+     * button is disabled (not just images): a model that does not advertise
+     * attachment support must not receive any file.
+     * @returns {void}
+     */
+    function updateAttachmentAvailability() {
+        if (!bImage) return;
+        const supported = supportsAttachments();
+        bImage.classList.toggle('attachment-disabled', !supported);
+        bImage.setAttribute('aria-disabled', supported ? 'false' : 'true');
+        bImage.title = browser.i18n.getMessage(supported ? 'uploadFile' : 'multimodalUnsupported') || '';
+        if (bImageUpload) bImageUpload.disabled = !supported;
     }
 
     /**
@@ -373,6 +422,7 @@ document.addEventListener("DOMContentLoaded", async () => {
      * configured Skills.
      */
     function renderActiveSkillBar() {
+        updateAttachmentAvailability();
         if (!skillBar || !skillNameSpan) return;
         const clearSkillBtn = skillBar.querySelector("#clearSkill");
         const labelEl = skillBar.querySelector(".skill-bar-label");
@@ -424,16 +474,23 @@ document.addEventListener("DOMContentLoaded", async () => {
      * @returns {void}
      */
     function persistSkillSelection() {
+        skillSelectionDirty = true;
         saveSkillSelection(sessionKey(), currentSkillSelection())
             .catch((e) => console.warn('Failed to remember the Skill selection:', e));
     }
 
     /**
      * Apply the choice remembered for the conversation on screen.
-     * @param {Object} [opts] - { skillsReady } true once the Skill list is loaded
+     * @param {Object} [opts] - { skillsReady } true once the Skill list is loaded,
+     *   { force } true when a conversation switch must win over an explicit
+     *   choice made in the previous one
      * @returns {Promise<void>}
      */
-    async function applyStoredSkillSelection({ skillsReady = false } = {}) {
+    async function applyStoredSkillSelection({ skillsReady = false, force = false } = {}) {
+        // A choice made here is newer than anything a background refresh read
+        // from storage. Only a conversation switch (force) may override it.
+        if (skillSelectionDirty && !force) return;
+        if (force) skillSelectionDirty = false;
         let entry = null;
         try {
             entry = await loadSkillSelection(sessionKey());
@@ -441,6 +498,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.warn('Failed to read the remembered Skill selection:', e);
             return;
         }
+        // The user picked / cleared a Skill while we were reading storage: that
+        // choice is newer than the value we just read, even across a switch.
+        if (skillSelectionDirty) return;
         if (!entry) {
             // No memory for THIS conversation → fall back to the page default
             // ("No Skill"), never to whatever the previous conversation happened
@@ -736,10 +796,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!m) return null;
         const wanted = m[1].toLowerCase();
         const list = dsListCache;
-        const entry = list.find(d =>
-            String(d.name || '').toLowerCase() === wanted || String(d.service || '').toLowerCase() === wanted);
+
+        // New values are entry ids, but @<service> and @<display name> keep
+        // working (including the historic case-insensitive match).
+        let entry = resolveApiEntry(list, m[1]);
+        if (!entry) {
+            entry = list.find(d =>
+                String(apiEntryId(d)).toLowerCase() === wanted
+                || String(d.id || '').toLowerCase() === wanted
+                || String(d.name || '').toLowerCase() === wanted
+                || String(d.service || '').toLowerCase() === wanted);
+        }
         if (!entry) return null;
-        return { name: entry.name || entry.service, rest: m[2] };
+
+        return {
+            id: apiEntryId(entry),
+            label: apiEntryLabel(entry, (key) => browser.i18n.getMessage(key)) || entry.service,
+            rest: m[2]
+        };
     }
 
     /**
@@ -766,6 +840,7 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
     function handleSkillInput() {
         const val = msgInput.value;
+        updateAttachmentAvailability();
         // Only trigger when "/" is the very first character of the draft. The
         // query is the first token only, so "/name arg1 arg2" keeps matching
         // "name" (args are handled as an inline command on send).
@@ -855,6 +930,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             skillDisabled = false; // adopting a Skill overrides "off"
             if (skillPickerOpen) closeSkillPicker();
             renderActiveSkillBar();
+            // Remember the choice for this conversation too: an inline command is
+            // as explicit as picking the Skill from the "/" list, so a background
+            // refresh must not drop it.
+            persistSkillSelection();
             if (!(cmd.args || '').trim()) {
                 // Bare "/skill": there is nothing to send. Adopt the Skill and, when
                 // it declares a starter message, prefill the input with it so the
@@ -872,14 +951,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         let callDsService = null;
         const svcOverride = parseServiceOverride(rawMessage);
         if (svcOverride) {
-            callDsService = svcOverride.name;
+            callDsService = svcOverride.id;
             rawMessage = svcOverride.rest;
-            appendArtifactNote((browser.i18n.getMessage('modelOverrideNote') || 'This message runs on {name}.').replace('{name}', svcOverride.name), null);
         }
 
         const messageContent = rawMessage.trim();
         const rtime = Date.now();
         if (!messageContent) return;
+
+        // Attachments already queued for sending belong to this turn. The whole
+        // attachment channel depends on the effective model's `multimodal`
+        // capability, so refuse to send the files rather than silently dropping
+        // them (or hitting an endpoint that cannot read them).
+        const hasPendingAttachments = historyMessages.some(msg => msg.role === 'user' && msg.fileInfo?.send);
+        if (hasPendingAttachments && !supportsAttachments(callDsService)) {
+            await balert(browser.i18n.getMessage('multimodalUnsupported'));
+            return;
+        }
+
+        if (svcOverride) {
+            appendArtifactNote((browser.i18n.getMessage('modelOverrideNote') || 'This message runs on {name}.').replace('{name}', svcOverride.label), null);
+        }
 
         // Whatever the user sends is the answer to a pending option list (they may
         // type "#1 #3" or explain their choice in their own words). Drop this
@@ -943,9 +1035,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? buildLessonsBlock(learnState.lessons, { maxChars: LESSONS_INJECT_CHARS })
             : '';
         const scenarioContent = [scenarioPrompt, lessonsBlock].filter(Boolean).join('\n\n');
-        if (scenarioContent) {
-            messagesForAPI.unshift({ role: "system", content: scenarioContent });
-        }
 
         // Inject current webpage content for skills that need it (usePage)
         if (activeSkill?.usePage) {
@@ -988,6 +1077,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             temperature: apiSettings.temperature,
             top_p: apiSettings.top_p,
             think: apiSettings.think,
+            // Scenario prompt + learned notes. chat() merges this with the
+            // active Skill into one system block (systemInstruction on Gemini).
+            systemPrompt: scenarioContent,
             activeSkill: activeSkill ? { ...activeSkill, prompt: applySkillArguments(activeSkill.prompt || '', activeSkillArgs) } : null,
             skills: skillDisabled ? [] : skills,
             // Where this turn runs from and which data source it uses; tools get
@@ -1143,7 +1235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const text = usage ? formatUsage(usage, tokenUsageLabels()) : '';
         const hint = usage && usage.estimated ? (browser.i18n.getMessage('tokenEstimatedHint') || '') : '';
         return `<div class="token-usage"${text ? '' : ' hidden'}` +
-            `${hint ? ` title="${escapeHTML(hint)}"` : ''}>${escapeHTML(text)}</div>`;
+            `${hint ? ` title="${escapeHtml(hint)}"` : ''}>${escapeHtml(text)}</div>`;
     }
 
     /**
@@ -1167,13 +1259,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     /**
      * Append message to chat interface
      */
-    function escapeHTML(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-
     function appendMessage(messageText, sender, timestamp, flag = true, fileInfo = null, usage = null) {
         const isSelf = sender === "self";
         const senderName = isSelf ? "" : sender;
@@ -1187,7 +1272,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let markdownSelf = isSelf ? "self-message" : "markdown-body";
         let divpre = isSelf ? "pre" : "div";
-        let msgText = isSelf ? escapeHTML(messageText) : messageText;
+        let msgText = isSelf ? escapeHtml(messageText) : messageText;
 
         if (fileInfo?.type) {
             divpre = "div";
@@ -3438,14 +3523,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         setComponentState(false);
     });
 
-    document.getElementById("b_image").addEventListener('click', (e) => {
+    bImage.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('imageUpload').click();
+        if (!supportsAttachments()) {
+            balert(browser.i18n.getMessage('multimodalUnsupported'));
+            return;
+        }
+        bImageUpload.click();
     });
 
-    document.getElementById('imageUpload').addEventListener('change', (event) => {
+    bImageUpload.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
+
+        if (!supportsAttachments()) {
+            event.target.value = '';
+            balert(browser.i18n.getMessage('multimodalUnsupported'));
+            return;
+        }
 
         if (file.size > 1024 * 1024 * 5) {
             alert(browser.i18n.getMessage("fileTooLarge"));
@@ -3584,6 +3679,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateChatRecordsList(scenarioData.history, scenarioData.currentId);
             checkAndShowSampleMessage(currentScenario, scenarioData.currentId);
             currentSessionId = newSessionId;
+            // A brand-new conversation has no remembered choice (AGENTS §7.6):
+            // do not carry the previous conversation's Skill over to it.
+            applyStoredSkillSelection({ skillsReady: skills.length > 0, force: true });
             renderPendingCards();
             updateLearnControls();
             // The conversation on screen was replaced: refresh the search bar so
@@ -3757,8 +3855,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         menu.className = 'export-menu';
         menu.setAttribute('role', 'menu');
         menu.innerHTML = `
-            <button type="button" class="export-menu-item" role="menuitem" data-format="html">${escapeHTML(browser.i18n.getMessage('exportReplyHtml') || 'HTML')}</button>
-            <button type="button" class="export-menu-item" role="menuitem" data-format="pdf">${escapeHTML(browser.i18n.getMessage('exportReplyPdf') || 'PDF')}</button>
+            <button type="button" class="export-menu-item" role="menuitem" data-format="html">${escapeHtml(browser.i18n.getMessage('exportReplyHtml') || 'HTML')}</button>
+            <button type="button" class="export-menu-item" role="menuitem" data-format="pdf">${escapeHtml(browser.i18n.getMessage('exportReplyPdf') || 'PDF')}</button>
         `;
         document.body.appendChild(menu);
         exportMenu = menu;
@@ -4133,9 +4231,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         snippet.className = 'chat-search-snippet';
         const { text = '', hitStart = -1, hitEnd = -1 } = hit.snippet || {};
         if (hitStart >= 0 && hitEnd > hitStart) {
-            snippet.innerHTML = escapeHTML(text.slice(0, hitStart))
-                + `<mark class="chat-search-hit">${escapeHTML(text.slice(hitStart, hitEnd))}</mark>`
-                + escapeHTML(text.slice(hitEnd));
+            snippet.innerHTML = escapeHtml(text.slice(0, hitStart))
+                + `<mark class="chat-search-hit">${escapeHtml(text.slice(hitStart, hitEnd))}</mark>`
+                + escapeHtml(text.slice(hitEnd));
         } else {
             snippet.textContent = text;
         }
@@ -4763,8 +4861,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 applyPendingSearchJump();
                 applyPendingGoto();
                 // The Skill choice belongs to the conversation: restore whatever
-                // was picked here last time (see applyStoredSkillSelection).
-                applyStoredSkillSelection({ skillsReady: skills.length > 0 });
+                // was picked here last time (see applyStoredSkillSelection). The
+                // switch is authoritative, so it may override an in-memory
+                // choice made in the conversation we just left.
+                applyStoredSkillSelection({ skillsReady: skills.length > 0, force: true });
             } else {
                 const fallbackSession = scenarioData.history.find(s => s.id === 0) || scenarioData.history[0];
                 if (fallbackSession) {
@@ -5283,6 +5383,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * Localised label for a data source. The stored `service` key stays the
+     * canonical value (it is what historical data and call routing use); only
+     * the text shown to the user changes.
+     * @param {Object|string} config - Data source config or service key
+     * @returns {string} Display label
+     */
+    function serviceDisplayName(config) {
+        if (!config) return '';
+        if (typeof config === 'string') {
+            return providerLabel(config, (key) => browser.i18n.getMessage(key)) || config;
+        }
+        return apiEntryLabel(config, (key) => browser.i18n.getMessage(key))
+            || providerLabel(config.service, (key) => browser.i18n.getMessage(key))
+            || config.service || '';
+    }
+
+    /**
      * Switch the active data source and refresh the model list
      * @param {Object} dsConfig - The new data source configuration
      */
@@ -5290,10 +5407,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!dsConfig) return;
         currentServiceConfig = dsConfig;
         setRuntimeConfig(dsConfig);
+        updateAttachmentAvailability();
         await populateModelList(dsConfig);
 
         const serviceDropdown = document.getElementById("serviceDropdown");
-        if (serviceDropdown) serviceDropdown.textContent = dsConfig.service;
+        if (serviceDropdown) serviceDropdown.textContent = serviceDisplayName(dsConfig);
     }
 
     /**
@@ -5308,13 +5426,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         serviceList.textContent = "";
 
-        // Build a combined list: the base config first, then dsList entries
-        const allServices = [baseConfig];
-        dsList.forEach(item => {
-            // Avoid duplicates with the base config
-            if (item.service !== baseConfig.service || item.apiUrl !== baseConfig.apiUrl) {
-                allServices.push(item);
-            }
+        // Build a combined list: the base config first, then dsList entries.
+        // Several entries may share a provider type, so identity is the entry
+        // id (never service+URL).
+        const allServices = [];
+        const seen = new Set();
+        [baseConfig, ...dsList].forEach((item) => {
+            const key = apiEntryId(item) || `${item.service}|${item.apiUrl}|${item.modelName}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            allServices.push(item);
         });
 
         allServices.forEach((dsConfig, index) => {
@@ -5322,7 +5443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const link = document.createElement("a");
             link.className = "dropdown-item";
             link.href = "#";
-            link.textContent = dsConfig.service + (dsConfig.apiUrl ? " (" + dsConfig.apiUrl + ")" : "");
+            link.textContent = serviceDisplayName(dsConfig) + (dsConfig.apiUrl ? " (" + dsConfig.apiUrl + ")" : "");
             link.addEventListener("click", (e) => {
                 e.preventDefault();
                 switchService(dsConfig);
@@ -5340,19 +5461,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             const dsList = runtimeConfig.dsList || [];
             dsListCache = dsList;
 
+            // Find the entry mirrored in `base` so the dropdown shows the same
+            // identity as the provider list.
+            const defaultEntry = dsList.find((d) => apiEntryId(d) === String(runtimeConfig.dsId || ''))
+                || dsList.find((d) => d.service === runtimeConfig.service
+                    && (!runtimeConfig.apiUrl || d.apiUrl === runtimeConfig.apiUrl)
+                    && (!runtimeConfig.modelName || d.modelName === runtimeConfig.modelName))
+                || dsList.find((d) => d.service === runtimeConfig.service);
+
             // Build the service selector with the base config and dsList
             const baseConfig = {
+                id: defaultEntry ? apiEntryId(defaultEntry) : (runtimeConfig.dsId || null),
                 service: runtimeConfig.service,
                 apiUrl: runtimeConfig.apiUrl,
                 apiKey: runtimeConfig.apiKey,
-                modelName: runtimeConfig.modelName
+                modelName: runtimeConfig.modelName,
+                modelType: runtimeConfig.modelType,
+                multimodal: runtimeConfig.multimodal,
+                supportsTools: runtimeConfig.supportsTools
             };
             currentServiceConfig = baseConfig;
+            updateAttachmentAvailability();
 
             buildServiceSelector(dsList, baseConfig);
 
             const serviceDropdown = document.getElementById("serviceDropdown");
-            if (serviceDropdown) serviceDropdown.textContent = runtimeConfig.service || "N/A";
+            if (serviceDropdown) serviceDropdown.textContent = serviceDisplayName(baseConfig) || "N/A";
 
             if (!runtimeConfig.apiUrl) {
                 const guidanceMsg = `${browser.i18n.getMessage("apiConfigGuidance")} <a href="#" class="go-to-config">${browser.i18n.getMessage("goToConfig")}</a>`;

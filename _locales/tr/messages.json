@@ -1,7 +1,4 @@
 {
-    "localLanguage": {
-        "message": "Türkçe"
-    },
     "browserActionTitle": {
         "message": "Akıllı Tarama Asistanı - cllama"
     },
@@ -93,12 +90,6 @@
     "toolRowsEmpty": {
         "message": "Henüz araç yok. Araç Ekle düğmesine tıklayın."
     },
-    "skillDefaultCalculator": {
-        "message": "Hesap Makinesi"
-    },
-    "skillDefaultCalculatorDesc": {
-        "message": "add_numbers aracıyla aritmetik yapın."
-    },
     "skillDefaultGeneralHelper": {
         "message": "Sayfa Sohbeti"
     },
@@ -153,15 +144,6 @@
     "settings": {
         "message": "Ayarlar"
     },
-    "ollamaHostLabel": {
-        "message": "API URL'si"
-    },
-    "modelNameLabel": {
-        "message": "Model Adı"
-    },
-    "tranPromptLabel": {
-        "message": "Çeviri İstem"
-    },
     "expBaseData": {
         "message": "Temel Yapılandırma"
     },
@@ -213,15 +195,6 @@
     "importFailMessage": {
         "message": "İçe aktarma başarısız"
     },
-    "getModuleListFailMessage": {
-        "message": "Model listesi alınamadı"
-    },
-    "tranPrompt": {
-        "message": "Lütfen kullanıcının verdiği cümleyi veya kelimeyi yeniden yazın. Kullanıcı {localLanguage} dışında bir dilde verdiyse, kullanıcının verdiği içeriği {localLanguage} olarak yeniden yazın, aksi takdirde İngilizce olarak yeniden yazın. Not: Yeniden yazarken orijinal anlam korunmalıdır."
-    },
-    "translateWaitMessage": {
-        "message": "Çevriliyor, lütfen bekleyin..."
-    },
     "cllamaError": {
         "message": "Üzgünüm, bazı sorunlar yaşadım, lütfen daha sonra tekrar deneyin veya cllama yapılandırma bilgilerinizin doğru olup olmadığını kontrol edin."
     },
@@ -239,12 +212,6 @@
     },
     "insightifyPageError2": {
         "message": "Bu sayfa bilgisi işlenemiyor, sayfanın sorunsuz olduğunu onaylarsanız yenileyip tekrar deneyebilirsiniz."
-    },
-    "summarizer": {
-        "message": "Özet"
-    },
-    "summaryPrompt": {
-        "message": "Verilen sayfa bilgi içeriğine göre kısa bir özet oluşturun, gereksinimler: 1. En fazla 300 kelime. 2. Her zaman {localLanguage} olarak özet bilgisi oluşturun."
     },
     "requiredError": {
         "message": "Gerekli öğe boş olamaz"
@@ -330,15 +297,6 @@
     },
     "insightServiceLabel": {
         "message": "İçgörü AI"
-    },
-    "tranServiceLabel": {
-        "message": "Çeviri AI"
-    },
-    "TestDesc": {
-        "message": "Yalnızca test amaçlıdır, hız ve kararlılık garanti edilmez."
-    },
-    "OtherDesc": {
-        "message": "OpenAI API protokolüyle uyumlu API arayüz hizmetlerini destekler."
     },
     "language": {
         "message": "Dil"
@@ -454,9 +412,6 @@
     "skillDefaultDateTimeDesc": {
         "message": "Geçerli tarih, saat ve haftanın günü hakkındaki soruları yanıtlar."
     },
-    "skillAutoMode": {
-        "message": "Otomatik"
-    },
     "skillManualOnly": {
         "message": "Yalnızca manuel"
     },
@@ -492,9 +447,6 @@
     },
     "mcpTestOk": {
         "message": "Tamam: {count} araç bulundu."
-    },
-    "mcpTestFail": {
-        "message": "Bağlantı başarısız"
     },
     "mcpDisabled": {
         "message": "devre dışı"
@@ -996,8 +948,7 @@
     },
     "mcpAutoSkillBadge": {
         "message": "MCP"
-    }
-,
+    },
     "mcpToolsPreview": {
         "message": "Araçlar"
     },
@@ -1027,10 +978,116 @@
     },
     "skillToolHintPlaceholder": {
         "message": "Bu araç ne zaman kullanılır (isteğe bağlı) — ör. mevcut bir öğeyi düzenle; yeni öğe için create kullan"
-    }
-,
+    },
     "toolConfirmDestructive": {
         "message": "Bu araç verileri değiştirebilir veya silebilir."
+    },
+    "apiProvidersTitle": {
+        "message": "API sağlayıcıları"
+    },
+    "apiProvidersDesc": {
+        "message": "Bir veya daha fazla yapay zekâ sağlayıcısı yapılandırın. Bir sohbet veya Insight tarifi başka bir sağlayıcı seçmedikçe varsayılan sağlayıcı kullanılır."
+    },
+    "apiAddProvider": {
+        "message": "Sağlayıcı ekle"
+    },
+    "apiEmptyProviders": {
+        "message": "Henüz yapılandırılmış sağlayıcı yok. Yapay zekâ özelliklerini kullanmaya başlamak için bir tane ekleyin."
+    },
+    "apiDefaultBadge": {
+        "message": "Varsayılan"
+    },
+    "apiSetDefault": {
+        "message": "Varsayılan yap"
+    },
+    "apiEditProvider": {
+        "message": "Sağlayıcıyı düzenle"
+    },
+    "apiDeleteProvider": {
+        "message": "Sağlayıcıyı sil"
+    },
+    "apiAddProviderTitle": {
+        "message": "API sağlayıcısı ekle"
+    },
+    "apiEditProviderTitle": {
+        "message": "API sağlayıcısını düzenle"
+    },
+    "apiProviderLabel": {
+        "message": "API sağlayıcısı"
+    },
+    "apiEndpointLabel": {
+        "message": "API uç noktası"
+    },
+    "apiKeyLabel": {
+        "message": "API anahtarı"
+    },
+    "apiModelLabel": {
+        "message": "Model"
+    },
+    "apiModelPlaceholder": {
+        "message": "Bir model adı seçin veya yazın"
+    },
+    "apiFetchModels": {
+        "message": "Modelleri yükle"
+    },
+    "apiModelsLoading": {
+        "message": "Modeller yükleniyor…"
+    },
+    "apiModelsLoaded": {
+        "message": "{count} model yüklendi"
+    },
+    "apiModelsFailed": {
+        "message": "Model listesi yüklenemedi. Model adını elle yazın."
+    },
+    "apiModelTypeLabel": {
+        "message": "Model türü"
+    },
+    "modelTypeImage": {
+        "message": "Görsel üretim modeli"
+    },
+    "apiProviderOllama": {
+        "message": "Ollama (yerel)"
+    },
+    "apiProviderOpenAI": {
+        "message": "OpenAI"
+    },
+    "apiProviderGoogle": {
+        "message": "Google Gemini"
+    },
+    "apiProviderDeepSeek": {
+        "message": "DeepSeek"
+    },
+    "apiProviderQwen": {
+        "message": "Qwen"
+    },
+    "apiProviderZhiPu": {
+        "message": "Zhipu AI"
+    },
+    "apiProviderCompatible": {
+        "message": "OpenAI uyumlu API"
+    },
+    "apiUseDefaultProvider": {
+        "message": "Varsayılanla aynı"
+    },
+    "apiDeleteProviderConfirm": {
+        "message": "\"{name}\" sağlayıcısı silinsin mi?"
+    },
+    "modelTypeDecision": {
+        "message": "Karar modeli"
+    },
+    "modelTypeText": {
+        "message": "Metin üretim modeli"
+    },
+    "apiCapabilitiesLabel": {
+        "message": "Yetenekler"
+    },
+    "apiMultimodal": {
+        "message": "Çoklu mod (ekler)"
+    },
+    "apiSupportsTools": {
+        "message": "Araçlar"
+    },
+    "multimodalUnsupported": {
+        "message": "Seçilen model ekleri desteklemiyor. Başka bir model seçin veya API ayarlarında çoklu mod girişini etkinleştirin."
     }
-
 }

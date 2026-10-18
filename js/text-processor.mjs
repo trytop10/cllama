@@ -1,5 +1,5 @@
 /**
- * Text processing utilities for template rendering, token estimation, and truncation
+ * Text processing utilities for template rendering and token estimation.
  */
 export const TextProcessor = {
   /**
@@ -35,77 +35,5 @@ export const TextProcessor = {
     
     // Add 10% safety margin
     return Math.ceil((chineseTokens + wordTokens + symbolTokens) * 1.1);
-  },
-
-  /**
-   * Normalizes whitespace by converting newlines to spaces and collapsing consecutive spaces
-   * @param {string} str - Input string
-   * @returns {string} Normalized string
-   */
-  normalizeWhitespace(str) {
-    if (typeof str !== 'string') return '';
-    
-    return str
-      .replace(/\r\n?|\n/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  },
-
-  /**
-   * Intelligently truncates text to fit within token limit
-   * Strategy: sentence boundaries → binary search → word boundaries
-   * @param {string} str - Original text
-   * @param {number} maxTokens - Maximum allowed tokens
-   * @returns {string} Truncated text
-   */
-  truncateToTokens(str, maxTokens) {
-    if (typeof str !== 'string' || maxTokens <= 0) return '';
-
-    const text = this.normalizeWhitespace(str);
-    if (this.estimateTokens(text) <= maxTokens) return text;
-
-    // Try sentence-level truncation (supports Chinese/English punctuation)
-    const sentenceEnders = /([。！？?!.](?=\s|$))/g;
-    const sentences = text.split(sentenceEnders).reduce((arr, s, i) => {
-      if (i % 2 === 0) arr.push(s);
-      else arr[arr.length - 1] += s;
-      return arr;
-    }, []);
-
-    let result = '';
-    for (const sentence of sentences) {
-      const temp = result + sentence;
-      if (this.estimateTokens(temp) > maxTokens) break;
-      result = temp;
-    }
-
-    // Binary search for precise length if no complete sentences fit
-    if (!result) {
-      let low = 0, high = text.length;
-      while (low <= high) {
-        const mid = (low + high) >>> 1;
-        const subText = text.slice(0, mid);
-        this.estimateTokens(subText) <= maxTokens 
-          ? (result = subText, low = mid + 1) 
-          : high = mid - 1;
-      }
-    }
-
-    // Fine-tune to exact token limit at word boundaries
-    const safeTruncate = (str) => {
-      const lastBoundary = Math.max(
-        str.lastIndexOf(' '),
-        str.lastIndexOf('。'),
-        str.lastIndexOf('!'),
-        str.lastIndexOf('?')
-      );
-      return lastBoundary > 0 ? str.slice(0, lastBoundary + 1) : str.slice(0, -1);
-    };
-
-    while (result && this.estimateTokens(result) > maxTokens) {
-      result = safeTruncate(result);
-    }
-
-    return result || text.slice(0, 10);
   }
 };

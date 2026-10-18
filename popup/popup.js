@@ -1,30 +1,30 @@
 import { i18n } from "../js/cllama.js";
 import { browser, isFirefox } from "../js/browser.mjs";
 
-document.getElementById('insightify').addEventListener('click',  async (e) => {
+document.getElementById('insightify').addEventListener('click', (e) => {
   e.preventDefault();
   openPage("/insightify/insightify.html", "Insightify");
   window.close();
 });
 
-document.getElementById('chat').addEventListener('click', async (e) => {
+document.getElementById('chat').addEventListener('click', (e) => {
   e.preventDefault();
   openPage("/chat/chat.html", "chat");
   window.close();
 });
 
-document.getElementById('settings').addEventListener('click', async (e) => {
+document.getElementById('settings').addEventListener('click', (e) => {
   e.preventDefault();  
   browser.runtime.openOptionsPage();
   window.close();
 });
 
-async function openPage(url, title) {
+function openPage(url, title) {
  
   if(isFirefox) {
     const sidebar = browser.sidebarAction;
     const fail = (err) => console.error("[cllama] sidebarAction:", err);
-    var thatPanel = browser.runtime.getURL(url);
+    const thatPanel = browser.runtime.getURL(url);
     sidebar.setPanel({ panel: thatPanel }).catch(fail); 
     sidebar.setTitle({ title: "cllama-" + browser.i18n.getMessage(title) }).catch(fail);   
     sidebar.open().catch(fail);    
@@ -40,6 +40,6 @@ async function openPage(url, title) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   i18n();
 });

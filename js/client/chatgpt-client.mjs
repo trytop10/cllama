@@ -3,6 +3,7 @@
  * Fully compatible with AI Service SDK Standard v1.0
  */
 import { normalizeOpenAIUsage } from '../token-usage.mjs';
+import { openAISamplingOptions } from '../request-options.mjs';
 
 export class ChatGPTClient {
   /**
@@ -73,12 +74,13 @@ export class ChatGPTClient {
 
     // Note: 'think' parameter disabled to avoid errors with some providers
     const think = options?.options?.think ?? true;
+    const sampling = openAISamplingOptions(options);
 
     const requestOptions = {
       model: options.model || this.defaultModel,
       messages,
-      temperature: options.temperature ?? 1,
-      top_p: options.top_p ?? 0.9,
+      temperature: sampling.temperature,
+      top_p: sampling.top_p,
       stream: true
     };
 
@@ -202,12 +204,13 @@ export class ChatGPTClient {
             const delta = choice.delta || {};
             if (choice.finish_reason) finishReason = choice.finish_reason;
 
-            // New API: standalone reasoning_content field for thinking
-            if (delta.reasoning_content) {
-              thinkingText += delta.reasoning_content;
+            // New API: standalone reasoning_content / reasoning field for thinking
+            const reasoningDelta = delta.reasoning_content || delta.reasoning;
+            if (reasoningDelta) {
+              thinkingText += reasoningDelta;
               if (typeof options.onStream === 'function') {
                 const full = '<think>' + thinkingText + '</think>' + contentText;
-                options.onStream(delta.reasoning_content, full, sessionId);
+                options.onStream(reasoningDelta, full, sessionId);
               }
             }
 

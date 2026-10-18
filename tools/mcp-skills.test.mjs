@@ -18,7 +18,7 @@ const {
   mcpToolDescription, mcpUiGroupSkillId, oneLine, serverIdFromSkillId,
   uiGroupLabel, uiResourceOfTool
 } = await import('../js/mcp-skills.mjs');
-const { registerTool, buildNativeTools, buildToolInstructions } = await import('../js/skill-tools.mjs');
+const { registerTool, buildNativeTools, buildToolInstructions, buildSkillSystemMessage } = await import('../js/skill-tools.mjs');
 
 let passed = 0;
 function check(name, fn) {
@@ -157,6 +157,17 @@ check('the prompt carries no skill-argument placeholders', () => {
   // must not look like a placeholder (it would be substituted or blanked).
   assert.ok(!skill.prompt.includes('$'));
   assert.match(skill.prompt, /costs 1 and ARGUMENTS/);
+});
+
+check('a derived MCP Skill injects nothing when tools are declared natively', () => {
+  const skill = buildMcpSkill(server, tools);
+  // Its prompt is the tool list, and that list already lives in the request's
+  // `tools` field. Any injected text here is a competing second copy.
+  assert.equal(skill.nativePrompt, '');
+  assert.equal(buildSkillSystemMessage(skill, { native: true }), '');
+  // The text protocol still gets the full list.
+  assert.match(skill.prompt, /Available tools:/);
+  assert.match(buildSkillSystemMessage(skill), /Available tools:/);
 });
 
 check('oneLine flattens, caps and strips placeholder syntax', () => {
@@ -389,6 +400,43 @@ check('a tool without a hint keeps its description exactly as before', () => {
   const skill = { name: 's', prompt: '', tools: [{ name: 'test_hint_tool', args: {} }] };
   assert.equal(buildNativeTools(skill)[0].function.description, 'does the thing');
   assert.match(buildToolInstructions(skill), /test_hint_tool: does the thing$/m);
+});
+
+check('native tools are not duplicated in the injected text', () => {
+  const skill = { name: 's', prompt: 'p', tools: [{ name: 'test_hint_tool', args: { x: 1 } }] };
+  // Native path: no tool text at all. The definitions in the request's `tools`
+  // field are the single source of truth; a second description (even just names
+  // plus fallback syntax) made models answer with the textual protocol instead
+  // of calling the tool.
+  assert.equal(buildToolInstructions(skill, { native: true }), '');
+  assert.equal(buildSkillSystemMessage(skill, { native: true }), 'p');
+  // Text path keeps the full description + default args + textual syntax.
+  const full = buildToolInstructions(skill);
+  assert.match(full, /does the thing/);
+  assert.match(full, /default args/);
+  assert.match(full, /<tool_call>/);
+  assert.match(buildSkillSystemMessage(skill), /does the thing/);
+});
+
+check('the chat loop injects Skill text only into system, never into a user turn', () => {
+  const source = read('js/cllama.js');
+  assert.match(source, /buildSkillSystemMessage\(activeSkill, \{ native: useNativeTools \}\)/);
+  assert.match(source, /buildToolInstructions\(skill, \{ native: useNativeTools \}\)/);
+  // Skill / MCP instructions are never glued to the user's own message: they go
+  // into the single system block, which Gemini receives as `systemInstruction`.
+  assert.doesNotMatch(source, /injectText \+ '\\n\\n' \+ msgs\[lastUser\]/);
+  assert.doesNotMatch(source, /content: injectText \+/);
+  assert.doesNotMatch(source, /skillSystemDisabled|skillSystemCache|looksLikeSystemRejection/);
+  assert.match(source, /msgs\.unshift\(\{ role: 'system', content: text \}\)/);
+  assert.match(source, /systemInstructionText = text/);
+  assert.doesNotMatch(source, /role: 'user', parts: \[\{ text: injectText \}\]/);
+  // Native Auto mode must not reintroduce the textual fallback syntax either:
+  // `use_skill` is declared in `tools`, and two formats confuse models.
+  assert.doesNotMatch(source, /If native tool calling is unavailable/);
+  // A dead stream / Ollama EOF retries once without native tools instead of
+  // surfacing a bare "EOF" to the user.
+  assert.match(source, /function looksLikeTransportBreak/);
+  assert.match(source, /looksLikeToolRejection\(err\) \|\| looksLikeTransportBreak\(err\)/);
 });
 
 // ------------------- wiring -------------------
