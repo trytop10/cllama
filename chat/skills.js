@@ -372,6 +372,9 @@ function showSkillForm(skill) {
   const manualOnlyInput = document.getElementById('skillManualOnlyInput');
   if (manualOnlyInput) manualOnlyInput.checked = skill ? skill.manualOnly === true : false;
 
+  const usePageInput = document.getElementById('skillUsePageInput');
+  if (usePageInput) usePageInput.checked = skill ? skill.usePage === true : false;
+
   const serviceInput = document.getElementById('skillServiceInput');
   if (serviceInput) {
     const stored = skill ? (skill.dsService || '') : '';
@@ -435,14 +438,16 @@ async function saveSkillFromForm() {
       existing.prompt = prompt;
       existing.tools = tools;
       existing.manualOnly = document.getElementById('skillManualOnlyInput')?.checked === true;
+      if (document.getElementById('skillUsePageInput')?.checked === true) existing.usePage = true;
+      else delete existing.usePage;
       setOptionalSkillField(existing, 'starter', starter);
       setOptionalSkillField(existing, 'dsService', dsService);
-      // usePage is not exposed in this form; editing must not drop it.
     }
   } else {
     const manualOnly = document.getElementById('skillManualOnlyInput')?.checked === true;
     const entry = { id: `skill_${Date.now()}`, name, description, prompt, tools };
     if (manualOnly) entry.manualOnly = true;
+    if (document.getElementById('skillUsePageInput')?.checked === true) entry.usePage = true;
     setOptionalSkillField(entry, 'starter', starter);
     setOptionalSkillField(entry, 'dsService', dsService);
     skillConfigurations.push(entry);

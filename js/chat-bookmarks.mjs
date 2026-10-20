@@ -18,6 +18,10 @@
 /** Cap on the number of bookmarks; adding beyond it is refused, never silently
  * evicted — favourites are user data, like learned notes. */
 export const MAX_BOOKMARKS = 300;
+/** Generated images kept in one bookmark snapshot (they are megabytes each). */
+export const MAX_BOOKMARK_IMAGES = 4;
+/** Total data-URL characters kept across one bookmark's images. */
+export const MAX_BOOKMARK_IMAGE_CHARS = 8 * 1024 * 1024;
 
 /** Cap on the stored text of one bookmark. Longer answers are truncated and
  * flagged, so a single huge code block cannot bloat `storage.local`. */
@@ -69,6 +73,33 @@ export function trimContent(text, max = MAX_BOOKMARK_CHARS) {
   return { content: source.slice(0, limit), truncated: true };
 }
 
+/**
+ * Trims generated images to the bookmark budget. A favourite is a snapshot, so
+ * the bytes are kept — but only up to a hard cap, otherwise one bookmark could
+ * be tens of megabytes.
+ * @param {Array<string>} images - Data URLs
+ * @returns {{images: Array<string>, truncated: boolean}}
+ */
+export function trimImages(images) {
+  const source = Array.isArray(images) ? images.filter(Boolean) : [];
+  const kept = [];
+  let chars = 0;
+  let truncated = false;
+  for (const image of source) {
+    if (typeof image !== 'string' || !/^data:image\//i.test(image)) {
+      truncated = true;
+      continue;
+    }
+    if (kept.length >= MAX_BOOKMARK_IMAGES || chars + image.length > MAX_BOOKMARK_IMAGE_CHARS) {
+      truncated = true;
+      continue;
+    }
+    kept.push(image);
+    chars += image.length;
+  }
+  return { images: kept, truncated };
+}
+
 /** Attachment messages keep a data URL as their content; only the file name is
  * worth storing (a base64 image would be megabytes of storage for no value). */
 function slimFileInfo(fileInfo) {
@@ -95,10 +126,14 @@ export function makeBookmark(record, context = {}) {
   const raw = typeof record?.content === 'string' ? record.content : '';
   const fileInfo = slimFileInfo(record?.fileInfo);
   const source = /^data:[^,]*,/i.test(raw) ? '' : raw;
-  if (!source && !fileInfo) return { ok: false, bookmark: null, notes: ['empty content'] };
+  const { images, truncated: imagesTruncated } = trimImages(record?.images);
+  if (!source && !fileInfo && !images.length) {
+    return { ok: false, bookmark: null, notes: ['empty content'] };
+  }
 
   const { content, truncated } = trimContent(source);
   if (truncated) notes.push('content truncated');
+  if (imagesTruncated) notes.push('images truncated');
 
   return {
     ok: true,
@@ -111,8 +146,9 @@ export function makeBookmark(record, context = {}) {
       role: record?.role === 'user' ? 'user' : 'assistant',
       model: typeof record?.model === 'string' ? record.model : '',
       content,
-      truncated,
+      truncated: truncated || imagesTruncated,
       fileInfo,
+      images,
       scenarioName: typeof context.scenarioName === 'string' ? context.scenarioName : '',
       sessionName: typeof context.sessionName === 'string' ? context.sessionName : '',
       createdAt: Number.isFinite(context.now) ? context.now : Date.now()
@@ -135,13 +171,19 @@ export function normalizeBookmark(raw) {
 
   const content = typeof raw.content === 'string' ? raw.content : '';
   const fileInfo = slimFileInfo(raw.fileInfo);
-  if (!content && !fileInfo) return { ok: false, bookmark: null, notes: ['empty content'] };
+  const { images, truncated: imagesTruncated } = trimImages(raw.images);
+  if (!content && !fileInfo && !images.length) {
+    return { ok: false, bookmark: null, notes: ['empty content'] };
+  }
 
   const createdAt = Number(raw.createdAt);
   const rtime = Number(raw.rtime);
   return {
     ok: true,
-    notes: raw.truncated ? ['content truncated'] : [],
+    notes: [
+      ...(raw.truncated ? ['content truncated'] : []),
+      ...(imagesTruncated ? ['images truncated'] : [])
+    ],
     bookmark: {
       id: String(raw.id),
       scenarioId: String(raw.scenarioId ?? parsed.scenarioId),
@@ -150,8 +192,9 @@ export function normalizeBookmark(raw) {
       role: raw.role === 'user' ? 'user' : 'assistant',
       model: typeof raw.model === 'string' ? raw.model : '',
       content,
-      truncated: Boolean(raw.truncated),
+      truncated: Boolean(raw.truncated) || imagesTruncated,
       fileInfo,
+      images,
       scenarioName: typeof raw.scenarioName === 'string' ? raw.scenarioName : '',
       sessionName: typeof raw.sessionName === 'string' ? raw.sessionName : '',
       createdAt: Number.isFinite(createdAt) ? createdAt : 0
@@ -284,6 +327,10 @@ export function groupBookmarks(list) {
 export function bookmarkText(bookmark) {
   const content = typeof bookmark?.content === 'string' ? bookmark.content : '';
   if (content) return content;
-  return bookmark?.fileInfo?.name ? String(bookmark.fileInfo.name) : '';
+  if (bookmark?.fileInfo?.name) return String(bookmark.fileInfo.name);
+  if (Array.isArray(bookmark?.images) && bookmark.images.length) {
+    return `🖼 ${bookmark.images.length}`;
+  }
+  return '';
 }
 

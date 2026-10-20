@@ -9,9 +9,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 
 const {
-  MAX_BOOKMARKS, MAX_BOOKMARK_CHARS, addBookmark, bookmarkId, bookmarkText,
+  MAX_BOOKMARKS, MAX_BOOKMARK_CHARS, MAX_BOOKMARK_IMAGES, addBookmark, bookmarkId, bookmarkText,
   groupBookmarks, isBookmarked, makeBookmark, normalizeBookmark, normalizeBookmarks,
-  parseBookmarkId, removeBookmark, sortBookmarks, trimContent
+  parseBookmarkId, removeBookmark, sortBookmarks, trimContent, trimImages
 } = await import('../js/chat-bookmarks.mjs');
 
 let passed = 0;
@@ -217,6 +217,29 @@ check('the bookmark count message keeps its {count} placeholder', () => {
     const messages = JSON.parse(readFileSync(new URL(`../_locales/${locale}/messages.json`, import.meta.url), 'utf8'));
     assert.match(messages.bookmarkCount.message, /\{count\}/, `${locale}: bookmarkCount lost {count}`);
   }
+});
+
+// ------------------- generated images -------------------
+check('image-only answers can be bookmarked and keep their snapshot', () => {
+  const src = 'data:image/png;base64,iVBORw0KGgo=';
+  const made = makeBookmark({ role: 'assistant', content: '', images: [src], rtime: 1700 },
+    { scenarioId: '2', sessionId: 1, now: 5 });
+  assert.equal(made.ok, true);
+  assert.deepEqual(made.bookmark.images, [src]);
+  assert.equal(made.bookmark.truncated, false);
+  assert.equal(bookmarkText(made.bookmark), '🖼 1');
+
+  const restored = normalizeBookmark(made.bookmark);
+  assert.equal(restored.ok, true);
+  assert.deepEqual(restored.bookmark.images, [src]);
+});
+
+check('trimImages caps the count and rejects non-image data', () => {
+  const image = 'data:image/png;base64,iVBORw0KGgo=';
+  const many = Array.from({ length: MAX_BOOKMARK_IMAGES + 2 }, () => image);
+  const trimmed = trimImages([...many, 'not-an-image']);
+  assert.equal(trimmed.images.length, MAX_BOOKMARK_IMAGES);
+  assert.equal(trimmed.truncated, true);
 });
 
 console.log(`\n${passed} checks passed.`);

@@ -272,7 +272,7 @@
 
               <div class="mb-3">
                 <label for="apiUrl" class="form-label i18n">apiEndpointLabel</label>
-                <input type="text" class="form-control" id="apiUrl" inputmode="url" required autocomplete="off" spellcheck="false">
+                <input type="text" class="form-control" id="apiUrl" inputmode="url" autocomplete="off" spellcheck="false">
               </div>
 
               <div class="mb-3">
@@ -302,6 +302,50 @@
               <div class="mb-1">
                 <label for="apiModelType" class="form-label i18n">apiModelTypeLabel</label>
                 <select id="apiModelType" class="form-select"></select>
+              </div>
+
+              <div class="mt-3 d-none" id="imageApiUrlRow">
+                <label for="imageApiUrl" class="form-label i18n">imageApiUrlLabel</label>
+                <input type="text" class="form-control" id="imageApiUrl" inputmode="url" autocomplete="off" spellcheck="false">
+                <div class="form-text i18n">imageApiUrlHint</div>
+              </div>
+
+              <div class="mt-3 d-none" id="imageDefaultsRow">
+                <div class="form-label i18n">imageDefaultsLabel</div>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label for="imageSize" class="form-label small i18n">imageSizeLabel</label>
+                    <select id="imageSize" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="col-6">
+                    <label for="imageAspectRatio" class="form-label small i18n">imageAspectRatioLabel</label>
+                    <select id="imageAspectRatio" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="col-6">
+                    <label for="imageQuality" class="form-label small i18n">imageQualityLabel</label>
+                    <select id="imageQuality" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="col-6">
+                    <label for="imageCount" class="form-label small i18n">imageCountLabel</label>
+                    <input type="number" class="form-control form-control-sm" id="imageCount" min="1" max="10" step="1">
+                  </div>
+                  <div class="col-6">
+                    <label for="imageOutputFormat" class="form-label small i18n">imageOutputFormatLabel</label>
+                    <select id="imageOutputFormat" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="col-6">
+                    <label for="imageBackground" class="form-label small i18n">imageBackgroundLabel</label>
+                    <select id="imageBackground" class="form-select form-select-sm"></select>
+                  </div>
+                  <div class="col-6">
+                    <label for="imageSeed" class="form-label small i18n">imageSeedLabel</label>
+                    <input type="number" class="form-control form-control-sm" id="imageSeed" min="0" step="1">
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 d-none" id="videoUnsupportedHint">
+                <div class="alert alert-warning py-2 mb-0 small i18n">imageVideoNotSupported</div>
               </div>
 
               <div class="mt-3">

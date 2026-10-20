@@ -1,10 +1,15 @@
 import { ChatGPTClient } from './chatgpt-client.mjs';
 import { OllamaClient } from './ollama-client.mjs';
 import { GeminiClient } from './gemini-client.mjs';
+import { ImageClient } from './image-client.mjs';
 import { isGemini } from '../util.js';
+import { buildImageEndpoint, buildImageModelsEndpoint, getImageProtocol } from '../image-protocol.mjs';
 
 // Internal cache to store initialized client instances to avoid redundant creation.
 const serviceCache = new Map();
+// Image clients are kept apart: their endpoint and protocol differ from the
+// text client for the same provider (OpenRouter: /images vs /chat/completions).
+const imageServiceCache = new Map();
 
 /**
  * Internal factory function to create a client instance based on the configuration.
@@ -86,6 +91,34 @@ export function getService(service, apiUrl, apiKey) {
         apiUrl,
         apiKey
     };
-    
+
     return createClient(config);
+}
+
+/**
+ * Creates the image client for one provider entry. The protocol is derived
+ * from the entry (explicit `imageProtocol`, provider meta or host); adding a
+ * vendor later only needs a codec + capability matrix.
+ * @param {Object} runtimeConfig - Provider entry
+ * @returns {ImageClient} Image client
+ */
+export function getImageServiceInstance(runtimeConfig) {
+  const protocol = getImageProtocol(runtimeConfig);
+  const endpoint = buildImageEndpoint(runtimeConfig);
+  const cacheKey = `image|${protocol}|${endpoint}|${runtimeConfig?.apiKey || ''}`;
+
+  if (imageServiceCache.has(cacheKey)) {
+    return imageServiceCache.get(cacheKey);
+  }
+
+  const instance = new ImageClient({
+    protocol,
+    endpoint,
+    apiKey: runtimeConfig?.apiKey || '-',
+    defaultModel: runtimeConfig?.modelName || '',
+    service: runtimeConfig?.service || '',
+    modelsEndpoint: buildImageModelsEndpoint(runtimeConfig)
+  });
+  imageServiceCache.set(cacheKey, instance);
+  return instance;
 }

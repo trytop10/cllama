@@ -600,6 +600,68 @@ hr {
     background-color: var(--bs-tertiary-bg);
 }
 
+/* Generated images (image-generation turns). The grid keeps several results
+   readable without forcing a horizontal scrollbar inside the sidebar. */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.image-item {
+    position: relative;
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-secondary-bg);
+}
+
+.image-link {
+    display: block;
+}
+
+.image-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.image-item:hover {
+    border-color: var(--bs-primary-border-subtle);
+}
+
+/* "Use as next input" checkbox: always visible so the pre-selected newest
+   image is obvious without hovering. */
+.image-select {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    cursor: pointer;
+}
+
+.image-select input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.image-warning {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--bs-warning-text-emphasis);
+}
+
+.image-message-error {
+    color: var(--bs-danger-text-emphasis);
+}
+
 .mcp-app-trigger-btn svg {
     width: 14px;
     height: 14px;

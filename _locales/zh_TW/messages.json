@@ -1089,5 +1089,134 @@
     },
     "multimodalUnsupported": {
         "message": "目前模型不支援附件上傳，請切換模型或在 API 設定中啟用多模態。"
+    },
+    "apiProviderOpenRouter": {
+        "message": "OpenRouter"
+    },
+    "modelTypeVideo": {
+        "message": "影片生成模型"
+    },
+    "imageApiUrlLabel": {
+        "message": "圖像 API 端點"
+    },
+    "imageApiUrlHint": {
+        "message": "与聊天端點分开。OpenRouter 使用 https://openrouter.ai/api/v1/images。"
+    },
+    "imageDefaultsLabel": {
+        "message": "圖像預設参数"
+    },
+    "imageSizeLabel": {
+        "message": "尺寸"
+    },
+    "imageAspectRatioLabel": {
+        "message": "宽高比"
+    },
+    "imageQualityLabel": {
+        "message": "质量"
+    },
+    "imageCountLabel": {
+        "message": "每次生成数量"
+    },
+    "imageSeedLabel": {
+        "message": "种子（可选）"
+    },
+    "imageOutputFormatLabel": {
+        "message": "格式"
+    },
+    "imageBackgroundLabel": {
+        "message": "背景"
+    },
+    "imageOptionAuto": {
+        "message": "自動"
+    },
+    "imageVideoNotSupported": {
+        "message": "影片生成已作为模型类型声明，但尚未实现；发送会被阻止。"
+    },
+    "imageGenerating": {
+        "message": "正在生成圖片…"
+    },
+    "imageGenFailed": {
+        "message": "圖片生成失敗。"
+    },
+    "imageGenEmpty": {
+        "message": "服務商没有返回圖片。"
+    },
+    "imageGenPartial": {
+        "message": "服務商返回的圖片数量少于請求数量。"
+    },
+    "imageGenCancelled": {
+        "message": "已取消圖片生成。"
+    },
+    "imageUsageCount": {
+        "message": "{count} 張圖片"
+    },
+    "imageOpen": {
+        "message": "打开圖片"
+    },
+    "imageGeneratedAlt": {
+        "message": "生成的圖片"
+    },
+    "imageInputPlaceholder": {
+        "message": "描述你想生成的圖片…"
+    },
+    "imageReferenceUnsupported": {
+        "message": "圖像模型只接受圖片附件（作为参考图）。"
+    },
+    "imageModelNoSkills": {
+        "message": "該模型类型不支持技能与反思。"
+    },
+    "videoNotSupported": {
+        "message": "影片生成尚未实现。"
+    },
+    "videoInputPlaceholder": {
+        "message": "影片生成暂不可用。"
+    },
+    "imageErrorAuth": {
+        "message": "API 金鑰被拒绝，请檢查提供商設定。"
+    },
+    "imageErrorPayment": {
+        "message": "服務商报告计费或配额问题。"
+    },
+    "imageErrorRateLimit": {
+        "message": "已触发速率限制，请稍後重试。"
+    },
+    "imageErrorContentPolicy": {
+        "message": "提示词被内容策略拒绝。"
+    },
+    "imageErrorUnsupported": {
+        "message": "該模型不支持所請求的某个圖像参数。"
+    },
+    "imageErrorUnsupportedProtocol": {
+        "message": "該提供商尚未实现圖像协议。"
+    },
+    "imageErrorTimeout": {
+        "message": "圖片生成超时。"
+    },
+    "imageErrorNetwork": {
+        "message": "生成圖片时发生網路錯誤。"
+    },
+    "imageErrorUpstream": {
+        "message": "服務商生成圖片失敗，请重试。"
+    },
+    "imageErrorTooLarge": {
+        "message": "生成的圖片超過大小限制。"
+    },
+    "insightNeedsTextModel": {
+        "message": "洞察需要文字模型，請在 API 設定中選擇一個。"
+    },
+    "imageSelectForNext": {
+        "message": "將這張圖片作為下一輪的輸入"
+    },
+    "imageSkillToolsIgnored": {
+        "message": "該 Skill 宣告了工具；圖片生成無法執行工具，因此只使用了它的提示詞。"
+    },
+    "imagePageUnavailable": {
+        "message": "該 Skill 需要目前網頁內容，但未能從作用中分頁讀取到頁面內容。"
+    },
+    "skillUsePage": {
+        "message": "讀取目前網頁"
+    },
+    "skillUsePageHint": {
+        "message": "取得作用中分頁內容並加入提示詞（文字對話和圖片生成都生效）。"
     }
 }

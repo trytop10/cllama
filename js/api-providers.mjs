@@ -27,6 +27,18 @@ export const PROVIDER_TYPES = [
     protocol: 'openai'
   },
   {
+    service: 'OpenRouter',
+    labelKey: 'apiProviderOpenRouter',
+    defaultUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    protocol: 'openai',
+    imageProtocol: 'openrouter-images',
+    // OpenRouter exposes image generation through its dedicated Images API,
+    // which is NOT the chat-completions URL. Keeping it next to the provider
+    // meta means the settings dialog can fill the right default without
+    // guessing by string replacement (see js/image-protocol.mjs).
+    imageDefaultUrl: 'https://openrouter.ai/api/v1/images'
+  },
+  {
     service: 'Google',
     labelKey: 'apiProviderGoogle',
     defaultUrl: 'https://generativelanguage.googleapis.com',
@@ -62,7 +74,8 @@ export const PROVIDER_TYPES = [
 export const MODEL_TYPES = [
   { value: 'text', labelKey: 'modelTypeText' },
   { value: 'decision', labelKey: 'modelTypeDecision' },
-  { value: 'image', labelKey: 'modelTypeImage' }
+  { value: 'image', labelKey: 'modelTypeImage' },
+  { value: 'video', labelKey: 'modelTypeVideo' }
 ];
 
 const PROVIDER_BY_SERVICE = new Map(PROVIDER_TYPES.map((item) => [item.service, item]));
@@ -73,13 +86,94 @@ const LEGACY_MODEL_TYPES = new Map([
 ]);
 
 /**
- * Maps every stored/legacy model type to one of the three current values.
+ * Maps every stored/legacy model type to one of the current values.
  * @param {string} type - Stored model type
- * @returns {string} `text`, `decision` or `image`
+ * @returns {string} `text`, `decision`, `image` or `video`
  */
 export function normalizeModelType(type) {
   if (MODEL_TYPE_BY_VALUE.has(type)) return type;
   return LEGACY_MODEL_TYPES.get(type) || 'text';
+}
+
+/** Whether a model type is answered by the text chat pipeline. */
+export function isTextModelType(type) {
+  const value = normalizeModelType(type);
+  return value === 'text' || value === 'decision';
+}
+
+/** Whether a model type is answered by the image pipeline. */
+export function isImageModelType(type) {
+  return normalizeModelType(type) === 'image';
+}
+
+/** Whether a model type is a generation kind that is not implemented yet. */
+export function isVideoModelType(type) {
+  return normalizeModelType(type) === 'video';
+}
+
+/**
+ * Default image-generation settings stored on a provider entry.
+ * These are the values the OpenRouter codec knows how to apply; unsupported
+ * fields are dropped or turned into warnings by the codec, never silently
+ * forwarded to another provider.
+ */
+export const IMAGE_DEFAULTS = Object.freeze({
+  size: 'auto',
+  aspect_ratio: 'auto',
+  resolution: 'auto',
+  quality: 'auto',
+  n: 1,
+  background: 'auto',
+  output_format: 'auto',
+  seed: null
+});
+
+const IMAGE_SIZE_PATTERN = /^(auto|\d{3,4}x\d{3,4}|512|768|1K|1\.5K|2K|4K)$/;
+const IMAGE_ASPECT_PATTERN = /^(auto|\d{1,2}:\d{1,2})$/;
+const IMAGE_RESOLUTION_VALUES = new Set(['auto', '512', '768', '1K', '1.5K', '2K', '4K']);
+const IMAGE_QUALITY_VALUES = new Set(['auto', 'low', 'medium', 'high']);
+const IMAGE_BACKGROUND_VALUES = new Set(['auto', 'transparent', 'opaque']);
+const IMAGE_FORMAT_VALUES = new Set(['auto', 'png', 'jpeg', 'webp', 'svg']);
+
+/**
+ * Normalises the optional image settings of one provider entry. Unknown or
+ * malformed values fall back to the documented default instead of being
+ * forwarded to the API, where they would cause a 400.
+ * @param {Object} [raw] - Stored `imageDefaults`
+ * @returns {Object} Normalised settings
+ */
+export function normalizeImageDefaults(raw) {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  const size = typeof source.size === 'string' ? source.size.trim() : '';
+  const aspect = typeof source.aspect_ratio === 'string' ? source.aspect_ratio.trim() : '';
+  const resolution = typeof source.resolution === 'string' ? source.resolution.trim() : '';
+  const quality = typeof source.quality === 'string' ? source.quality.trim() : '';
+  const background = typeof source.background === 'string' ? source.background.trim() : '';
+  const format = typeof source.output_format === 'string' ? source.output_format.trim() : '';
+
+  let n = Number(source.n);
+  if (!Number.isFinite(n)) n = IMAGE_DEFAULTS.n;
+  n = Math.min(10, Math.max(1, Math.round(n)));
+
+  let seed = source.seed;
+  if (seed === '' || seed === null || seed === undefined) {
+    seed = null;
+  } else {
+    seed = Number(seed);
+    if (!Number.isFinite(seed) || seed < 0) seed = null;
+    else seed = Math.floor(seed);
+  }
+
+  return {
+    size: IMAGE_SIZE_PATTERN.test(size) ? size : IMAGE_DEFAULTS.size,
+    aspect_ratio: IMAGE_ASPECT_PATTERN.test(aspect) ? aspect : IMAGE_DEFAULTS.aspect_ratio,
+    resolution: IMAGE_RESOLUTION_VALUES.has(resolution) ? resolution : IMAGE_DEFAULTS.resolution,
+    quality: IMAGE_QUALITY_VALUES.has(quality) ? quality : IMAGE_DEFAULTS.quality,
+    n,
+    background: IMAGE_BACKGROUND_VALUES.has(background) ? background : IMAGE_DEFAULTS.background,
+    output_format: IMAGE_FORMAT_VALUES.has(format) ? format : IMAGE_DEFAULTS.output_format,
+    seed
+  };
 }
 
 
@@ -160,6 +254,8 @@ export function getProviderMeta(service) {
     service,
     labelKey: '',
     defaultUrl: '',
+    imageDefaultUrl: '',
+    imageProtocol: '',
     protocol: service === 'ollama'
       ? 'ollama'
       : ((service === 'Google' || service === 'Test') ? 'gemini' : 'openai')
@@ -281,6 +377,11 @@ export function normalizeApiEntry(entry) {
   delete out.name;
   out.service = String(entry.service);
   out.apiUrl = typeof entry.apiUrl === 'string' ? entry.apiUrl.trim() : '';
+  // Image generation does not share the chat-completions endpoint (OpenRouter:
+  // `/api/v1/images` vs `/api/v1/chat/completions`). It is a separate field so
+  // switching model types never silently sends a request to the wrong path.
+  out.imageApiUrl = typeof entry.imageApiUrl === 'string' ? entry.imageApiUrl.trim() : '';
+  out.imageDefaults = normalizeImageDefaults(entry.imageDefaults);
   out.apiKey = typeof entry.apiKey === 'string' ? entry.apiKey : '';
   out.modelName = typeof entry.modelName === 'string' ? entry.modelName.trim() : '';
   out.modelType = normalizeModelType(entry.modelType);
@@ -336,6 +437,8 @@ export function entryFromConfig(config, id = '') {
     id: id || config.dsId || '',
     service: config.service,
     apiUrl: config.apiUrl,
+    imageApiUrl: config.imageApiUrl,
+    imageDefaults: config.imageDefaults,
     apiKey: config.apiKey,
     modelName: config.modelName,
     modelType: config.modelType,

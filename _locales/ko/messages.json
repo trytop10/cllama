@@ -1089,5 +1089,134 @@
     },
     "multimodalUnsupported": {
         "message": "선택한 모델은 첨부 파일을 지원하지 않습니다. 다른 모델을 선택하거나 API 설정에서 멀티모달 입력을 활성화하세요."
+    },
+    "apiProviderOpenRouter": {
+        "message": "OpenRouter"
+    },
+    "modelTypeVideo": {
+        "message": "Video generation model"
+    },
+    "imageApiUrlLabel": {
+        "message": "Image API endpoint"
+    },
+    "imageApiUrlHint": {
+        "message": "Separate from the chat endpoint. OpenRouter uses https://openrouter.ai/api/v1/images."
+    },
+    "imageDefaultsLabel": {
+        "message": "Image defaults"
+    },
+    "imageSizeLabel": {
+        "message": "Size"
+    },
+    "imageAspectRatioLabel": {
+        "message": "Aspect ratio"
+    },
+    "imageQualityLabel": {
+        "message": "Quality"
+    },
+    "imageCountLabel": {
+        "message": "Images per request"
+    },
+    "imageSeedLabel": {
+        "message": "Seed (optional)"
+    },
+    "imageOutputFormatLabel": {
+        "message": "Format"
+    },
+    "imageBackgroundLabel": {
+        "message": "Background"
+    },
+    "imageOptionAuto": {
+        "message": "Auto"
+    },
+    "imageVideoNotSupported": {
+        "message": "Video generation is declared as a model type but is not implemented yet. Sending is blocked."
+    },
+    "imageGenerating": {
+        "message": "Generating image…"
+    },
+    "imageGenFailed": {
+        "message": "Image generation failed."
+    },
+    "imageGenEmpty": {
+        "message": "The provider returned no image."
+    },
+    "imageGenPartial": {
+        "message": "The provider returned fewer images than requested."
+    },
+    "imageGenCancelled": {
+        "message": "Image generation cancelled."
+    },
+    "imageUsageCount": {
+        "message": "{count} image(s)"
+    },
+    "imageOpen": {
+        "message": "Open image"
+    },
+    "imageGeneratedAlt": {
+        "message": "Generated image"
+    },
+    "imageInputPlaceholder": {
+        "message": "Describe the image you want to generate…"
+    },
+    "imageReferenceUnsupported": {
+        "message": "Image models only accept image attachments (used as reference images)."
+    },
+    "imageModelNoSkills": {
+        "message": "Skills and reflection are unavailable for this model type."
+    },
+    "videoNotSupported": {
+        "message": "Video generation is not implemented yet."
+    },
+    "videoInputPlaceholder": {
+        "message": "Video generation is not available yet."
+    },
+    "imageErrorAuth": {
+        "message": "The API key was rejected. Check the provider settings."
+    },
+    "imageErrorPayment": {
+        "message": "The provider reports a billing or quota problem."
+    },
+    "imageErrorRateLimit": {
+        "message": "Rate limit reached. Try again later."
+    },
+    "imageErrorContentPolicy": {
+        "message": "The prompt was rejected by the content policy."
+    },
+    "imageErrorUnsupported": {
+        "message": "This model does not support one of the requested image options."
+    },
+    "imageErrorUnsupportedProtocol": {
+        "message": "This provider has no implemented image protocol yet."
+    },
+    "imageErrorTimeout": {
+        "message": "Image generation timed out."
+    },
+    "imageErrorNetwork": {
+        "message": "Network error while generating the image."
+    },
+    "imageErrorUpstream": {
+        "message": "The provider failed to generate the image. Try again."
+    },
+    "imageErrorTooLarge": {
+        "message": "The generated image exceeds the size limit."
+    },
+    "insightNeedsTextModel": {
+        "message": "Insight requires a text model. Pick one in the API settings."
+    },
+    "imageSelectForNext": {
+        "message": "Use this image as input for the next turn"
+    },
+    "imageSkillToolsIgnored": {
+        "message": "This Skill declares tools; image generation cannot run tools, so only its prompt was used."
+    },
+    "imagePageUnavailable": {
+        "message": "This Skill asks for the current webpage, but no page content could be read from the active tab."
+    },
+    "skillUsePage": {
+        "message": "Read the current webpage"
+    },
+    "skillUsePageHint": {
+        "message": "Fetch the active tab content and include it in the prompt (text chat and image generation)."
     }
 }

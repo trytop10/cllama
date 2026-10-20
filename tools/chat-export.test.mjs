@@ -278,4 +278,34 @@ check('every locale defines the per-answer export messages', () => {
   }
 });
 
+check('generated images are embedded in assistant answers', () => {
+  const src = 'data:image/png;base64,iVBORw0KGgo=';
+  const html = recordToHtml({
+    role: 'assistant',
+    content: '',
+    images: [src],
+    imageMeta: { prompt: 'a cat' },
+    rtime: 1700000000000
+  }, { renderMarkdown });
+  assert.ok(html.includes('export-images'));
+  assert.ok(html.includes('src="data:image/png;base64,iVBORw0KGgo="'));
+
+  const skipped = recordToHtml({ role: 'assistant', content: '', images: [src] }, {
+    renderMarkdown,
+    options: { includeImages: false }
+  });
+  assert.ok(!skipped.includes('<img'));
+  assert.ok(skipped.includes('export-attachment-skipped'));
+});
+
+check('generated images alone make a non-empty single-answer export', () => {
+  const html = recordToHtml({
+    role: 'assistant',
+    content: '',
+    images: ['data:image/png;base64,iVBORw0KGgo=']
+  }, { renderMarkdown, options: { minimal: true } });
+  assert.ok(html.includes('export-images'));
+  assert.ok(!html.includes('message-header'));
+});
+
 console.log(`\n${passed} checks passed.`);

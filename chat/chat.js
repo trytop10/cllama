@@ -1,6 +1,6 @@
-import { getService } from '../js/client/client.mjs';
+import { getService, getImageServiceInstance } from '../js/client/client.mjs';
 import { providerLabel, apiEntryLabel, apiEntryId, resolveApiEntry } from '../js/api-providers.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, generateImages, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
 import { getMcpServerByName, initMcpTools, loadMcpServers, readMcpResource } from '../js/mcp.mjs';
@@ -186,6 +186,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let stopFlag = true;
     let historyMessages = [];
     let responseId = null;
+    // Image generation has no text session: its own controller is what the
+    // stop button aborts (and what cancels the 180s request timeout).
+    let imageAbortController = null;
     let lastScrollTop = messagesContainer.scrollTop;
     let stopScrollFlag = false;
     let currentModel = "";
@@ -311,7 +314,12 @@ document.addEventListener("DOMContentLoaded", async () => {
      * @returns {boolean}
      */
     function supportsAttachments(overrideId = null) {
-        return effectiveServiceConfig(overrideId)?.multimodal === true;
+        const entry = effectiveServiceConfig(overrideId);
+        if (!entry) return false;
+        // Image models accept attachments as reference images (img2img), even
+        // when the entry does not advertise the text-multimodal flag.
+        if (entry.modelType === 'image') return true;
+        return entry.multimodal === true;
     }
 
     /**
@@ -327,6 +335,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         bImage.setAttribute('aria-disabled', supported ? 'false' : 'true');
         bImage.title = browser.i18n.getMessage(supported ? 'uploadFile' : 'multimodalUnsupported') || '';
         if (bImageUpload) bImageUpload.disabled = !supported;
+        updateModelKindUi();
+    }
+
+    /**
+     * The placeholder tells the user what the input means for this model kind.
+     * Skills stay available for image models: many of them are pure
+     * text-to-image prompt templates, and a Skill that needs tools is reported
+     * when it runs instead of being silently removed from the picker.
+     */
+    function updateModelKindUi() {
+        const entry = effectiveServiceConfig();
+        const modelType = entry?.modelType || 'text';
+        const isImage = modelType === 'image';
+        const isVideo = modelType === 'video';
+
+        if (msgInput) {
+            const key = isImage ? 'imageInputPlaceholder' : isVideo ? 'videoInputPlaceholder' : 'inputMessage';
+            msgInput.placeholder = browser.i18n.getMessage(key)
+                || (isImage ? 'Describe the image you want to generate…'
+                    : isVideo ? 'Video generation is not available yet.' : '');
+        }
     }
 
     /**
@@ -894,6 +923,179 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * One image-generation turn. Kept separate from the text pipeline on
+     * purpose: no history, no Skills, no tools, no token stream. Only the
+     * prompt plus this turn's reference images are sent.
+     * @param {Object} params - { messageContent, rtime, callDsService }
+     */
+    async function runImageTurn({ messageContent, rtime, callDsService }) {
+        const currModelName = currentModel;
+        // An image turn answers whatever was pending in this conversation too;
+        // dropping the list here keeps it from lingering into another turn.
+        await clearPendingChoice(sessionKey());
+
+        // Reference images for this turn: queued uploads plus the generated
+        // images the user ticked for the next turn. Read-only until the request
+        // succeeds, so a failure does not lose the selection.
+        const references = [];
+        historyMessages.forEach((msg) => {
+            if (msg.role === 'user' && msg.fileInfo?.send && String(msg.fileInfo.type || '').startsWith('image/')) {
+                references.push(msg.content);
+                msg.fileInfo.send = false;
+            } else if (msg.role === 'assistant' && Array.isArray(msg.images)) {
+                const selected = Array.isArray(msg.imageSelections) ? msg.imageSelections : [];
+                msg.images.forEach((image, index) => {
+                    if (selected[index] && image) references.push(image);
+                });
+            }
+        });
+
+        // Scenario prompt + learned notes + Skill prompt are the image model's
+        // "system prompt": the Images API has no system role, so they are
+        // prepended to the prompt as clearly labelled blocks.
+        const instructions = [];
+        if (ccId && ccId !== '0' && currentConfigurations.length > 0) {
+            const scenario = currentConfigurations.find((config) => String(config.id) === String(ccId));
+            if (scenario?.prompt) instructions.push(`[Scenario instructions]\n${scenario.prompt}`);
+        }
+        if (learnState.enabled) {
+            const lessons = buildLessonsBlock(learnState.lessons, { maxChars: LESSONS_INJECT_CHARS });
+            if (lessons) instructions.push(lessons);
+        }
+        let skillWarning = false;
+        let pageWarning = false;
+        if (activeSkill) {
+            const skillPrompt = applySkillArguments(activeSkill.prompt || '', activeSkillArgs);
+            if (skillPrompt.trim()) instructions.push(`[Skill: ${activeSkill.name}]\n${skillPrompt}`);
+            // Image generation has no tool loop. Keep the prompt usable, but tell
+            // the user that this Skill's tools were not executed.
+            if (Array.isArray(activeSkill.tools) && activeSkill.tools.length) skillWarning = true;
+            if (activeSkill.usePage) {
+                try {
+                    console.debug('[Image] usePage requested by Skill:', activeSkill.name);
+                    const pageInfo = await sendToContentScript({ action: 'getPageInfo' });
+                    if (pageInfo?.content) {
+                        console.debug('[Image] page content chars:', String(pageInfo.content).length);
+                        instructions.push(
+                            `[Current webpage]\nTitle: ${pageInfo.title || ''}\nURL: ${pageInfo.url || ''}\n\nContent:\n${pageInfo.content}`
+                        );
+                    } else {
+                        pageWarning = true;
+                        console.warn('[Image] usePage returned no content:', pageInfo);
+                    }
+                } catch (error) {
+                    pageWarning = true;
+                    // No content script on this tab (chrome://, PDF viewer, …).
+                    console.warn('[Image] usePage failed:', error);
+                }
+            }
+        }
+
+        msgInput.value = '';
+        appendMessage(messageContent, 'self', rtime);
+        historyMessages.push({ role: 'user', content: messageContent, rtime });
+        updateResendButtonVisibility();
+
+        const assistantMsgBlock = appendMessage('', currModelName, rtime + 1, false);
+        const assistantMsgDiv = assistantMsgBlock.querySelector('.message-text');
+        currentAssistantBlock = assistantMsgBlock;
+        assistantMsgDiv.textContent = browser.i18n.getMessage('imageGenerating') || 'Generating image…';
+
+        imageAbortController = new AbortController();
+        setComponentState(true);
+
+        try {
+            const result = await generateImages(messageContent, {
+                dsService: callDsService,
+                model: currModelName,
+                references,
+                instructions,
+                signal: imageAbortController.signal,
+                onStart: (id) => { responseId = id; }
+            });
+
+            const dataUrls = (result.images || []).map((image) => image.dataUrl).filter(Boolean);
+            if (!dataUrls.length) {
+                const error = new Error('empty image response');
+                error.code = 'empty';
+                throw error;
+            }
+
+            const warnings = [...(result.warnings || [])];
+            const visibleWarnings = [];
+            if (skillWarning) {
+                const message = browser.i18n.getMessage('imageSkillToolsIgnored')
+                    || 'This Skill declares tools; image generation cannot run tools, so only its prompt was used.';
+                warnings.push({ code: 'skill_tools_ignored', message });
+                visibleWarnings.push(message);
+            }
+            if (pageWarning) {
+                const message = browser.i18n.getMessage('imagePageUnavailable')
+                    || 'This Skill asks for the current webpage, but no page content could be read from the active tab.';
+                warnings.push({ code: 'page_unavailable', message });
+                visibleWarnings.push(message);
+            }
+            // The newest image is pre-selected for the next turn; earlier
+            // selected images were just consumed by this request.
+            const imageSelections = dataUrls.map((_, index) => index === dataUrls.length - 1);
+            consumeGeneratedImageSelections();
+
+            const assistantRtime = Date.now();
+            assistantMsgBlock.dataset.timestamp = assistantRtime;
+            renderImagesIntoMessage(assistantMsgBlock, dataUrls, imageSelections);
+            visibleWarnings.forEach((message) => appendImageWarning(assistantMsgDiv, message));
+            const pdiv = findMatchingParentNode(assistantMsgDiv, '.bot-message');
+            if (pdiv) {
+                pdiv.dataset.timestamp = assistantRtime;
+                pdiv.querySelector('.copy-message-btn')?.setAttribute('data-flag', 'true');
+                pdiv.querySelector('.delete-message-btn')?.setAttribute('data-flag', 'true');
+                pdiv.querySelector('.export-message-btn')?.setAttribute('data-flag', 'true');
+                refreshBookmarkButton(pdiv);
+            }
+            setImageUsage(assistantMsgBlock, result.usage, warnings);
+
+            historyMessages.push({
+                role: 'assistant',
+                content: '',
+                images: dataUrls,
+                imageSelections,
+                imageMeta: {
+                    prompt: messageContent,
+                    finalPrompt: result.meta?.prompt || '',
+                    model: currModelName,
+                    provider: result.meta?.service || '',
+                    protocol: result.meta?.protocol || '',
+                    revisedPrompt: (result.images || [])
+                        .map((image) => image.revised_prompt)
+                        .filter(Boolean),
+                    usage: result.usage || {},
+                    warnings,
+                    skillToolsIgnored: skillWarning,
+                    pageUnavailable: pageWarning
+                },
+                rtime: assistantRtime,
+                model: currModelName,
+                // Keep usage on the record too: the image-only line is restored
+                // from here when the conversation is reopened.
+                usage: result.usage || {}
+            });
+            saveCurrentSession();
+            updateLearnControls();
+        } catch (error) {
+            if (error?.code === 'cancelled') {
+                assistantMsgDiv.textContent = browser.i18n.getMessage('imageGenCancelled') || 'Cancelled.';
+            } else {
+                assistantMsgDiv.textContent = imageErrorText(error);
+                if (error?.message) assistantMsgDiv.title = error.message;
+            }
+            console.warn('[Image] generation failed:', error);
+        } finally {
+            imageAbortController = null;
+            setComponentState(false);
+        }
+    }
+
+    /**
      * Send message: handle user input, add system prompts, call chat API
      */
     async function sendMessage() {
@@ -901,6 +1103,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         // chat message. Together with the toolbar button this is the only way a
         // reflection ever starts - nothing is learned automatically.
         if (/^\/evolve\b/i.test(msgInput.value.trim())) {
+            const modelType = effectiveServiceConfig()?.modelType || 'text';
+            if (modelType !== 'text' && modelType !== 'decision') {
+                balert(browser.i18n.getMessage('imageModelNoSkills')
+                    || 'Skills and reflection are unavailable for this model type.');
+                return;
+            }
             // Only consume the command when a reflection can actually run. It
             // shares reflectReadiness() with the button, so the command and the
             // UI can never disagree about whether a reflection is possible.
@@ -958,6 +1166,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         const messageContent = rawMessage.trim();
         const rtime = Date.now();
         if (!messageContent) return;
+
+        // Route by the model kind of the data source that will answer this
+        // turn. Image models use their own endpoint/pipeline; video is a
+        // declared type that is not implemented yet and must never fall through
+        // to the text API.
+        const turnEntry = effectiveServiceConfig(callDsService);
+        const turnModelType = turnEntry?.modelType || 'text';
+        if (turnModelType === 'video') {
+            balert(browser.i18n.getMessage('videoNotSupported') || 'Video generation is not implemented yet.');
+            return;
+        }
+        if (turnModelType === 'image') {
+            const unsupportedAttachment = historyMessages.some((msg) =>
+                msg.role === 'user'
+                && msg.fileInfo?.send
+                && !String(msg.fileInfo.type || '').startsWith('image/'));
+            if (unsupportedAttachment) {
+                balert(browser.i18n.getMessage('imageReferenceUnsupported')
+                    || 'Image models only accept image attachments.');
+                return;
+            }
+            await runImageTurn({ messageContent, rtime, callDsService });
+            return;
+        }
 
         // Attachments already queued for sending belong to this turn. The whole
         // attachment channel depends on the effective model's `multimodal`
@@ -1257,9 +1489,161 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
+     * Grid markup for generated images. Data URLs are escaped as attributes but
+     * kept intact (they contain `+`, `/`, `=` and `;`).
+     * @param {Array<string>} images - Data URLs
+     * @returns {string} HTML
+     */
+    function imageGridHtml(images, selections = []) {
+        const list = (Array.isArray(images) ? images : []).filter(Boolean);
+        if (!list.length) return '';
+        const selected = Array.isArray(selections) ? selections : [];
+        const selectLabel = browser.i18n.getMessage('imageSelectForNext')
+            || 'Use this image as input for the next turn';
+        const items = list.map((src, index) => `
+            <div class="image-item">
+                <a class="image-link" href="${escapeHtml(src)}" target="_blank" rel="noopener"
+                   title="${escapeHtml(browser.i18n.getMessage('imageOpen') || 'Open image')}">
+                    <img src="${escapeHtml(src)}" alt="${escapeHtml(`${browser.i18n.getMessage('imageGeneratedAlt') || 'Generated image'} ${index + 1}`)}" loading="lazy">
+                </a>
+                <label class="image-select" title="${escapeHtml(selectLabel)}">
+                    <input type="checkbox" class="image-select-checkbox" data-index="${index}" ${selected[index] ? 'checked' : ''}>
+                </label>
+            </div>`).join('');
+        return `<div class="image-grid">${items}</div>`;
+    }
+
+    /**
+     * Replaces a bubble's content with the generated images.
+     * @param {HTMLElement} messageDiv - The `.message` element
+     * @param {Array<string>} images - Data URLs
+     * @param {Array<boolean>} [selections] - Which images feed the next turn
+     */
+    function renderImagesIntoMessage(messageDiv, images, selections = []) {
+        const textEl = messageDiv?.querySelector('.message-text');
+        if (!textEl) return;
+        textEl.classList.remove('markdown-body');
+        textEl.innerHTML = imageGridHtml(images, selections);
+        bindImageSelection(messageDiv);
+    }
+
+    /**
+     * Persists the per-image "use as next input" checkboxes on the assistant
+     * record. The record is looked up by the bubble timestamp (the same key the
+     * bookmark/delete buttons use).
+     * @param {HTMLElement} messageDiv - The `.message` element
+     */
+    function bindImageSelection(messageDiv) {
+        messageDiv.querySelectorAll('.image-select-checkbox').forEach((checkbox) => {
+            checkbox.addEventListener('click', (event) => {
+                // The checkbox sits next to a link; never navigate or toggle twice.
+                event.stopPropagation();
+            });
+            checkbox.addEventListener('change', () => {
+                const rtime = parseInt(messageDiv.dataset.timestamp, 10);
+                const record = historyMessages.find((item) =>
+                    item.role === 'assistant' && Number(item.rtime) === rtime && Array.isArray(item.images));
+                if (!record) return;
+                const index = Number(checkbox.dataset.index);
+                const next = record.images.map((_, i) => (
+                    i === index
+                        ? checkbox.checked
+                        : Boolean(record.imageSelections?.[i])
+                ));
+                record.imageSelections = next;
+                saveCurrentSession();
+            });
+        });
+    }
+
+    /**
+     * Clears the "next input" selection on every generated image after a
+     * successful generation consumed it.
+     */
+    function consumeGeneratedImageSelections() {
+        historyMessages.forEach((record) => {
+            if (record.role === 'assistant' && Array.isArray(record.images)) {
+                record.imageSelections = record.images.map(() => false);
+            }
+        });
+        messagesContainer.querySelectorAll('.bot-message .image-select-checkbox')
+            .forEach((checkbox) => { checkbox.checked = false; });
+    }
+
+    /**
+     * Renders the "N images · $cost" line. Image responses do not have token
+     * counts, so reusing the token formatter would print a misleading "0".
+     * @param {HTMLElement} messageDiv - The `.message` element
+     * @param {Object} usage - Canonical usage
+     * @param {Array} [warnings] - Canonical warnings
+     */
+    function setImageUsage(messageDiv, usage, warnings = []) {
+        const el = messageDiv?.querySelector('.token-usage');
+        if (!el) return;
+        const count = Number(usage?.image_count) || 0;
+        const template = browser.i18n.getMessage('imageUsageCount') || '{count} image(s)';
+        let text = count ? template.replace('{count}', String(count)) : '';
+        if (usage && Number.isFinite(Number(usage.cost))) {
+            text += `${text ? ' · ' : ''}$${Number(usage.cost).toFixed(2)}`;
+        }
+        if (Array.isArray(warnings) && warnings.length) {
+            const note = warnings
+                .map((warning) => warning?.message || warning?.code || '')
+                .filter(Boolean)
+                .join('; ');
+            if (note) el.title = note;
+        }
+        if (text) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+        el.textContent = text;
+    }
+
+    /**
+     * Appends a visible warning under generated images (e.g. a Skill declared
+     * tools, which an image request cannot execute).
+     * @param {HTMLElement} messageDiv - The `.message-text` element
+     * @param {string} text - Warning text
+     */
+    function appendImageWarning(messageDiv, text) {
+        if (!messageDiv || !text) return;
+        const el = document.createElement('div');
+        el.className = 'image-warning';
+        el.textContent = text;
+        messageDiv.appendChild(el);
+    }
+
+    /**
+     * Localised message for an image-pipeline failure. The provider's raw text
+     * stays in the tooltip instead of being dumped into the bubble.
+     * @param {Error} error - Error thrown by generateImages()
+     * @returns {string} User-facing text
+     */
+    function imageErrorText(error) {
+        const map = {
+            auth: 'imageErrorAuth',
+            payment: 'imageErrorPayment',
+            rate_limit: 'imageErrorRateLimit',
+            content_policy: 'imageErrorContentPolicy',
+            unsupported_parameter: 'imageErrorUnsupported',
+            unsupported_protocol: 'imageErrorUnsupportedProtocol',
+            timeout: 'imageErrorTimeout',
+            network: 'imageErrorNetwork',
+            upstream: 'imageErrorUpstream',
+            empty: 'imageGenEmpty',
+            too_large: 'imageErrorTooLarge',
+            cancelled: 'imageGenCancelled',
+            video_unsupported: 'videoNotSupported',
+            not_image_model: 'imageGenFailed'
+        };
+        const key = map[error?.code] || 'imageGenFailed';
+        const text = browser.i18n.getMessage(key) || browser.i18n.getMessage('imageGenFailed') || 'Image generation failed.';
+        return text;
+    }
+
+    /**
      * Append message to chat interface
      */
-    function appendMessage(messageText, sender, timestamp, flag = true, fileInfo = null, usage = null) {
+    function appendMessage(messageText, sender, timestamp, flag = true, fileInfo = null, usage = null, images = null, imageSelections = null) {
         const isSelf = sender === "self";
         const senderName = isSelf ? "" : sender;
         const senderClass = isSelf ? "user" : "bot";
@@ -1303,6 +1687,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>`}
             </div>
         `;
+
+        if (images && images.length) renderImagesIntoMessage(messageDiv, images, imageSelections || []);
 
         const msgTextEl = messageDiv.querySelector('.message-text');
         msgTextEl.addEventListener('click', (e) => {
@@ -3135,7 +3521,10 @@ document.addEventListener("DOMContentLoaded", async () => {
      * Called on every path that changes `historyMessages` (see the call sites).
      */
     function updateLearnControls() {
-        const scenario = hasScenario();
+        const modelType = effectiveServiceConfig()?.modelType || 'text';
+        // Reflection works on text answers; an image/video model has no text
+        // history to learn from, so the whole cluster is unavailable there.
+        const scenario = hasScenario() && (modelType === 'text' || modelType === 'decision');
         // The cluster carries its own divider, so hiding it hides the divider too.
         if (scenarioCluster) scenarioCluster.style.display = scenario ? '' : 'none';
         for (const el of [bReflect, bLessons]) {
@@ -3518,7 +3907,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     cancelButton.addEventListener('click', async (e) => {
         e.preventDefault();
         stopFlag = true;
-        if (responseId) {
+        if (imageAbortController) {
+            imageAbortController.abort();
+        } else if (responseId) {
             abortSession(responseId);
         }
         setComponentState(false);
@@ -3551,6 +3942,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const supportedTypes = ['application/pdf', 'video/', 'audio/', 'image/'];
         if (!supportedTypes.some(type => file.type.startsWith(type) || file.type === type)) {
             alert("Unsupported file format");
+            return;
+        }
+        if (effectiveServiceConfig()?.modelType === 'image' && !file.type.startsWith('image/')) {
+            event.target.value = '';
+            balert(browser.i18n.getMessage('imageReferenceUnsupported')
+                || 'Image models only accept image attachments.');
             return;
         }
 
@@ -4831,7 +5228,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ? item.content 
                         : marked.parse(item.content);
                     const role = item.role === "user" ? "self" : "assistant";
-                    const block = appendMessage(replaceThinkTags(content), item.model || role, item.rtime, true, item.fileInfo, item.usage || null);
+                    const block = appendMessage(
+                        replaceThinkTags(content),
+                        item.model || role,
+                        item.rtime,
+                        true,
+                        item.fileInfo,
+                        item.usage || null,
+                        Array.isArray(item.images) ? item.images : null,
+                        Array.isArray(item.imageSelections) ? item.imageSelections : null
+                    );
+                    if (Array.isArray(item.images) && item.images.length) {
+                        setImageUsage(block, item.usage || item.imageMeta?.usage, item.imageMeta?.warnings || []);
+                        if (item.imageMeta?.skillToolsIgnored) {
+                            appendImageWarning(block.querySelector('.message-text'),
+                                browser.i18n.getMessage('imageSkillToolsIgnored')
+                                || 'This Skill declares tools; image generation cannot run tools, so only its prompt was used.');
+                        }
+                        if (item.imageMeta?.pageUnavailable) {
+                            appendImageWarning(block.querySelector('.message-text'),
+                                browser.i18n.getMessage('imagePageUnavailable')
+                                || 'This Skill asks for the current webpage, but no page content could be read from the active tab.');
+                        }
+                    }
                     // Interactive views are rebuilt from the references stored on
                     // the record, never from stored HTML: the document is
                     // re-fetched, and with auto-rendering off nothing runs until
@@ -5334,18 +5753,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         const currentModelDisplay = document.getElementById("modelDropdown");
         if (modelListDiv) modelListDiv.textContent = "";
 
-        if (!dsConfig || !dsConfig.apiUrl) {
+        const isImageEntry = dsConfig?.modelType === 'image';
+        if (!dsConfig || (!dsConfig.apiUrl && !(isImageEntry && dsConfig.imageApiUrl))) {
             if (currentModelDisplay) currentModelDisplay.textContent = "--";
             return;
         }
 
         try {
-            const serviceInstance = getService(
-                dsConfig.service,
-                dsConfig.apiUrl,
-                dsConfig.apiKey
-            );
-            const models = await serviceInstance.getModels();
+            let models = [];
+            if (isImageEntry) {
+                // The text /models catalogue is the wrong list for image models:
+                // use the provider's image catalogue (OpenRouter /images/models).
+                const imageClient = getImageServiceInstance(dsConfig);
+                const catalogue = await imageClient.getImageModels();
+                models = catalogue.ids;
+            } else {
+                const serviceInstance = getService(
+                    dsConfig.service,
+                    dsConfig.apiUrl,
+                    dsConfig.apiKey
+                );
+                models = await serviceInstance.getModels();
+            }
 
             // Use current modelName if present in the list, otherwise use the first model
             if (models.length > 0) {
@@ -5409,6 +5838,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentServiceConfig = dsConfig;
         setRuntimeConfig(dsConfig);
         updateAttachmentAvailability();
+        // Refresh the Skill capsule for the new data source (Skills also stay
+        // available for image models).
+        renderActiveSkillBar();
         await populateModelList(dsConfig);
 
         const serviceDropdown = document.getElementById("serviceDropdown");
@@ -5475,6 +5907,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 id: defaultEntry ? apiEntryId(defaultEntry) : (runtimeConfig.dsId || null),
                 service: runtimeConfig.service,
                 apiUrl: runtimeConfig.apiUrl,
+                imageApiUrl: runtimeConfig.imageApiUrl,
+                imageDefaults: runtimeConfig.imageDefaults,
                 apiKey: runtimeConfig.apiKey,
                 modelName: runtimeConfig.modelName,
                 modelType: runtimeConfig.modelType,

@@ -4,8 +4,25 @@ import { ThemeManager } from './theme.mjs';
 import { marked } from './marked.mjs';
 import { copyToClipboard, thinkCollapseExpanded } from './marked/copy.mjs';
 import { balert } from "./dialog.mjs"
-import { getServiceInstance } from './client/client.mjs';
-import { resolveApiEntry, normalizeApiList, normalizeModelType, migrateLegacyReferences } from './api-providers.mjs';
+import { getServiceInstance, getImageServiceInstance } from './client/client.mjs';
+import {
+  resolveApiEntry,
+  findDefaultEntry,
+  normalizeApiList,
+  normalizeModelType,
+  normalizeImageDefaults,
+  migrateLegacyReferences,
+  isImageModelType,
+  isVideoModelType
+} from './api-providers.mjs';
+import {
+  IMAGE_ERROR_CODES,
+  buildImageEndpoint,
+  getImageProtocol,
+  imageCapabilitiesFor,
+  normalizeImageRequest,
+  imageToDataUrl
+} from './image-protocol.mjs';
 import { cloneOllamaOptions, isGemini, removeThinkTags, replaceElementContent, replaceThinkTags, withUiLanguageDirective } from './util.js';
 import { hasUsage, makeEstimatedUsage, mergeUsage } from './token-usage.mjs';
 import { parseToolCallsDetailed, stripToolCalls, executeToolCall, buildSkillSystemMessage, buildToolInstructions, buildNativeTools, runTool, getMcpReady, listTools, registerTool, getTool, previewToolArgs, SKILL_TOOL_MAX_ITER } from './skill-tools.mjs';
@@ -94,6 +111,10 @@ async function loadConfiguration() {
       if (Object.keys(writes).length) browser.storage.local.set(writes);
       runtimeConfig.modelType = normalizeModelType(runtimeConfig.modelType);
       runtimeConfig.multimodal = runtimeConfig.multimodal === true;
+      runtimeConfig.imageApiUrl = typeof runtimeConfig.imageApiUrl === 'string'
+        ? runtimeConfig.imageApiUrl
+        : '';
+      runtimeConfig.imageDefaults = normalizeImageDefaults(runtimeConfig.imageDefaults);
       if (runtimeConfig.supportsTools === true) runtimeConfig.supportsTools = true;
       else delete runtimeConfig.supportsTools;
       resolve();
@@ -107,20 +128,29 @@ async function loadConfiguration() {
  * @param {Object} config - The new data source configuration
  */
 export function setRuntimeConfig(config) {
-  if (!config || !config.service || !config.apiUrl) {
+  // Image entries legitimately have no chat-completions URL: their endpoint is
+  // `imageApiUrl`. Requiring `apiUrl` here used to make an image-only provider
+  // impossible to activate.
+  const modelType = normalizeModelType(config?.modelType);
+  const endpoint = isImageModelType(modelType)
+    ? (config?.imageApiUrl || config?.apiUrl)
+    : config?.apiUrl;
+  if (!config || !config.service || !endpoint) {
     console.warn("setRuntimeConfig: invalid config", config);
     return;
   }
   // Merge into existing runtimeConfig, preserving other settings
   runtimeConfig.service = config.service;
-  runtimeConfig.apiUrl = config.apiUrl;
+  runtimeConfig.apiUrl = config.apiUrl || '';
+  runtimeConfig.imageApiUrl = config.imageApiUrl || '';
+  runtimeConfig.imageDefaults = normalizeImageDefaults(config.imageDefaults);
   runtimeConfig.apiKey = config.apiKey || "-";
   runtimeConfig.modelName = config.modelName || runtimeConfig.modelName;
   // Identity of the selected configuration (the list may hold several entries
   // for the same provider type).
   runtimeConfig.dsId = config.id || config.dsId || null;
-  // Model kind is kept for future routing (text generation / decision / image).
-  runtimeConfig.modelType = config.modelType || 'text';
+  // Model kind drives the per-turn route (text / image / video guard).
+  runtimeConfig.modelType = modelType;
   runtimeConfig.multimodal = config.multimodal === true;
   if (config.supportsTools === true) runtimeConfig.supportsTools = true;
   else delete runtimeConfig.supportsTools;
@@ -156,6 +186,137 @@ export async function getRuntimeConfig() {
   await loadConfiguration();
   return runtimeConfig;
 }
+/**
+ * Builds a typed error for the image pipeline. The UI maps `code` to a
+ * localised message; `message` is the provider's diagnostic text.
+ * @param {string} code - One of IMAGE_ERROR_CODES
+ * @param {string} message - Detail
+ * @param {Object} [details] - Extra fields (field, status, raw)
+ * @returns {Error} Error with a stable code
+ */
+function imageOperationError(code, message, details = {}) {
+  const error = new Error(message || code);
+  error.code = code;
+  Object.assign(error, details);
+  return error;
+}
+
+/**
+ * Capabilities of the image model currently configured for an entry. Dynamic
+ * catalogue data is used when the client has it cached.
+ * @param {Object} entry - Provider entry
+ * @param {string} [model] - Model id
+ * @returns {Object} { protocol, supports }
+ */
+export function getImageCapabilities(entry, model = '') {
+  if (!entry) return imageCapabilitiesFor(entry);
+  try {
+    return getImageServiceInstance(entry).getCapabilities(entry, model || entry.modelName || '');
+  } catch (error) {
+    return imageCapabilitiesFor(entry);
+  }
+}
+
+/**
+ * Runs one image-generation turn. This is deliberately separate from `chat()`:
+ * image models have no streaming text, no conversation history, no Skills and
+ * no tools. Only the latest prompt plus this turn's reference images are sent.
+ *
+ * @param {string} prompt - User prompt
+ * @param {Object} [options] - { dsService, model, references, imageOptions, signal, onStart, timeoutMs }
+ * @returns {Promise<{images: Array, usage: Object, warnings: Array, meta: Object}>}
+ */
+export async function generateImages(prompt, options = {}) {
+  if (!_configManuallySet) await loadConfiguration();
+
+  const list = Array.isArray(runtimeConfig.dsList) ? runtimeConfig.dsList : [];
+  let entry = null;
+  if (options.dsService) {
+    entry = resolveApiEntry(list, options.dsService);
+  }
+  if (!entry) entry = findDefaultEntry(list, runtimeConfig);
+  if (!entry && runtimeConfig.service) entry = { ...runtimeConfig };
+
+  if (!entry) {
+    throw imageOperationError(IMAGE_ERROR_CODES.NOT_IMAGE_MODEL, 'no provider is configured');
+  }
+
+  const modelType = normalizeModelType(entry.modelType || runtimeConfig.modelType);
+  if (isVideoModelType(modelType)) {
+    throw imageOperationError(IMAGE_ERROR_CODES.VIDEO_UNSUPPORTED, 'video generation is not implemented yet');
+  }
+  if (!isImageModelType(modelType)) {
+    throw imageOperationError(IMAGE_ERROR_CODES.NOT_IMAGE_MODEL, 'the selected provider is not an image model');
+  }
+
+  const protocol = getImageProtocol(entry);
+  if (!protocol) {
+    throw imageOperationError(
+      IMAGE_ERROR_CODES.UNSUPPORTED_PROTOCOL,
+      'this provider has no implemented image protocol'
+    );
+  }
+
+  const model = String(options.model || entry.modelName || runtimeConfig.modelName || '').trim();
+  if (!model) {
+    throw imageOperationError(IMAGE_ERROR_CODES.INVALID_REQUEST, 'no image model is selected', { field: 'model' });
+  }
+
+  const client = getImageServiceInstance(entry);
+  const capabilities = client.getCapabilities(entry, model);
+
+  // The Images API has no system role. Scenario/Skill text is therefore
+  // prepended as clearly labelled blocks instead of being thrown away.
+  const instructions = Array.isArray(options.instructions)
+    ? options.instructions.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  const finalPrompt = instructions.length
+    ? `${instructions.join('\n\n')}\n\n[Image request]\n${prompt}`
+    : prompt;
+
+  const merged = {
+    ...normalizeImageDefaults(entry.imageDefaults || runtimeConfig.imageDefaults),
+    ...(options.imageOptions || {}),
+    prompt: finalPrompt,
+    model,
+    input_references: Array.isArray(options.references) ? options.references : []
+  };
+
+  const normalized = normalizeImageRequest(merged, { capabilities });
+  if (!normalized.ok) {
+    const first = normalized.errors[0] || {};
+    throw imageOperationError(first.code || IMAGE_ERROR_CODES.INVALID_REQUEST, first.message, {
+      field: first.field || null
+    });
+  }
+
+  const result = await client.generate(normalized.request, {
+    signal: options.signal,
+    timeoutMs: options.timeoutMs,
+    onStart: options.onStart
+  });
+
+  return {
+    images: result.images.map((image) => ({
+      ...image,
+      dataUrl: imageToDataUrl(image)
+    })),
+    usage: result.usage,
+    warnings: [...normalized.warnings, ...(result.warnings || [])],
+    meta: {
+      model,
+      service: entry.service || runtimeConfig.service || '',
+      protocol,
+      endpoint: buildImageEndpoint(entry),
+      // `prompt` is what actually went to the provider (instructions included);
+      // `userPrompt` is what the user typed and what the bubble shows.
+      prompt: finalPrompt,
+      userPrompt: prompt
+    }
+  };
+}
+
+
 
 /**
  * Rough input-token estimate for a request payload. Used only when the backend
@@ -265,6 +426,13 @@ async function _getInsightClientAndData(prompt, doc) {
       serviceConfig = foundConfig;
     }
   }
+  // Insight is a text pipeline. An image/video entry has no chat endpoint and
+  // would fail with an obscure 404, so refuse with a clear message instead.
+  const insightModelType = serviceConfig.modelType || runtimeConfig.modelType;
+  if (isImageModelType(insightModelType) || isVideoModelType(insightModelType)) {
+    throw new Error(browser.i18n.getMessage('insightNeedsTextModel')
+      || 'Insight requires a text model. Pick one in the API settings.');
+  }
   const isGoogle = isGemini(serviceConfig);
 
   let msgData;
@@ -296,7 +464,14 @@ async function _getInsightClientAndData(prompt, doc) {
  * @param {Object} options - Callback options (onStream, onComplete, onError)
  */
 export async function processInsightForBackground(prompt, doc, options) {
-  const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
+  let clientData;
+  try {
+    clientData = await _getInsightClientAndData(prompt, doc);
+  } catch (error) {
+    if (typeof options?.onError === 'function') options.onError(error, null);
+    return;
+  }
+  const { clientService, msgData } = clientData;
   const ops = insightRequestOptions();
   clientService.sendRequest(msgData, {
     options: ops,
@@ -320,7 +495,17 @@ export async function processInsight(prompt, doc, msgId, options) {
     return;
   }
 
-  const { clientService, msgData } = await _getInsightClientAndData(prompt, doc);
+  let clientData;
+  try {
+    clientData = await _getInsightClientAndData(prompt, doc);
+  } catch (error) {
+    // Misconfigured provider (e.g. the default is an image model). Show the
+    // reason instead of leaving the card on "waiting" forever.
+    target.textContent = error?.message || String(error);
+    if (typeof options?.error === 'function') options.error(error, msgId);
+    return;
+  }
+  const { clientService, msgData } = clientData;
   const ops = insightRequestOptions();
 
   clientService.sendRequest(msgData, {
@@ -426,7 +611,11 @@ export async function chat(historyMessages, options) {
       let role = m.role === 'assistant' ? 'model' : m.role;
       let content = removeThinkTags(m.content);
 
-      tempMsgs.push({ role, content, images: m.images });
+      // Image-generation records have no text and carry output images; they are
+      // not conversation context for a text model. Only a user's attachments are
+      // image input.
+      if (m.role === 'assistant' && !String(content || '').trim() && Array.isArray(m.images)) continue;
+      tempMsgs.push({ role, content, images: m.role === 'user' ? m.images : undefined });
     }
 
     // Merge consecutive messages from same role
@@ -476,7 +665,9 @@ export async function chat(historyMessages, options) {
         return;
       }
       const msg = { role: m.role, content: removeThinkTags(m.content) };
-      if (m.images) {
+      // Generated images are assistant output, not history for a text model.
+      if (m.role === 'assistant' && !String(msg.content || '').trim() && Array.isArray(m.images)) return;
+      if (m.images && m.role === 'user') {
         if (isOllama) {
           msg.images = m.images.map(item => item.split(',')[1]);
         } else {
@@ -1330,7 +1521,23 @@ export function mergeDefaultSkills(stored, removedIds = []) {
     if (!def || removed.has(String(def.id))) continue;
     const defVersion = def.version || 1;
     const storedVersion = s.version || 1;
-    if (storedVersion >= defVersion) continue;
+    if (storedVersion >= defVersion) {
+      // Older copies of an unmodified default may predate fields that were
+      // added later (notably `usePage`). Fill only missing fields; never
+      // overwrite an explicit value and never touch a user-edited prompt.
+      if (isUnmodifiedDefaultSkill(s, def)) {
+        const merged = { ...s };
+        let changed = false;
+        for (const key of ['usePage', 'manualOnly', 'starter', 'description', 'uiLanguage']) {
+          if (!(key in merged) && key in def) {
+            merged[key] = def[key];
+            changed = true;
+          }
+        }
+        if (changed) list[i] = merged;
+      }
+      continue;
+    }
     if (isUnmodifiedDefaultSkill(s, def)) {
       // Keep the entry's position; everything else comes from the new default.
       list[i] = { ...def };

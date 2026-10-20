@@ -1,5 +1,5 @@
 import { defaultSettings, i18n, DB_KEY } from "../js/cllama.js";
-import { getService } from "../js/client/client.mjs";
+import { getService, getImageServiceInstance } from "../js/client/client.mjs";
 import { balert, confirm } from "../js/dialog.mjs";
 import { browser } from '../js/browser.mjs';
 import { escapeHtml, exportFile, formatBytes, getStorageUsage } from "../js/util.js";
@@ -15,8 +15,12 @@ import {
   findDefaultEntry,
   normalizeApiList,
   normalizeApiEntry,
+  normalizeImageDefaults,
   entryFromConfig,
   isDefaultEntry,
+  isTextModelType,
+  isImageModelType,
+  isVideoModelType,
   migrateLegacyReferences
 } from "../js/api-providers.mjs";
 
@@ -111,9 +115,12 @@ async function initPage() {
       // `base` is what chat/insight actually use, so when an old backup has a
       // stale duplicate in dsList the default row must show the real values.
       let changed = false;
-      for (const key of ['apiUrl', 'apiKey', 'modelName', 'modelType', 'multimodal', 'supportsTools']) {
+      for (const key of ['apiUrl', 'imageApiUrl', 'imageDefaults', 'apiKey', 'modelName', 'modelType', 'multimodal', 'supportsTools']) {
         if (!Object.prototype.hasOwnProperty.call(rawBase, key)) continue;
-        if (defaultEntry[key] !== rawBase[key]) {
+        const same = key === 'imageDefaults'
+          ? JSON.stringify(normalizeImageDefaults(defaultEntry[key])) === JSON.stringify(normalizeImageDefaults(rawBase[key]))
+          : defaultEntry[key] === rawBase[key];
+        if (!same) {
           defaultEntry[key] = rawBase[key];
           changed = true;
         }
@@ -230,8 +237,11 @@ function renderProviderRow(entry) {
 
   const endpoint = document.createElement('div');
   endpoint.className = 'api-provider-endpoint';
-  endpoint.textContent = entry.apiUrl || '';
-  endpoint.title = entry.apiUrl || '';
+  const endpointText = isImageModelType(entry.modelType)
+    ? (entry.imageApiUrl || '')
+    : (entry.apiUrl || '');
+  endpoint.textContent = endpointText;
+  endpoint.title = endpointText;
   main.appendChild(endpoint);
 
   const actions = document.createElement('div');
@@ -315,6 +325,57 @@ function openProviderModal(id) {
   ensureProviderModal().show();
 }
 
+/** Values offered by the image-defaults selects. */
+const IMAGE_SELECT_VALUES = {
+  imageSize: ['auto', '512', '768', '1K', '1.5K', '2K', '4K', '1024x1024', '1536x1024', '1024x1536', '2048x2048'],
+  imageAspectRatio: ['auto', '1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3', '4:5', '5:4', '21:9'],
+  imageQuality: ['auto', 'low', 'medium', 'high'],
+  imageOutputFormat: ['auto', 'png', 'jpeg', 'webp'],
+  imageBackground: ['auto', 'transparent', 'opaque']
+};
+
+/**
+ * Fills the static option lists once. Labels stay untranslated for concrete
+ * values ("1024x1024", "png"…); "auto" is the only word needing translation.
+ */
+function ensureImageSelectOptions() {
+  for (const [id, values] of Object.entries(IMAGE_SELECT_VALUES)) {
+    const select = document.getElementById(id);
+    if (!select || select.options.length) continue;
+    values.forEach((value) => {
+      select.add(new Option(value === 'auto' ? msg('imageOptionAuto', 'Auto') : value, value));
+    });
+  }
+}
+
+/**
+ * Shows the image rows only for image models, and the "not implemented" hint
+ * for video models. The endpoint field also gets a sensible default when empty.
+ */
+function updateModelTypeVisibility() {
+  const type = document.getElementById('apiModelType').value;
+  const service = document.getElementById('apiProviderType').value;
+  const isImage = isImageModelType(type);
+  const isVideo = isVideoModelType(type);
+
+  document.getElementById('imageApiUrlRow').classList.toggle('d-none', !isImage);
+  document.getElementById('imageDefaultsRow').classList.toggle('d-none', !isImage);
+  document.getElementById('videoUnsupportedHint').classList.toggle('d-none', !isVideo);
+
+  const imageUrl = document.getElementById('imageApiUrl');
+  const meta = getProviderMeta(service);
+  if (isImage && !imageUrl.value.trim()) {
+    imageUrl.value = meta.imageDefaultUrl || '';
+  }
+
+  // Switching an image-only entry back to text leaves the chat URL empty; fill
+  // the provider default instead of forcing the user to paste the same URL.
+  const textUrl = document.getElementById('apiUrl');
+  if (!isImage && !isVideo && textUrl && !textUrl.value.trim()) {
+    textUrl.value = meta.defaultUrl || '';
+  }
+}
+
 /**
  * Fills every field of the dialog.
  * @param {Object} entry - Provider data
@@ -343,6 +404,19 @@ function fillProviderForm(entry, isEdit) {
   }
   modelTypeSelect.value = entry.modelType || 'text';
 
+  ensureImageSelectOptions();
+  const meta = getProviderMeta(entry.service);
+  document.getElementById('imageApiUrl').value = entry.imageApiUrl
+    || (isImageModelType(entry.modelType) ? (meta.imageDefaultUrl || '') : '');
+  const imageDefaults = normalizeImageDefaults(entry.imageDefaults);
+  document.getElementById('imageSize').value = imageDefaults.size;
+  document.getElementById('imageAspectRatio').value = imageDefaults.aspect_ratio;
+  document.getElementById('imageQuality').value = imageDefaults.quality;
+  document.getElementById('imageOutputFormat').value = imageDefaults.output_format;
+  document.getElementById('imageBackground').value = imageDefaults.background;
+  document.getElementById('imageCount').value = String(imageDefaults.n);
+  document.getElementById('imageSeed').value = imageDefaults.seed === null ? '' : String(imageDefaults.seed);
+
   document.getElementById('apiUrl').value = entry.apiUrl
     || (isEdit ? '' : getProviderMeta(entry.service).defaultUrl || '');
   document.getElementById('apiKey').value = entry.apiKey || '';
@@ -356,6 +430,7 @@ function fillProviderForm(entry, isEdit) {
 
   form.classList.remove('was-validated');
   modelFetchRequested = false;
+  updateModelTypeVisibility();
 
   const title = isEdit ? msg('apiEditProviderTitle', 'Edit API provider') : msg('apiAddProviderTitle', 'Add API provider');
   document.getElementById('apiProviderModalTitle').textContent = title;
@@ -374,8 +449,17 @@ function onProviderChanged() {
     urlInput.value = next.defaultUrl || '';
   }
 
+  const imageUrlInput = document.getElementById('imageApiUrl');
+  if (imageUrlInput) {
+    const imageCurrent = imageUrlInput.value.trim();
+    if (!imageCurrent || imageCurrent === (previous.imageDefaultUrl || '')) {
+      imageUrlInput.value = next.imageDefaultUrl || '';
+    }
+  }
+
   form.dataset.lastService = select.value;
   modelFetchRequested = false;
+  updateModelTypeVisibility();
   document.getElementById('modelNameList').innerHTML = '';
   document.getElementById('modelFetchStatus').textContent = '';
 }
@@ -403,8 +487,24 @@ async function fetchModelList() {
   status.textContent = msg('apiModelsLoading');
 
   try {
-    const client = getService(service, url, key);
-    const models = await client.getModels(true);
+    const modelType = document.getElementById('apiModelType').value;
+    let models = [];
+    if (isImageModelType(modelType)) {
+      // Image models live on a different endpoint (OpenRouter: /images/models),
+      // so the text client's /models list would be the wrong catalogue.
+      const imageClient = getImageServiceInstance({
+        service,
+        modelType,
+        imageApiUrl: document.getElementById('imageApiUrl').value.trim(),
+        apiUrl: url,
+        apiKey: key
+      });
+      const catalogue = await imageClient.getImageModels(true);
+      models = catalogue.ids;
+    } else {
+      const client = getService(service, url, key);
+      models = await client.getModels(true);
+    }
     const names = [...new Set((models || []).filter(Boolean).map(String))];
 
     datalist.innerHTML = '';
@@ -440,10 +540,16 @@ async function saveProvider(event) {
   const form = document.getElementById('apiProviderForm');
   const service = document.getElementById('apiProviderType').value;
   const apiUrl = document.getElementById('apiUrl').value.trim();
+  const imageApiUrl = document.getElementById('imageApiUrl').value.trim();
   const apiKey = document.getElementById('apiKey').value.trim();
   const modelName = document.getElementById('modelName').value.trim();
+  const modelType = document.getElementById('apiModelType').value;
 
-  if (!service || !apiUrl || !modelName || !form.checkValidity()) {
+  // An image entry needs its images endpoint, not the chat-completions URL;
+  // a text entry needs the chat URL. Requiring both would force users to fill a
+  // field that is never used.
+  const requiredEndpoint = isImageModelType(modelType) ? (imageApiUrl || apiUrl) : apiUrl;
+  if (!service || !requiredEndpoint || !modelName || !form.checkValidity()) {
     form.classList.add('was-validated');
     balert(msg('requiredError'));
     return;
@@ -461,9 +567,21 @@ async function saveProvider(event) {
     id: editingId || newApiEntryId(),
     service,
     apiUrl,
+    imageApiUrl,
+    imageDefaults: {
+      size: document.getElementById('imageSize').value,
+      aspect_ratio: document.getElementById('imageAspectRatio').value,
+      quality: document.getElementById('imageQuality').value,
+      n: Number(document.getElementById('imageCount').value),
+      output_format: document.getElementById('imageOutputFormat').value,
+      background: document.getElementById('imageBackground').value,
+      seed: document.getElementById('imageSeed').value === ''
+        ? null
+        : Number(document.getElementById('imageSeed').value)
+    },
     apiKey,
     modelName,
-    modelType: document.getElementById('apiModelType').value,
+    modelType,
     multimodal: document.getElementById('apiMultimodal').checked,
     supportsTools: document.getElementById('apiSupportsTools').checked || undefined
   });
@@ -499,6 +617,8 @@ function applyDefaultFromEntry(entry) {
   ds.dsId = entry.id;
   ds.service = entry.service;
   ds.apiUrl = entry.apiUrl || '';
+  ds.imageApiUrl = entry.imageApiUrl || '';
+  ds.imageDefaults = normalizeImageDefaults(entry.imageDefaults);
   ds.apiKey = entry.apiKey || '';
   ds.modelName = entry.modelName || '';
   ds.modelType = entry.modelType || 'text';
@@ -546,7 +666,7 @@ async function deleteProvider(id) {
     if (dsList.length > 0) {
       applyDefaultFromEntry(dsList[0]);
     } else {
-      ['dsId', 'service', 'apiUrl', 'apiKey', 'modelName', 'modelType', 'multimodal', 'supportsTools']
+      ['dsId', 'service', 'apiUrl', 'imageApiUrl', 'imageDefaults', 'apiKey', 'modelName', 'modelType', 'multimodal', 'supportsTools']
         .forEach((key) => delete ds[key]);
     }
   }
@@ -604,11 +724,14 @@ function populateServiceDropdowns() {
   insightSelect.innerHTML = '';
   insightSelect.add(new Option(msg('apiUseDefaultProvider', 'Same as default'), ''));
 
-  dsList.forEach((item) => {
+  // Insight is a text pipeline: never offer an image/video entry, or the
+  // request would be sent to an endpoint that cannot answer it.
+  const textEntries = dsList.filter((item) => isTextModelType(item.modelType));
+  textEntries.forEach((item) => {
     insightSelect.add(new Option(apiEntryDisplay(item, translate) || item.service, item.id));
   });
 
-  const known = dsList.some((item) => item.id === ds.insightService);
+  const known = textEntries.some((item) => item.id === ds.insightService);
   insightSelect.value = known ? ds.insightService : '';
 
   const empty = dsList.length === 0;
@@ -723,6 +846,7 @@ function bindEventListeners() {
   document.getElementById('b_add_api').addEventListener('click', () => openProviderModal(null));
   document.getElementById('apiProviderForm').addEventListener('submit', saveProvider);
   document.getElementById('apiProviderType').addEventListener('change', onProviderChanged);
+  document.getElementById('apiModelType').addEventListener('change', updateModelTypeVisibility);
   document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
   document.getElementById('b_fetch_models').addEventListener('click', fetchModelList);
 

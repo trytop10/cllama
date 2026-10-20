@@ -107,6 +107,27 @@ function attachmentHtml(record, options) {
 }
 
 /**
+ * Renders generated images stored as data URLs. Used for assistant records;
+ * attachments on user records have their own `attachmentHtml()`.
+ * @param {Object} record - The message record
+ * @param {Object} options - { includeImages }
+ * @returns {string} HTML
+ */
+function generatedImagesHtml(record, options) {
+  const images = Array.isArray(record?.images) ? record.images.filter(Boolean) : [];
+  if (!images.length) return '';
+  if (options.includeImages === false) {
+    return `<div class="export-attachment export-attachment-skipped">🖼 ${images.length}</div>`;
+  }
+  const items = images.map((src, index) => {
+    const alt = `${escapeHtml(record?.imageMeta?.prompt || 'Generated image')} ${index + 1}`;
+    return `<a class="export-image" href="${escapeHtml(src)}" target="_blank" rel="noopener">` +
+      `<img src="${escapeHtml(src)}" alt="${alt}"></a>`;
+  }).join('');
+  return `<div class="export-images">${items}</div>`;
+}
+
+/**
  * Renders one message record as a section of the exported document.
  * @param {Object} record - { role, content, rtime, model?, fileInfo?, usage? }
  * @param {Object} context - { renderMarkdown, labels, options }
@@ -143,9 +164,13 @@ export function recordToHtml(record, context = {}) {
       }
       return `<div class="markdown-body">${html}</div>`;
     }).join('\n');
+    body += generatedImagesHtml(record, options);
   }
 
-  const usageText = (isUser || minimal) ? '' : formatUsage(record?.usage, labels);
+  const hasImages = Array.isArray(record?.images) && record.images.length > 0;
+  // Image results have no meaningful token count; their usage is the image
+  // count/cost shown in the chat line, not a token line in the export.
+  const usageText = (isUser || minimal || hasImages) ? '' : formatUsage(record?.usage, labels);
   const usageHtml = usageText
     ? `<div class="token-usage">${escapeHtml(usageText)}</div>`
     : '';
@@ -213,6 +238,9 @@ body.cllama-export-minimal .message { margin-bottom: 0; }
 .user-text { white-space: pre-wrap; word-break: break-word; }
 .export-attachment img { max-width: 100%; max-height: 360px; border-radius: 6px; }
 .export-attachment { margin: 4px 0; }
+.export-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin: 8px 0; }
+.export-image img { width: 100%; height: auto; border-radius: 6px; border: 1px solid #d0d7de; }
+@media print { .export-images, .export-image { break-inside: avoid; } }
 .think { margin: 6px 0; border-left: 3px solid #d0d7de; padding-left: 10px; }
 .think summary { cursor: pointer; font-size: 0.78rem; color: #59636e; }
 .think-body { font-size: 0.85rem; color: #59636e; }

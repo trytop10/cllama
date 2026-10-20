@@ -19,6 +19,7 @@ import {
   resolveApiEntry,
   findDefaultEntry,
   normalizeApiEntry,
+  normalizeImageDefaults,
   normalizeApiList,
   entryFromConfig,
   isDefaultEntry,
@@ -37,21 +38,26 @@ function check(name, fn) {
 
 const translate = (key) => ({
   apiProviderOllama: 'Ollama (local)',
+  apiProviderOpenRouter: 'OpenRouter',
   apiProviderCompatible: 'OpenAI-compatible API',
   modelTypeText: 'Text generation model',
   modelTypeDecision: 'Decision model',
-  modelTypeImage: 'Image generation model'
+  modelTypeImage: 'Image generation model',
+  modelTypeVideo: 'Video generation model'
 }[key] || '');
 
 check('provider keys keep the historic routing values', () => {
   const services = PROVIDER_TYPES.map((item) => item.service);
-  assert.deepEqual(services, ['ollama', 'OpenAI', 'Google', 'DeepSeek', 'Qwen', 'ZhiPu', 'Other']);
+  assert.deepEqual(services, ['ollama', 'OpenAI', 'OpenRouter', 'Google', 'DeepSeek', 'Qwen', 'ZhiPu', 'Other']);
   // "Other" is stored as-is; only the label is friendlier.
   assert.equal(PROVIDER_TYPES.find((item) => item.service === 'Other').labelKey, 'apiProviderCompatible');
+  // OpenRouter has a dedicated Images API, separate from its chat endpoint.
+  assert.equal(PROVIDER_TYPES.find((item) => item.service === 'OpenRouter').imageDefaultUrl,
+    'https://openrouter.ai/api/v1/images');
 });
 
-check('model kinds cover text generation, decision and image generation', () => {
-  assert.deepEqual(MODEL_TYPES.map((item) => item.value), ['text', 'decision', 'image']);
+check('model kinds cover text, decision, image and video generation', () => {
+  assert.deepEqual(MODEL_TYPES.map((item) => item.value), ['text', 'decision', 'image', 'video']);
 });
 
 check('labels are localised and unknown providers fall back to their key', () => {
@@ -67,10 +73,11 @@ check('unknown legacy providers keep their editing defaults', () => {
   assert.equal(getProviderMeta('ollama').protocol, 'ollama');
 });
 
-check('model type labels cover the three current kinds and legacy values map to text', () => {
+check('model type labels cover all current kinds and legacy values map to text', () => {
   assert.equal(modelTypeLabel('text', translate), 'Text generation model');
   assert.equal(modelTypeLabel('decision', translate), 'Decision model');
   assert.equal(modelTypeLabel('image', translate), 'Image generation model');
+  assert.equal(modelTypeLabel('video', translate), 'Video generation model');
   assert.equal(modelTypeLabel('chat', translate), 'Text generation model');
   assert.equal(modelTypeLabel('reasoning', translate), 'Text generation model');
   assert.equal(modelTypeLabel('nope', translate), 'Text generation model');
@@ -109,9 +116,34 @@ check('normalization drops the legacy name and maps capability flags / model typ
 
   assert.equal(normalizeApiEntry({ service: 'Qwen', modelType: 'decision' }).modelType, 'decision');
   assert.equal(normalizeApiEntry({ service: 'Qwen', modelType: 'image' }).modelType, 'image');
-  assert.equal(normalizeApiEntry({ service: 'Qwen', modelType: 'video' }).modelType, 'text');
+  assert.equal(normalizeApiEntry({ service: 'Qwen', modelType: 'video' }).modelType, 'video');
   assert.equal(normalizeApiEntry({ service: 'Qwen', supportsTools: true }).supportsTools, true);
   assert.equal('supportsTools' in normalizeApiEntry({ service: 'Qwen', supportsTools: false }), false);
+});
+
+check('image settings are normalised instead of forwarded blindly', () => {
+  const out = normalizeApiEntry({
+    service: 'OpenRouter',
+    modelType: 'image',
+    imageApiUrl: '  https://openrouter.ai/api/v1/images  ',
+    imageDefaults: { size: '2048x2048', aspect_ratio: '16:9', n: 99, seed: -3, quality: 'ultra' }
+  });
+  assert.equal(out.imageApiUrl, 'https://openrouter.ai/api/v1/images');
+  assert.equal(out.imageDefaults.size, '2048x2048');
+  assert.equal(out.imageDefaults.aspect_ratio, '16:9');
+  assert.equal(out.imageDefaults.n, 10);
+  assert.equal(out.imageDefaults.seed, null);
+  assert.equal(out.imageDefaults.quality, 'auto');
+  assert.deepEqual(normalizeImageDefaults(null), {
+    size: 'auto',
+    aspect_ratio: 'auto',
+    resolution: 'auto',
+    quality: 'auto',
+    n: 1,
+    background: 'auto',
+    output_format: 'auto',
+    seed: null
+  });
 });
 
 check('entryFromConfig migrates base-only data and carries identity', () => {
