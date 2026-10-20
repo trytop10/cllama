@@ -22,8 +22,11 @@ import {
   normalizeApiList,
   entryFromConfig,
   isDefaultEntry,
-  migrateLegacyReferences
+  migrateLegacyReferences,
+  buildModelsEndpoint,
+  sortModelNames
 } from '../js/api-providers.mjs';
+import { ChatGPTClient } from '../js/client/chatgpt-client.mjs';
 
 let passed = 0;
 function check(name, fn) {
@@ -257,6 +260,50 @@ check('ambiguous legacy names/services are not guessed', () => {
   });
   assert.equal(out.skillList[0].dsService, 'dup');
   assert.ok(out.dsList.every((entry) => !('name' in entry)));
+});
+
+check('OpenRouter model requests include image and video output models', () => {
+  // OpenRouter's /models defaults to text-only; image-only models such as
+  // qwen/qwen-image-3 and video models such as google/veo-3.1 are hidden
+  // unless output_modalities asks for them.
+  assert.equal(
+    buildModelsEndpoint('https://openrouter.ai/api/v1/chat/completions'),
+    'https://openrouter.ai/api/v1/models?output_modalities=text%2Cimage%2Cvideo'
+  );
+  // Works with the bare API base and with a trailing slash too.
+  assert.equal(
+    buildModelsEndpoint('https://openrouter.ai/api/v1/'),
+    'https://openrouter.ai/api/v1/models?output_modalities=text%2Cimage%2Cvideo'
+  );
+  // An explicit choice is never overwritten.
+  assert.equal(
+    buildModelsEndpoint('https://openrouter.ai/api/v1/models?output_modalities=all'),
+    'https://openrouter.ai/api/v1/models?output_modalities=all'
+  );
+  // Other gateways must not receive the parameter...
+  assert.equal(buildModelsEndpoint('https://api.openai.com/v1/chat/completions'), 'https://api.openai.com/v1/models');
+  // ...and a lookalike host does not count as OpenRouter.
+  assert.equal(
+    buildModelsEndpoint('https://openrouter.ai.example.com/api/v1/chat/completions'),
+    'https://openrouter.ai.example.com/api/v1/models'
+  );
+});
+
+check('the OpenAI-compatible client builds the OpenRouter endpoint', () => {
+  const client = new ChatGPTClient({
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    apiKey: 'test-key',
+    defaultModel: 'qwen/qwen-image-3'
+  });
+  assert.match(client.modelsEndpoint, /^https:\/\/openrouter\.ai\/api\/v1\/models\?output_modalities=text%2Cimage%2Cvideo$/);
+});
+
+check('model names are deduplicated and sorted alphabetically', () => {
+  assert.deepEqual(sortModelNames(['b/model', 'a/model', 'b/model', '', null]), ['a/model', 'b/model']);
+  // Natural ordering: qwen2.5 comes before qwen10, not after it.
+  assert.deepEqual(sortModelNames(['qwen10', 'qwen2.5', 'qwen1']), ['qwen1', 'qwen2.5', 'qwen10']);
+  // Bad input does not throw.
+  assert.deepEqual(sortModelNames(null), []);
 });
 
 check('tool execution survives the native-tools path', () => {

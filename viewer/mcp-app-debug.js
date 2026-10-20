@@ -357,7 +357,8 @@ els.copy.addEventListener('click', async () => {
 });
 
 // Say so up front when this build cannot host a view at all (Firefox ≤153,
-// Android): a card here would only produce a misleading "nothing happens".
+// Firefox Android <154): a card here would only produce a misleading
+// "nothing happens".
 if (!hostSupportsSandboxPages(browser.runtime?.getManifest?.() || null)) {
   els.unsupported.classList.remove('d-none');
   els.run.disabled = true;

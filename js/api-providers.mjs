@@ -84,6 +84,68 @@ export function normalizeModelType(type) {
 
 
 /**
+ * Sorts model ids the way a model picker should show them: alphabetically,
+ * case-insensitively, with numbers compared naturally (`qwen2.5` before
+ * `qwen3`), and without duplicates. Every client's `getModels()` runs its
+ * response through this so the settings datalist and the chat dropdown agree.
+ * @param {Array<string>} names - Model ids as returned by the service
+ * @returns {Array<string>} Deduplicated, naturally sorted ids
+ */
+export function sortModelNames(names) {
+  const unique = [...new Set((Array.isArray(names) ? names : [])
+    .filter(Boolean)
+    .map((name) => String(name)))];
+
+  const collator = typeof Intl !== 'undefined' && typeof Intl.Collator === 'function'
+    ? new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
+    : null;
+
+  unique.sort((a, b) => {
+    if (collator) {
+      const diff = collator.compare(a, b);
+      if (diff !== 0) return diff;
+    }
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+  return unique;
+}
+
+/**
+ * Builds the `/models` URL for an OpenAI-compatible chat endpoint.
+ *
+ * OpenRouter's model catalogue defaults to `output_modalities=text`, which
+ * hides image-only models (e.g. `qwen/qwen-image-3`) and video models (e.g.
+ * `google/veo-3.1`). Asking for text, image and video explicitly keeps the
+ * chat models and adds the generation models, without also pulling in
+ * embeddings / rerank / speech / transcription endpoints. Other gateways
+ * never receive the parameter, because unknown query fields may be rejected.
+ * @param {string} endpoint - Chat completions endpoint (with or without `/chat/completions`)
+ * @returns {string} Absolute models endpoint
+ */
+export function buildModelsEndpoint(endpoint) {
+  const raw = String(endpoint || '').trim();
+
+  try {
+    const url = new URL(raw);
+    // Accept a chat-completions endpoint, a bare API base, or an already
+    // complete models URL; only the first two need their path rewritten.
+    const path = url.pathname.replace(/\/+$/, '');
+    if (!/\/models$/.test(path)) {
+      url.pathname = `${path.replace(/\/chat\/completions$/, '')}/models`;
+    }
+
+    if (/(^|\.)openrouter\.ai$/i.test(url.hostname)
+      && !url.searchParams.has('output_modalities')) {
+      url.searchParams.set('output_modalities', 'text,image,video');
+    }
+    return url.toString();
+  } catch (error) {
+    // Non-absolute endpoints keep the historic string concatenation.
+    return `${raw.replace(/\/+$/, '').replace(/\/chat\/completions$/, '')}/models`;
+  }
+}
+
+/**
  * Returns the catalogue entry for a stored service key. Unknown legacy keys
  * (e.g. "Test", "Claude" from an old backup) are kept as-is so they stay
  * editable instead of being dropped.

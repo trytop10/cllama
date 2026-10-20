@@ -212,11 +212,13 @@ export function hostCapabilities() {
 /**
  * Whether this build can host an app view at all.
  *
- * The opaque origin and the inline-script-capable CSP come from Chrome's
- * `manifest.sandbox`; Firefox/Android have no such key, so the shell page there
- * is an ordinary extension page whose `script-src 'self'` blocks the view's own
- * script. Reading the *live* manifest lets those builds degrade up front with an
- * explanation, instead of rendering a card that silently does nothing.
+ * The opaque origin and the inline-script-capable CSP come from
+ * `manifest.sandbox`, which Chrome and Firefox/Firefox Android 154+ support.
+ * Builds that do not register it (Firefox ≤153, Firefox Android <154) load the
+ * shell page as an ordinary extension page whose `script-src 'self'` blocks the
+ * view's own script. Reading the *live* manifest lets those builds degrade up
+ * front with an explanation, instead of rendering a card that silently does
+ * nothing.
  * @param {Object} manifest - `browser.runtime.getManifest()`
  * @returns {boolean}
  */

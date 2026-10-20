@@ -109,8 +109,9 @@ function findRemoteScripts() {
  * a failure instead of presenting a dead card:
  *   - `inlineScripts`: whether the view's own script can run here at all;
  *   - `sandboxed`/`origin`: whether this frame really is an opaque-origin
- *     sandbox page (Chrome's `manifest.sandbox`) or an ordinary extension page
- *     (Firefox/Android, where a view can never work).
+ *     sandbox page (`manifest.sandbox`) or an ordinary extension page (builds
+ *     without sandbox-page support, e.g. Firefox/Android <154, where a view can
+ *     never work).
  *
  * `window.origin` — not `location.origin` — is the opaque-origin test: a
  * sandboxed extension page keeps reporting its `chrome-extension://` URL from

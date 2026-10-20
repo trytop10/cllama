@@ -362,12 +362,33 @@ check('the Firefox (MV2) manifest registers the sandbox page in the MV2 shape', 
   const manifest = JSON.parse(read('../manifest.firefox.json'));
   assert.deepEqual(manifest.sandbox?.pages, [MCP_APP_SANDBOX_PAGE]);
   assert.equal(typeof manifest.sandbox.content_security_policy, 'string');
+  // AMO's `contentSecurityPolicySandbox` format rejects a policy without the
+  // `sandbox` directive, and `allow-same-origin` would lift the opaque origin.
+  assert.match(manifest.sandbox.content_security_policy, /^sandbox /);
+  assert.ok(!manifest.sandbox.content_security_policy.includes('allow-same-origin'));
   assert.match(manifest.sandbox.content_security_policy, /'unsafe-inline'/);
   // Same reason as the Chrome manifest: https: is part of the policy.
   assert.match(manifest.sandbox.content_security_policy, /'unsafe-eval' https:/);
   assert.equal(manifest.content_security_policy?.sandbox, undefined);
   // The extension's own pages keep their (untouched) MV2 string policy.
   assert.equal(typeof manifest.content_security_policy, 'string');
+});
+
+check('the Firefox Android (MV2) manifest registers the same sandbox page', () => {
+  // Firefox Android 154+ supports sandboxed pages (BCD). Without the key, MCP
+  // Apps degrade to "unsupported" on a build that can actually host them.
+  const manifest = JSON.parse(read('../manifest.android.json'));
+  const firefox = JSON.parse(read('../manifest.firefox.json'));
+  assert.deepEqual(manifest.sandbox?.pages, [MCP_APP_SANDBOX_PAGE]);
+  assert.equal(typeof manifest.sandbox.content_security_policy, 'string');
+  assert.match(manifest.sandbox.content_security_policy, /^sandbox /);
+  assert.ok(!manifest.sandbox.content_security_policy.includes('allow-same-origin'));
+  assert.match(manifest.sandbox.content_security_policy, /'unsafe-inline'/);
+  assert.match(manifest.sandbox.content_security_policy, /'unsafe-eval' https:/);
+  assert.equal(manifest.content_security_policy?.sandbox, undefined);
+  assert.equal(typeof manifest.content_security_policy, 'string');
+  // Keep both MV2 manifests identical: drifting one breaks AMO validation.
+  assert.equal(manifest.sandbox.content_security_policy, firefox.sandbox.content_security_policy);
 });
 
 // ------------------- i18n parity -------------------

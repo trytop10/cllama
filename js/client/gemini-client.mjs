@@ -1,6 +1,7 @@
 import { GoogleGenAI } from './gemini.mjs';
 import { normalizeGeminiUsage } from '../token-usage.mjs';
 import { toGeminiGenerationConfig, toGeminiFunctionDeclarations } from '../request-options.mjs';
+import { sortModelNames } from '../api-providers.mjs';
 
 export class GeminiClient {
     constructor(config) {
@@ -37,8 +38,9 @@ export class GeminiClient {
                 .filter(model => model.supportedActions && model.supportedActions.includes('generateContent'))
                 .map(model => model.name.replace(/^models\//, ''));
 
-            this.modelCache = models;
-            return models;    
+            // Same alphabetical order as every other provider's picker.
+            this.modelCache = sortModelNames(models);
+            return this.modelCache;    
         } catch (error) {
             console.error('Error fetching models:', error);
             throw new Error(`Failed to fetch models: ${error.message || error}`);

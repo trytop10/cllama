@@ -1,5 +1,6 @@
 import { Ollama } from './ollama.mjs'
 import { normalizeOllamaUsage } from '../token-usage.mjs'
+import { sortModelNames } from '../api-providers.mjs'
 
 const DEFAULT_MODEL = 'gemma3';
 
@@ -39,7 +40,8 @@ export class OllamaClient {
       }
 
       const response = await this.client.list()
-      this.cachedModels = response.models.map(model => model.name)
+      // Same alphabetical order as every other provider's picker.
+      this.cachedModels = sortModelNames(response.models.map(model => model.name))
       return this.cachedModels
     } catch (error) {
       console.error('Failed to fetch models:', error)

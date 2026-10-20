@@ -4,6 +4,7 @@
  */
 import { normalizeOpenAIUsage } from '../token-usage.mjs';
 import { openAISamplingOptions } from '../request-options.mjs';
+import { buildModelsEndpoint, sortModelNames } from '../api-providers.mjs';
 
 export class ChatGPTClient {
   /**
@@ -23,7 +24,9 @@ export class ChatGPTClient {
     this.apiKey = config.apiKey;
     this.defaultModel = config.defaultModel;
 
-    this.modelsEndpoint = `${this.endpoint.replace(/\/chat\/completions$/, '')}/models`;
+    // OpenRouter needs `output_modalities=text,image,video` here; every other
+    // endpoint gets the plain `/models` URL (see buildModelsEndpoint()).
+    this.modelsEndpoint = buildModelsEndpoint(this.endpoint);
 
     this.modelsCache = null;
     this.activeSessions = new Map(); // sessionId -> AbortController
@@ -53,7 +56,9 @@ export class ChatGPTClient {
       }
 
       const data = await response.json();
-      this.modelsCache = data.data.map(model => model.id);
+      // Sorted + deduplicated so both the settings datalist and the chat
+      // dropdown show the same stable, alphabetical order.
+      this.modelsCache = sortModelNames(data.data.map(model => model.id));
       return this.modelsCache;
     } catch (error) {
       console.error('Failed to fetch models:', error);

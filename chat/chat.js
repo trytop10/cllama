@@ -2513,10 +2513,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         container.appendChild(card);
         if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        // Can this build host a view at all? Firefox/Android have no
-        // `manifest.sandbox`, so their shell page is an ordinary extension page
-        // whose `script-src 'self'` blocks the view's own script: say so up front
-        // instead of building a card that would silently do nothing.
+        // Can this build host a view at all? Builds that do not register
+        // `manifest.sandbox` (Firefox ≤153, Firefox Android <154) load the shell
+        // as an ordinary extension page whose `script-src 'self'` blocks the
+        // view's own script: say so up front instead of building a card that
+        // would silently do nothing.
         if (!hostSupportsSandboxPages(browser.runtime?.getManifest?.() || null)) {
             setCardNotice(card, 'mcpAppUnsupported', 'Interactive apps are not supported in this environment — showing the text result instead.');
             console.warn('[MCP Apps] this build has no manifest "sandbox" support: the view is not rendered (the text result is unaffected).');
