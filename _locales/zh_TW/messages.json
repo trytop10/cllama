@@ -3,7 +3,7 @@
         "message": "智能瀏覽助手 - cllama"
     },
     "cllamaDescription": {
-        "message": "瀏覽器AI助手：網頁深度洞察與問答、帶技能/工具的多模型對話。支援 Ollama、OpenAI、Gemini 等本地與主流模型。"
+        "message": "瀏覽器AI助手：一鍵洞察網頁，用本機 Ollama 或 OpenAI、Gemini 聊天；Skill 與 MCP 讓 AI 會做事，還能文生圖。"
     },
     "inputMessage": {
         "message": "請輸入訊息...",

@@ -3,7 +3,7 @@
         "message": "Smart Browsing Assistant - cllama"
     },
     "cllamaDescription": {
-        "message": "Browser AI copilot: deep webpage insights & Q&A, skill-powered multi-model chat. Works with Ollama, OpenAI, Gemini."
+        "message": "Browser AI copilot: one-click page insight, your own models (Ollama/OpenAI/Gemini), skills, MCP and image generation."
     },
     "inputMessage": {
         "message": "Please enter a message...",

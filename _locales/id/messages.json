@@ -3,7 +3,7 @@
         "message": "Asisten Penjelajahan Cerdas - cllama"
     },
     "cllamaDescription": {
-        "message": "Copilot AI untuk browser: wawasan & tanya jawab halaman web, chat multi-model dengan skill. Mendukung Ollama, OpenAI, Gemini."
+        "message": "Copilot AI: wawasan halaman sekali klik, chat dengan model Anda (Ollama/OpenAI/Gemini), skill, MCP, dan pembuatan gambar."
     },
     "inputMessage": {
         "message": "Masukkan pesan...",

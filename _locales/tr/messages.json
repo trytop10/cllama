@@ -3,7 +3,7 @@
         "message": "Akıllı Tarama Asistanı - cllama"
     },
     "cllamaDescription": {
-        "message": "Tarayıcı için yapay zekâ yardımcısı: sayfa analizi ve soru-cevap, becerili çoklu model sohbet. Ollama, OpenAI, Gemini destekli."
+        "message": "Yapay zekâ yardımcısı: tek tıkla sayfa analizi, kendi modellerinizle sohbet (Ollama/OpenAI/Gemini), beceriler, MCP, görsel üretimi."
     },
     "inputMessage": {
         "message": "Mesaj girin...",

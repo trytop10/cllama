@@ -3,7 +3,7 @@
         "message": "Trợ lý duyệt web thông minh - cllama"
     },
     "cllamaDescription": {
-        "message": "Trợ lý AI cho trình duyệt: phân tích và hỏi đáp trang web, chat đa mô hình với kỹ năng. Hỗ trợ Ollama, OpenAI, Gemini."
+        "message": "Trợ lý AI: phân tích trang trong một cú nhấp, chat với mô hình của bạn (Ollama/OpenAI/Gemini), kỹ năng, MCP và tạo ảnh."
     },
     "inputMessage": {
         "message": "Nhập tin nhắn...",

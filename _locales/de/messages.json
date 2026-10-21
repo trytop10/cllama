@@ -3,7 +3,7 @@
         "message": "Intelligenter Browser-Assistent - cllama"
     },
     "cllamaDescription": {
-        "message": "Browser-KI-Copilot: tiefe Einblicke & Q&A zu Webseiten, skillgestützter Multimodell-Chat. Kompatibel mit Ollama, OpenAI, Gemini."
+        "message": "Browser-KI: Seiten-Einblick per Klick, Chat mit eigenen Modellen (Ollama/OpenAI/Gemini), Skills, MCP und Bildgenerierung."
     },
     "inputMessage": {
         "message": "Nachricht eingeben...",

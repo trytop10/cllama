@@ -3,7 +3,7 @@
         "message": "スマートブラウジングアシスタント - cllama"
     },
     "cllamaDescription": {
-        "message": "ブラウザ向けAIコパイロット：Webページの深掘りとQ&A、スキル対応のマルチモデルチャット。Ollama、OpenAI、Gemini対応。"
+        "message": "ブラウザAI：ワンクリックでページを洞察、Ollama/OpenAI/Gemini など自分のモデルでチャット。スキル、MCP、画像生成にも対応。"
     },
     "inputMessage": {
         "message": "メッセージを入力...",

@@ -3,7 +3,7 @@
         "message": "스마트 브라우징 도우미 - cllama"
     },
     "cllamaDescription": {
-        "message": "브라우저 AI 코파일럿: 웹페이지 심층 분석 및 Q&A, 스킬 기반 멀티모델 채팅. Ollama, OpenAI, Gemini 지원."
+        "message": "브라우저 AI: 클릭 한 번으로 페이지 인사이트, Ollama/OpenAI/Gemini 등 내 모델로 채팅. 스킬, MCP, 이미지 생성 지원."
     },
     "inputMessage": {
         "message": "메시지 입력...",

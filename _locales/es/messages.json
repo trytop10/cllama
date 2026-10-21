@@ -3,7 +3,7 @@
         "message": "Asistente Inteligente de Navegación - cllama"
     },
     "cllamaDescription": {
-        "message": "Copiloto de IA: análisis y preguntas de páginas web, chat multimodelo con habilidades. Funciona con Ollama, OpenAI, Gemini."
+        "message": "Copiloto IA: análisis de páginas en un clic, chat con tus modelos (Ollama/OpenAI/Gemini), habilidades, MCP e imágenes."
     },
     "inputMessage": {
         "message": "Ingrese un mensaje...",
