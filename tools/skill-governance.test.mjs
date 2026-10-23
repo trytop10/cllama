@@ -50,7 +50,7 @@ const { previewToolArgs, toolNeedsConfirmation, getToolSideEffect, registerTool,
 const { mergeDefaultSkills, SKILL_DEFAULTS, startSkillRun, recordRunStep, finishSkillRun, loadSkillRuns, clearSkillRuns, DB_KEY,
         collectArtifactDrafts, collectArtifactDraftsDetailed, extractBareJsonObjects, guessArtifactTarget, setPendingArtifact,
         loadPendingArtifact, removePendingDraft, applyArtifact, recordUserAction, recordPageEvent, filterSkillRuns, parseChoiceOptions,
-        setPendingChoice, loadPendingChoice, clearPendingChoice } =
+        setPendingChoice, loadPendingChoice, clearPendingChoice, clearPendingArtifact, clearPendingRejected } =
   await import('../js/cllama.js');
 const { formatBytes, withUiLanguageDirective, UI_LANGUAGE_MARKER } = await import('../js/util.js');
 
@@ -413,6 +413,46 @@ check('an explicit target from the model wins over the heuristics', () => {
   assert.equal(guessArtifactTarget({ type: 'skill', name: 'X', prompt: 'p' }), 'skill');
   assert.equal(guessArtifactTarget({ name: 'X', prompt: 'p', sample: 's' }), 'scenario');
   assert.equal(guessArtifactTarget({ name: 'X', prompt: 'p', description: 'd' }), 'skill');
+});
+
+check('an unparsable json block that is not a draft is ignored', () => {
+  // Sample payloads / config snippets in the same answer are not proposals: they
+  // must not turn into a red "Could not be imported" card (see looksLikeDraftJson).
+  const { drafts, rejected } = collectArtifactDraftsDetailed('```json\n{ "theme": "dark", }\n```');
+  assert.equal(drafts.length, 0);
+  assert.equal(rejected.length, 0);
+});
+
+await checkAsync('a rejected-only card can be dismissed, and drafts survive it', async () => {
+  // A rejected-only proposal has no Import/Cancel button at all, so the page
+  // needs clearPendingRejected() as its only way out (see chat.js).
+  await setPendingArtifact([], [{ name: 'Bad', target: 'recipe', reason: 'too long', raw: '{}' }], '5:2');
+  // Another conversation must not be able to clear it.
+  await clearPendingRejected('9:1');
+  assert.equal((await loadPendingArtifact()).rejected.length, 1);
+  // The owning conversation can.
+  await clearPendingRejected('5:2');
+  assert.equal(await loadPendingArtifact(), null);
+
+  // With an importable draft present only the rejected blocks go away.
+  await setPendingArtifact(
+    [{ target: 'recipe', payload: { name: '摘要', prompt: 'p' }, name: '摘要' }],
+    [{ name: 'Bad', target: 'recipe', reason: 'too long', raw: '{}' }], '5:2');
+  await clearPendingRejected('5:2');
+  const left = await loadPendingArtifact();
+  assert.equal(left.drafts.length, 1);
+  assert.equal(left.rejected.length, 0);
+  await clearPendingArtifact('5:2');
+  assert.equal(await loadPendingArtifact(), null);
+});
+
+await checkAsync('clearPendingArtifact only clears the conversation it belongs to', async () => {
+  await setPendingArtifact(
+    [{ target: 'recipe', payload: { name: '摘要', prompt: 'p' }, name: '摘要' }], [], '5:2');
+  await clearPendingArtifact('9:1');
+  assert.ok(await loadPendingArtifact(), 'a foreign conversation must not delete it');
+  await clearPendingArtifact('5:2');
+  assert.equal(await loadPendingArtifact(), null);
 });
 
 await checkAsync('all-rejected proposals still show up (no silent empty card)', async () => {

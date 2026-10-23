@@ -1,6 +1,6 @@
 import { getService, getImageServiceInstance } from '../js/client/client.mjs';
 import { providerLabel, apiEntryLabel, apiEntryId, resolveApiEntry } from '../js/api-providers.mjs';
-import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, generateImages, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
+import { chat, i18n, DB_KEY, getRuntimeConfig, setRuntimeConfig, abortSession, generateImages, loadSkills, applySkillArguments, applyArtifact, loadPendingArtifact, loadPendingChoice, clearPendingChoice, clearPendingArtifact, clearPendingRejected, removePendingDraft, artifactTargetLabel, parseChoiceOptions, collectArtifactDraftsDetailed, setPendingChoice, setPendingArtifact, recordUserAction, recordPageEvent, recordAppViewEvent, loadScenarioLearn, setLearnEnabled, removeLesson, clearLessons, loadBookmarks, toggleBookmark, deleteBookmark, buildToolContext, startSkillRun, finishSkillRun, loadMcpAppAutoRender, loadMcpAppDebug, loadSkillSelection, saveSkillSelection, removeSkillSelection } from '../js/cllama.js';
 import { buildLessonsBlock, buildReflectExcerpt, reflectReadiness, REFLECT_PROMPT, LESSONS_INJECT_CHARS, REFLECT_MIN_MESSAGES } from '../js/scenario-learn.mjs';
 import { bookmarkId, bookmarkText, groupBookmarks, sortBookmarks } from '../js/chat-bookmarks.mjs';
 import { getMcpServerByName, initMcpTools, loadMcpServers, readMcpResource } from '../js/mcp.mjs';
@@ -2018,10 +2018,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Blocks that failed validation: show them with the reason instead of
         // dropping them, otherwise a failed import looks like "nothing happened".
         if (rejected.length) {
+            // This section has no Import/Cancel button, so it needs its own way
+            // out: without one the notice (stored globally, not per card) would
+            // stay forever and resurface in every conversation sharing the key.
+            const badHead = document.createElement('div');
+            badHead.className = 'artifact-rejected-head';
+
             const badTitle = document.createElement('div');
             badTitle.className = 'artifact-card-title artifact-rejected-title';
             badTitle.textContent = `${browser.i18n.getMessage('artifactRejectedTitle') || 'Could not be imported'} (${rejected.length})`;
-            card.appendChild(badTitle);
+            badHead.appendChild(badTitle);
+
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'artifact-rejected-dismiss';
+            const dismissLabel = browser.i18n.getMessage('close') || 'Close';
+            dismiss.title = dismissLabel;
+            dismiss.setAttribute('aria-label', dismissLabel);
+            dismiss.textContent = '×';
+            dismiss.addEventListener('click', () => handleRejectedDismiss());
+            badHead.appendChild(dismiss);
+
+            card.appendChild(badHead);
 
             rejected.forEach((bad) => {
                 const item = document.createElement('div');
@@ -2064,6 +2082,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         wrap.appendChild(card);
         messagesContainer.appendChild(wrap);
         if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    /**
+     * Dismiss the blocks that failed validation (the red "Could not be imported"
+     * section). They have no Import button, so this is the only way to clear
+     * them; drafts that can still be imported are kept untouched.
+     * @returns {Promise<void>}
+     */
+    async function handleRejectedDismiss() {
+        await clearPendingRejected(sessionKey());
+        await recordUserAction({
+            sessionId: ccId || '0',
+            action: 'cancel',
+            ok: true,
+            detail: 'rejected draft blocks dismissed'
+        }).catch((e) => console.warn('audit write failed:', e));
+        renderPendingArtifacts();
     }
 
     /**
@@ -3764,7 +3799,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const pendingStored = await loadPendingArtifact();
         // A card left over from another conversation must not count as "already
         // shown": this turn's identical draft still has to be written for THIS chat.
-        const pending = belongsToThisSession(pendingStored) ? pendingStored : null;
+        let pending = belongsToThisSession(pendingStored) ? pendingStored : null;
+        // A proposal made only of rejected blocks is a notice about an *older*
+        // answer, not something to import. Once a new answer arrives it is stale
+        // (and would otherwise sit there forever, since it has no buttons).
+        if (pending && pending.id < turnStartedAt && !(pending.drafts || []).length) {
+            await clearPendingArtifact(sessionKey());
+            pending = null;
+        }
         if (!(pending && pending.id >= turnStartedAt)) {
             const { drafts, rejected } = collectArtifactDraftsDetailed(text);
             if (drafts.length || rejected.length) {
@@ -4025,6 +4067,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             // The conversation this list belonged to is gone: drop it instead of
             // leaving an orphaned card stamped with a deleted session.
             await clearPendingChoice(sessionKey());
+            // Same for a draft proposal: it lives in one global storage key, so an
+            // orphan would come back in a later conversation that reuses this id.
+            await clearPendingArtifact(sessionKey());
             loadChatHistory(currentScenario, scenarioData.currentId);
             updateChatRecordsList(scenarioData.history, scenarioData.currentId);
             updateLearnControls();
@@ -4058,9 +4103,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
             }
 
-            const newSessionId = scenarioData.history.length > 0
-                ? Math.max(...scenarioData.history.map(s => s.id)) + 1
-                : 1;
+            // Never reuse the id of a deleted conversation: pending cards and the
+            // remembered Skill are keyed by "<scenarioId>:<sessionId>", so a reused
+            // id would resurrect data that belongs to the conversation that is gone.
+            // `lastSessionId` keeps a monotonic high-water mark for that reason
+            // (old data without it falls back to the ids actually in the list).
+            const newSessionId = Math.max(
+                0,
+                ...scenarioData.history.map(s => Number(s.id) || 0),
+                Number(scenarioData.lastSessionId) || 0
+            ) + 1;
+            scenarioData.lastSessionId = newSessionId;
             const newSession = {
                 id: newSessionId,
                 name: (newSessionId < 10 ? "0" : "") + newSessionId,

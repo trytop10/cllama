@@ -2742,6 +2742,21 @@ export function extractBareJsonObjects(text, maxObjects = 12, maxLength = 20000)
 }
 
 /**
+ * Whether a block that failed to parse still looks like a draft the model meant
+ * to propose. A builder turn's answer often carries sample JSON or config
+ * snippets for unrelated reasons; turning every unparsable `{`/`[` block into a
+ * red "Could not be imported" card is exactly the false positive this guards
+ * against. A real draft always names at least one of these keys (even when its
+ * syntax is broken), so genuine mistakes are still reported.
+ * @param {string} raw - Raw block text
+ * @returns {boolean}
+ */
+function looksLikeDraftJson(raw) {
+  if (!raw) return false;
+  return /"(?:target|prompt|payload|summary|name|text)"\s*:/.test(raw);
+}
+
+/**
  * Same as collectArtifactDrafts, but also reports what could NOT be turned into a
  * draft and why. Silently dropping an invalid block would look like "Import did
  * nothing", so the chat page shows the rejected items with their reason.
@@ -2806,7 +2821,10 @@ export function collectArtifactDraftsDetailed(text) {
     try {
       parsed = JSON.parse(raw);
     } catch (e) {
-      if (raw.startsWith('{') || raw.startsWith('[')) {
+      // Only a block that still looks like a draft is worth a red card: an
+      // example payload or config snippet in the same answer is not a proposal
+      // and must not become an unimportable notice (see looksLikeDraftJson).
+      if ((raw.startsWith('{') || raw.startsWith('[')) && looksLikeDraftJson(raw)) {
         rejected.push({ name: '', reason: `invalid JSON: ${e.message}`, raw: raw.slice(0, 800) });
       }
       continue;
@@ -2974,6 +2992,44 @@ export async function clearPendingChoice(sessionKey = '') {
     if (pending?.sessionKey && pending.sessionKey !== String(sessionKey)) return;
   }
   await browser.storage.local.remove(DB_KEY.pendingChoice);
+}
+
+/**
+ * Drop the pending draft proposal entirely (drafts *and* rejected blocks).
+ * Used when a conversation is deleted: the proposal is stored in one global
+ * storage key, so leaving it behind lets a later conversation that reuses the
+ * same session key render a card whose source the user can no longer see.
+ * @param {string} [sessionKey] - Current conversation ("<scenarioId>:<sessionId>").
+ *   When given, a proposal belonging to a *different* conversation is left
+ *   alone, so a stale tab cannot delete a card another session is showing.
+ * @returns {Promise<void>}
+ */
+export async function clearPendingArtifact(sessionKey = '') {
+  if (sessionKey) {
+    const pending = await loadPendingArtifact();
+    if (pending?.sessionKey && pending.sessionKey !== String(sessionKey)) return;
+  }
+  await browser.storage.local.remove(DB_KEY.pendingArtifact);
+}
+
+/**
+ * Drop only the blocks that failed validation, keeping any draft that can still
+ * be imported. A proposal made solely of rejected blocks has no Import button
+ * at all, so without this the user could never get rid of the notice.
+ * Removes the storage key when nothing is left.
+ * @param {string} [sessionKey] - Current conversation; a foreign one is left alone
+ * @returns {Promise<void>}
+ */
+export async function clearPendingRejected(sessionKey = '') {
+  const pending = await loadPendingArtifact();
+  if (!pending) return;
+  if (sessionKey && pending.sessionKey && pending.sessionKey !== String(sessionKey)) return;
+  const drafts = Array.isArray(pending.drafts) ? pending.drafts : [];
+  if (drafts.length) {
+    await browser.storage.local.set({ [DB_KEY.pendingArtifact]: { ...pending, drafts, rejected: [] } });
+  } else {
+    await browser.storage.local.remove(DB_KEY.pendingArtifact);
+  }
 }
 
 /**
