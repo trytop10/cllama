@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Скрыть интерактивное представление"
     },
+    "mcpAppMaximize": {
+        "message": "Развернуть"
+    },
+    "mcpAppRestore": {
+        "message": "Восстановить"
+    },
     "mcpAutoSkill": {
         "message": "Использовать также как Skill"
     },

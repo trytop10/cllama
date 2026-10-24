@@ -654,6 +654,7 @@ check('the MCP Apps / app-origin labels exist in every locale', () => {
     'mcpAppInlineBlocked', 'mcpAppExternalScriptBlocked', 'mcpAppViewError', 'mcpAppMessagePrefilled', 'mcpAppLinkBlocked', 'mcpAppRender',
     'mcpAppHide', 'mcpAppAutoRender', 'mcpAppAutoRenderHint', 'skillRunApp', 'skillRunFilterApp',
     'mcpAppDebug', 'mcpAppDebugHint', 'mcpAppDebugPage', 'mcpAppDiagnostics', 'mcpAppDiagnosticsCopy', 'mcpAppCopyHtml',
+    'mcpAppMaximize', 'mcpAppRestore',
     'skillRunViewFailed'];
   const dir = new URL('../_locales/', import.meta.url);
   const locales = readdirSync(dir);
@@ -713,6 +714,24 @@ check('a view can be rendered on demand instead of automatically', () => {
   // ...and it is switchable where the MCP servers are configured.
   assert.match(read('../chat/skills.html'), /id="mcpAppAutoRender"/);
   assert.match(read('../chat/skills.js'), /setMcpAppAutoRender\(autoRenderBox\.checked\)/);
+});
+
+check('an interactive view can be maximized inside the sidebar', () => {
+  const chat = read('../chat/chat.js');
+  const css = read('../chat/chat.css');
+  const html = read('../chat/chat.html');
+  // The window control sits at the right end of the card header...
+  assert.match(chat, /function setupAppCardResize\(card, button, content\)/);
+  assert.match(chat, /className = 'mcp-app-expand-btn'/);
+  assert.match(chat, /setupAppCardResize\(card, resizeBtn, container\)/);
+  assert.match(chat, /getMessage\(expanded \? 'mcpAppRestore' : 'mcpAppMaximize'\)/);
+  assert.match(html, /id="svg_maximize"/);
+  assert.match(html, /id="svg_restore"/);
+  // ...and grows the *content* box: the bubble is shrink-to-fit, so widening
+  // only the card would have no effect at all.
+  assert.match(css, /\.message-content\.mcp-app-expanded-content \{[^}]*width: 99%/);
+  // Hiding a maximized view must also give the extra width back.
+  assert.match(chat, /content\.classList\.remove\('mcp-app-expanded-content'\)/);
 });
 
 check('the chosen Skill is remembered per conversation only', () => {

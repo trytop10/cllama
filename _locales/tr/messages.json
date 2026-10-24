@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Etkileşimli görünümü gizle"
     },
+    "mcpAppMaximize": {
+        "message": "Büyüt"
+    },
+    "mcpAppRestore": {
+        "message": "Geri yükle"
+    },
     "mcpAutoSkill": {
         "message": "Skill olarak da kullan"
     },

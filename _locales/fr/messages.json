@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Masquer la vue interactive"
     },
+    "mcpAppMaximize": {
+        "message": "Agrandir"
+    },
+    "mcpAppRestore": {
+        "message": "Rétablir"
+    },
     "mcpAutoSkill": {
         "message": "Utiliser aussi comme Skill"
     },

@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "ซ่อนมุมมองแบบอินเทอร์แอกทีฟ"
     },
+    "mcpAppMaximize": {
+        "message": "ขยายใหญ่สุด"
+    },
+    "mcpAppRestore": {
+        "message": "คืนขนาดเดิม"
+    },
     "mcpAutoSkill": {
         "message": "ใช้เป็น Skill ด้วย"
     },

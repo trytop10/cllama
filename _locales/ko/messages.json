@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "대화형 뷰 숨기기"
     },
+    "mcpAppMaximize": {
+        "message": "최대화"
+    },
+    "mcpAppRestore": {
+        "message": "복원"
+    },
     "mcpAutoSkill": {
         "message": "Skill로도 사용"
     },

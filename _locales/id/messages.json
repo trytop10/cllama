@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Sembunyikan tampilan interaktif"
     },
+    "mcpAppMaximize": {
+        "message": "Perbesar"
+    },
+    "mcpAppRestore": {
+        "message": "Pulihkan"
+    },
     "mcpAutoSkill": {
         "message": "Juga gunakan sebagai Skill"
     },

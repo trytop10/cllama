@@ -2919,7 +2919,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /**
-     * Build the card for one view: heading, sandboxed frame, bridge.
+     * Give a view's card the window controls of a desktop window: the button in
+     * its header maximizes the card to (nearly) the full width of the sidebar and
+     * restores it to the width of the answer bubble.
+     *
+     * Why the *content* box has to grow, not just the card: a bot bubble is
+     * shrink-to-fit (`.message-content` is `display: inline-block`, so a short
+     * answer keeps it narrow), and a block child can never be wider than its
+     * parent. The answer text does not grow with it (`.message-text` is
+     * inline-block too) — only the view (and the footer row) becomes wide.
+     * @param {HTMLElement} card - The card element
+     * @param {HTMLButtonElement} button - The header button
+     * @param {HTMLElement} content - The message's `.message-content`
+     * @returns {void}
+     */
+    function setupAppCardResize(card, button, content) {
+        const apply = (expanded) => {
+            card.classList.toggle('mcp-app-expanded', expanded);
+            if (content) {
+                // Several views may share one bubble: it stays wide while any of
+                // them is expanded (see removeAppCard for the other half).
+                content.classList.toggle(
+                    'mcp-app-expanded-content',
+                    Boolean(content.querySelector('.mcp-app-card.mcp-app-expanded'))
+                );
+            }
+            const label = browser.i18n.getMessage(expanded ? 'mcpAppRestore' : 'mcpAppMaximize')
+                || (expanded ? 'Restore size' : 'Maximize');
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            button.setAttribute('aria-pressed', expanded ? 'true' : 'false');
+            button.innerHTML = `<svg viewBox="0 0 16 16" aria-hidden="true"><use href="#svg_${expanded ? 'restore' : 'maximize'}"></use></svg>`;
+        };
+        button.addEventListener('click', (e) => {
+            // A click inside the bubble would otherwise collapse the message.
+            e.preventDefault();
+            e.stopPropagation();
+            apply(!card.classList.contains('mcp-app-expanded'));
+        });
+        apply(false);
+    }
+
+    /**
+     * Build the card for one view: heading, window controls, sandboxed frame,
+     * bridge.
      * @param {HTMLElement} container - The message's `.message-content`
      * @param {Object} ref - Stored view reference
      * @returns {HTMLElement} The card element (may carry a notice instead of a frame)
@@ -2929,8 +2972,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.className = 'mcp-app-card';
         const head = document.createElement('div');
         head.className = 'mcp-app-header';
-        head.textContent = `${browser.i18n.getMessage('mcpAppTitle') || 'Interactive app'} · ${ref.tool}`;
+        const title = document.createElement('span');
+        title.className = 'mcp-app-header-title';
+        title.textContent = `${browser.i18n.getMessage('mcpAppTitle') || 'Interactive app'} · ${ref.tool}`;
+        head.appendChild(title);
+
+        // Maximize / restore, at the right end of the header (like a desktop
+        // window). The view can be wider than the bubble, but never the reverse,
+        // so the card itself is a plain block inside the content box.
+        const resizeBtn = document.createElement('button');
+        resizeBtn.type = 'button';
+        resizeBtn.className = 'mcp-app-expand-btn';
+        head.appendChild(resizeBtn);
+
         card.appendChild(head);
+        setupAppCardResize(card, resizeBtn, container);
         container.appendChild(card);
         if (!stopScrollFlag) messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
@@ -2970,10 +3026,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             clearTimeout(bridge.initTimer);
             mcpAppBridges.delete(bridge);
         }
+        // Read the parent while the card is still attached: hiding the maximized
+        // view must also take the bubble's extra width away, otherwise the answer
+        // would stay stretched with no view left in it.
+        const content = card.closest('.message-content');
         try {
             card.remove();
         } catch (e) {
             // Already gone — nothing to do.
+        }
+        if (content && !content.querySelector('.mcp-app-card.mcp-app-expanded')) {
+            content.classList.remove('mcp-app-expanded-content');
         }
     }
 

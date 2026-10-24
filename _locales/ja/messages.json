@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "インタラクティブビューを隠す"
     },
+    "mcpAppMaximize": {
+        "message": "最大化"
+    },
+    "mcpAppRestore": {
+        "message": "元のサイズに戻す"
+    },
     "mcpAutoSkill": {
         "message": "Skill としても使用"
     },

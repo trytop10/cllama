@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Hide interactive view"
     },
+    "mcpAppMaximize": {
+        "message": "Maximize"
+    },
+    "mcpAppRestore": {
+        "message": "Restore size"
+    },
     "mcpAutoSkill": {
         "message": "Also expose this server as a Skill"
     },

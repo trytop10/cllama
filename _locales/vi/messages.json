@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "Ẩn chế độ xem tương tác"
     },
+    "mcpAppMaximize": {
+        "message": "Phóng to"
+    },
+    "mcpAppRestore": {
+        "message": "Khôi phục"
+    },
     "mcpAutoSkill": {
         "message": "Cũng dùng làm Skill"
     },

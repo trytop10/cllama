@@ -940,6 +940,12 @@
     "mcpAppHide": {
         "message": "收起交互视图"
     },
+    "mcpAppMaximize": {
+        "message": "放大"
+    },
+    "mcpAppRestore": {
+        "message": "还原"
+    },
     "mcpAutoSkill": {
         "message": "同时作为一个 Skill 使用"
     },

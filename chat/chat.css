@@ -528,12 +528,62 @@ hr {
     overflow: hidden;
 }
 
+/* Header row: the title on the left, the view's window controls on the right. */
 .mcp-app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     font-size: 0.75rem;
     color: var(--bs-secondary-color);
     padding: 0.35rem 0.6rem;
     border-bottom: 1px solid var(--bs-border-color);
     word-break: break-word;
+}
+
+.mcp-app-header-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Maximize / restore, drawn like the button in a desktop window's title bar.
+   The icon is swapped by chat.js (below #svg_maximize / #svg_restore in
+   chat.html), so one button covers both states. */
+.mcp-app-expand-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: none;
+    color: var(--bs-secondary-color);
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mcp-app-expand-btn:hover {
+    color: var(--bs-body-color);
+    background-color: var(--bs-tertiary-bg);
+}
+
+.mcp-app-expand-btn svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+}
+
+/* A maximized view takes the width of the sidebar instead of the width of the
+   answer that produced it. The *content* box has to grow: a bot bubble is
+   shrink-to-fit (`display: inline-block`), and a block child can never be wider
+   than its parent. The answer text stays shrink-to-fit as well (`.message-text`
+   is inline-block), so only the view becomes wide — see setupAppCardResize in
+   chat.js, which toggles this class together with `.mcp-app-expanded`. */
+.message-content.mcp-app-expanded-content {
+    display: block;
+    width: 99%;
+    max-width: 100%;
 }
 
 /* The view is a sandboxed iframe: it must never grow the bubble sideways, and
